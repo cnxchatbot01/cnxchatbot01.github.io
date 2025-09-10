@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>LINE Chatbot Admin</title>
+    <meta name="description" content="LINE Chatbot Admin for LIFF" />
+    <meta name="author" content="T42" />
+    <meta property="og:title" content="LINE Chatbot Admin-T42-thailand" />
+    <meta property="og:description" content="LINE Chatbot Admin for LIFF" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://qpsljqpwjxlvvvnycwxy.supabase.co/storage/v1/object/public/user-images/U48c16d105f55ec3ad6a6b52f72142abd/1757525781103.jpeg" />
+    <!-- Library Scripts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans Thai', sans-serif; background-color: #111827; }
+        :root { --brand-yellow: #FBBF24; --brand-dark: #1F2937; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modal-open { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .gradient-text { background: linear-gradient(135deg, var(--brand-yellow), #F59E0B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .tab-button { transition: all 0.2s ease-in-out; }
+        .tab-active { color: var(--brand-yellow); border-color: var(--brand-yellow); }
+        .tab-inactive { color: #6B7280; border-color: transparent; }
+        .tab-inactive:hover { color: #D1D5DB; border-color: #4B5563; }
+
+        .modal-content { background-color: var(--brand-dark); animation: modal-open 0.3s ease-out forwards; }
+        
+        /* ✨ [แก้ไข] ปรับปรุงดีไซน์ Toggle Switch ให้สวยงามและสมดุล */
+        .toggle-label {
+            width: 50px;
+            height: 28px;
+            background-color: #4B5563; /* Gray-600 */
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .toggle-label::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 9999px;
+            background-color: white;
+            top: 50%;
+            left: 4px;
+            transform: translateY(-50%); /* จัดให้อยู่กึ่งกลางแนวตั้ง */
+            transition: transform 0.2s ease-in-out;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #22C55E; /* Green-500 */
+        }
+        .toggle-checkbox:checked + .toggle-label::before {
+            /* เมื่อถูกเลือก ให้ขยับทั้งแกน X และ Y เพื่อให้ยังอยู่ตรงกลาง */
+            transform: translateX(22px) translateY(-50%);
+        }
+          .loading-spinner {
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear-infinite;
+        }
+
+        .modal-body::-webkit-scrollbar { width: 8px; }
+        .modal-body::-webkit-scrollbar-track { background: var(--brand-dark); }
+        .modal-body::-webkit-scrollbar-thumb { background-color: #4B5563; border-radius: 10px; border: 2px solid var(--brand-dark); }
+
+
+        .chat-bubble { max-width: 80%; padding: 10px 15px; border-radius: 20px; margin-bottom: 10px; }
+        .user-bubble { background-color: #3B82F6; color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+        .model-bubble { background-color: #374151; color: #E5E7EB; align-self: flex-start; border-bottom-left-radius: 5px; }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- Main Container -->
+    <div id="app-container" class="container mx-auto p-4 max-w-4xl hidden">
+        <header class="text-center my-6">
+            <h1 class="text-4xl font-bold gradient-text">Admin LINE Chatbot-AI</h1>
+            <p class="text-gray-400 mt-2">จัดการระบบ LINE Chatbot-AI ของคุณ</p>
+        </header>
+
+        <div class="mb-8 border-b border-gray-700">
+            <nav class="flex space-x-4 md:space-x-8" aria-label="Tabs">
+                <button id="tab-users" class="tab-button tab-active py-4 px-1 border-b-2 font-medium text-sm md:text-lg">จัดการผู้ใช้-AI</button>
+                <button id="tab-keywords" class="tab-button tab-inactive py-4 px-1 border-b-2 font-medium text-sm md:text-lg">จัดการคีย์เวิร์ด</button>
+                <button id="tab-permissions" class="tab-button tab-inactive py-4 px-1 border-b-2 font-medium text-sm md:text-lg">จัดการสิทธิ์ VIP</button>
+               <button id="tab-chathistory" class="tab-button tab-inactive py-4 px-1 border-b-2 font-medium text-sm md:text-lg">ประวัติการแชท</button>
+            </nav>
+        </div>
+
+        <!-- Content Panels -->
+        <main>
+            <div id="panel-users">
+                <div class="sticky top-4 z-10 mb-6"><input id="userSearchInput" type="text" placeholder="ค้นหาด้วยชื่อ..." class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"></div>
+                <div id="userList" class="space-y-3"></div>
+            </div>
+            <div id="panel-keywords" class="hidden">
+                <div class="text-right mb-6"><button id="addKeywordBtn" class="bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg hover:bg-yellow-400 transition-colors">เพิ่มคีย์เวิร์ดใหม่</button></div>
+                <div id="keywordList" class="space-y-3"></div>
+            </div>
+            <div id="panel-permissions" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <input id="permissionSearchInput" type="text" placeholder="ค้นหาด้วยคีย์เวิร์ด หรือ UserId..." class="w-full md:w-1/2 p-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    <button id="addPermissionBtn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-500 transition-colors ml-4">เพิ่มสิทธิ์ VIP</button>
+                </div>
+                <div id="permissionList" class="space-y-3"></div>
+            </div>
+            <div id="panel-chathistory" class="hidden">
+                <div class="sticky top-4 z-10 mb-6">
+                    <input id="chatUserSearchInput" type="text" placeholder="ค้นหาด้วยชื่อ หรือ UserId..." class="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                </div>
+                <div id="chatUserList" class="space-y-3"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Keyword Editor Modal -->
+   <div id="keyword-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm hidden">
+        <div class="modal-content w-full max-w-2xl rounded-2xl shadow-lg max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-700">
+                <h2 id="modalTitle" class="text-2xl font-bold text-white"></h2>
+            </div>
+            <form id="keywordForm" class="p-6 space-y-4 overflow-y-auto modal-body">
+                <input type="hidden" id="keywordId">
+                <div><label for="keywordInput" class="block text-sm font-medium text-gray-300">คีย์เวิร์ด (คำสั่งหลัก)</label><input type="text" id="keywordInput" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-yellow-500 focus:border-yellow-500"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="replyImageInput" class="block text-sm font-medium text-gray-300">ตอบกลับด้วยรูปภาพ (URL)</label><input type="url" id="replyImageInput" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></div>
+                    <div><label for="replyRichmenuInput" class="block text-sm font-medium text-gray-300">เปลี่ยน Rich Menu (ID)</label><input type="text" id="replyRichmenuInput" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></div>
+                    <div><label for="replyPostbackInput" class="block text-sm font-medium text-gray-300">ข้อมูล Postback</label><input type="text" id="replyPostbackInput" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></div>
+                </div>
+                <div><label for="replyTextInput" class="block text-sm font-medium text-gray-300">ตอบกลับด้วยข้อความ (Text)</label><textarea id="replyTextInput" rows="3" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></textarea></div>
+                <div><label for="replyFlexInput" class="block text-sm font-medium text-gray-300">ตอบกลับด้วย Flex Message (JSON)</label><textarea id="replyFlexInput" rows="5" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></textarea></div>
+                <div><label for="replyTemplateInput" class="block text-sm font-medium text-gray-300">ตอบกลับด้วย Template Message (JSON)</label><textarea id="replyTemplateInput" rows="5" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></textarea></div>
+                <div><label for="replyPromptInput" class="block text-sm font-medium text-gray-300">คำสั่งสำหรับ AI (Prompt)</label><textarea id="replyPromptInput" rows="3" class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></textarea></div>
+                <div class="flex items-center justify-between pt-2">
+                     <label for="requireVipInput" class="block text-sm font-medium text-gray-300">จำกัดสิทธิ์เฉพาะ VIP</label>
+                     <div class="relative inline-block w-10 align-middle select-none">
+                        <input type="checkbox" id="requireVipInput" class="toggle-checkbox absolute hidden">
+                        <label for="requireVipInput" class="toggle-label block"></label>
+                    </div>
+                </div>
+            </form>
+            <div class="p-6 border-t border-gray-700 mt-auto bg-gray-800 rounded-b-2xl">
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancelKeywordBtn" class="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">ยกเลิก</button>
+                    <button type="submit" form="keywordForm" class="px-4 py-2 bg-yellow-500 text-gray-900 font-bold rounded-lg hover:bg-yellow-400">บันทึก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Permission Editor Modal -->
+    <div id="permission-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm hidden">
+        <div class="modal-content w-full max-w-lg rounded-2xl shadow-lg">
+            <form id="permissionForm" class="p-8 space-y-4">
+                <h2 id="permissionModalTitle" class="text-2xl font-bold text-white mb-4"></h2>
+                <input type="hidden" id="permissionId">
+                <div><label for="permissionUserIdInput" class="block text-sm font-medium text-gray-300">User ID</label><input type="text" id="permissionUserIdInput" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></div>
+                <div><label for="permissionKeywordInput" class="block text-sm font-medium text-gray-300">คีย์เวิร์ด</label><input type="text" id="permissionKeywordInput" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white"></div>
+                <div class="flex items-center justify-between pt-2">
+                     <label for="permissionVipInput" class="block text-sm font-medium text-gray-300">สถานะ VIP</label>
+                     <div class="relative inline-block w-10 align-middle select-none">
+                        <input type="checkbox" id="permissionVipInput" class="toggle-checkbox absolute hidden">
+                        <label for="permissionVipInput" class="toggle-label block"></label>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" id="cancelPermissionBtn" class="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500">ยกเลิก</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-500">บันทึกสิทธิ์</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+     <div id="chathistory-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm hidden">
+        <div class="modal-content w-full max-w-lg rounded-2xl shadow-lg max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h2 id="chatHistoryModalTitle" class="text-xl font-bold text-white"></h2>
+                <button id="closeChatHistoryBtn" class="p-2 text-2xl text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div id="chatHistoryModalBody" class="p-6 overflow-y-auto modal-body flex flex-col space-y-2">
+                <!-- Chat bubbles will be injected here -->
+            </div>
+        </div>
+    </div>
+
+     <div id="action-loading-overlay" class="fixed inset-0 z-50 flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm hidden">
+        <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="loading-spinner mb-4">
+        <p id="action-loading-text" class="text-lg font-semibold text-white"></p>
+    </div>
+
+    <!-- Initial Screen -->
+    <div id="initial-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900">
+        <div id="loadingIndicator" class="text-center">
+            <div class="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p class="mt-4 text-lg">กำลังตรวจสอบสิทธิ์...</p>
+        </div>
+        <div id="accessDenied" class="text-center hidden">
+            <h2 class="text-3xl font-bold text-red-500">Access Denied</h2>
+            <p class="mt-2 text-gray-400">คุณไม่มีสิทธิ์เข้าใช้งานหน้านี้</p>
+        </div>
+    </div>
+
+    <script>
+        // --- 🚨 Configuration 🚨 ---
+        const LIFF_ID = "2008089908-DWOE4J2d"; // <-- 🚨 ใส่ LIFF ID ของคุณ
+        const ADMIN_API_URL = "https://qpsljqpwjxlvvvnycwxy.supabase.co/functions/v1/admin-api"; // <-- 🚨 ใส่ URL ของ Function 'admin-api'
+        const botbasicId = "@656lqtnp"
+      
+      // --- DOM Elements ---
+        const tabUsers = document.getElementById('tab-users');
+        const tabKeywords = document.getElementById('tab-keywords');
+        const tabPermissions = document.getElementById('tab-permissions');
+        const tabChatHistory = document.getElementById('tab-chathistory');
+        const panelUsers = document.getElementById('panel-users');
+        const panelKeywords = document.getElementById('panel-keywords');
+        const panelPermissions = document.getElementById('panel-permissions');
+        const userSearchInput = document.getElementById('userSearchInput');
+        const userList = document.getElementById('userList');
+        const keywordList = document.getElementById('keywordList');
+        const keywordModal = document.getElementById('keyword-modal');
+        const keywordForm = document.getElementById('keywordForm');
+        const permissionList = document.getElementById('permissionList');
+        const permissionModal = document.getElementById('permission-modal');
+        const permissionForm = document.getElementById('permissionForm');
+        const permissionSearchInput = document.getElementById('permissionSearchInput');
+        const actionLoadingOverlay = document.getElementById('action-loading-overlay');
+        const actionLoadingText = document.getElementById('action-loading-text');
+        const panelChatHistory = document.getElementById('panel-chathistory');
+        const chatUserList = document.getElementById('chatUserList');
+        const chatHistoryModal = document.getElementById('chathistory-modal');
+        const chatUserSearchInput = document.getElementById('chatUserSearchInput');
+
+        function showLoading(text = 'กำลังดำเนินการ...') {
+            actionLoadingText.textContent = text;
+            actionLoadingOverlay.classList.remove('hidden');
+            actionLoadingOverlay.classList.add('flex');
+        }
+
+        function hideLoading() {
+            actionLoadingOverlay.classList.add('hidden');
+            actionLoadingOverlay.classList.remove('flex');
+        }
+
+        // --- Helper function for authenticated API calls ---
+        async function apiFetch(endpoint, options = {}) {
+            const accessToken = liff.getAccessToken();
+            if (!accessToken) throw new Error("Not logged in");
+            const defaultOptions = {
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` }
+            };
+            const response = await fetch(`${ADMIN_API_URL}${endpoint}`, { ...defaultOptions, ...options });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+            if (response.status === 204 || response.headers.get('content-length') === '0') return null;
+            return response.json();
+        }
+
+        // --- Main App Initialization ---
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true  });
+                if (!liff.isLoggedIn()) {
+                    liff.login({ redirectUri: window.location.href });
+                    return;
+                }
+                   liff.getFriendship().then((data) => {
+                        if (!data.friendFlag) {
+                            Swal.fire({ title: 'เดี๋ยวก่อน!', text: 'คุณยังไม่ได้เป็นเพื่อนกับเรา', icon: 'error', background: '#1F2937', color: '#F9FAFB' }).then(() => {
+                                window.location = 'https://line.me/R/ti/p/'+ botbasicId
+                            })
+                        }
+                    });
+                document.getElementById('initial-screen').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                await loadUsers();
+                await loadKeywords();
+                await loadPermissions();
+                await loadChatUsers();
+            } catch (err) {
+                console.error("Initialization or Access Error:", err);
+                document.getElementById('loadingIndicator').classList.add('hidden');
+                document.getElementById('accessDenied').classList.remove('hidden');
+            }
+        });
+        
+        // --- Tab Navigation ---
+        tabUsers.addEventListener('click', () => switchTab('users'));
+        tabKeywords.addEventListener('click', () => switchTab('keywords'));
+        tabPermissions.addEventListener('click', () => switchTab('permissions'));
+        tabChatHistory.addEventListener('click', () => switchTab('chathistory'));
+
+        function switchTab(tabName) {
+            const tabs = [tabUsers, tabKeywords, tabPermissions, tabChatHistory];
+            const panels = [panelUsers, panelKeywords, panelPermissions, panelChatHistory];
+            
+            tabs.forEach(tab => { tab.classList.remove('tab-active'); tab.classList.add('tab-inactive'); });
+            panels.forEach(panel => panel.classList.add('hidden'));
+
+            if (tabName === 'users') {
+                tabUsers.classList.add('tab-active'); tabUsers.classList.remove('tab-inactive');
+                panelUsers.classList.remove('hidden');
+            } else if (tabName === 'keywords') {
+                tabKeywords.classList.add('tab-active'); tabKeywords.classList.remove('tab-inactive');
+                panelKeywords.classList.remove('hidden');
+            } else if (tabName === 'permissions') {
+                tabPermissions.classList.add('tab-active'); tabPermissions.classList.remove('tab-inactive');
+                panelPermissions.classList.remove('hidden');
+            } else if (tabName === 'chathistory') {
+                tabChatHistory.classList.add('tab-active'); tabChatHistory.classList.remove('tab-inactive');
+                panelChatHistory.classList.remove('hidden');
+            }
+        }
+        
+        // --- User Management ---
+        let userSearchTimeout;
+        userSearchInput.addEventListener('keyup', () => {
+            clearTimeout(userSearchTimeout);
+            userSearchTimeout = setTimeout(() => loadUsers(userSearchInput.value), 500);
+        });
+
+        async function loadUsers(searchTerm = '') {
+            userList.innerHTML = `<p class="text-center text-gray-400">กำลังโหลด...</p>`;
+            try {
+                const users = await apiFetch(`/users?search=${encodeURIComponent(searchTerm)}`);
+                userList.innerHTML = '';
+                if (users.length === 0) {
+                    userList.innerHTML = `<p class="text-center text-gray-500">ไม่พบผู้ใช้</p>`;
+                } else {
+                    users.forEach(user => {
+                        const userCard = document.createElement('div');
+                        userCard.className = 'flex items-center justify-between bg-gray-800 p-4 rounded-lg animate-fadeIn';
+                        const toggleId = `toggle-ai-${user.userId}`;
+                        userCard.innerHTML = `
+                            <div>
+                                <p class="font-bold text-white">${user.displayName || '-'}</p>
+                                <p class="text-xs text-gray-400">${user.userId}</p>
+                            </div>
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                <input type="checkbox" id="${toggleId}" data-userid="${user.userId}" class="toggle-checkbox absolute hidden" ${user.ai_enabled ? 'checked' : ''}>
+                                <label for="${toggleId}" class="toggle-label block"></label>
+                            </div>
+                        `;
+                        userList.appendChild(userCard);
+                    });
+                }
+            } catch (error) {
+                // userList.innerHTML = `<p class="text-center text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+                console.error("เกิดข้อผิดพลาด:", error.message);
+                userList.innerHTML = `<div  class="text-center "><h2 class="text-3xl font-bold text-red-500">ขอโทษด้วย</h2><p class="mt-2 text-gray-400">คุณไม่มีสิทธิ์เข้าใช้งานหน้านี้</p>
+        </div>`;
+       
+            }
+        }
+        
+        userList.addEventListener('change', async (e) => {
+            if (e.target.classList.contains('toggle-checkbox')) {
+                const userId = e.target.dataset.userid;
+                const ai_enabled = e.target.checked;
+                showLoading('กำลังอัปเดต...');
+                try {
+                    await apiFetch('/update-user-ai', {
+                        method: 'POST',
+                        body: JSON.stringify({ userId, ai_enabled })
+                    });
+                    Toastify({ text: `อัปเดตสถานะ AI สำเร็จ`, style: { background: "linear-gradient(to right, #00b09b, #96c93d)"} }).showToast();
+                } catch (error) {
+                    Toastify({ text: `เกิดข้อผิดพลาด: ${error.message}`, style: { background: "red"} }).showToast();
+                    e.target.checked = !ai_enabled;
+                } finally {
+                    hideLoading();
+                }
+            }
+        });
+
+        // --- Keyword Management ---
+        document.getElementById('addKeywordBtn').addEventListener('click', () => openKeywordModal());
+        document.getElementById('cancelKeywordBtn').addEventListener('click', () => closeKeywordModal());
+
+        async function loadKeywords() {
+             keywordList.innerHTML = `<p class="text-center text-gray-400">กำลังโหลดคีย์เวิร์ด...</p>`;
+             try {
+                const keywords = await apiFetch('/keywords');
+                keywordList.innerHTML = '';
+                 keywords.forEach(kw => {
+                     const keywordCard = document.createElement('div');
+                     keywordCard.className = 'flex items-center justify-between bg-gray-800 p-4 rounded-lg animate-fadeIn';
+                     
+                     
+                     const safeKeywordData = JSON.stringify(kw).replace(/'/g, '&apos;');
+
+                     keywordCard.innerHTML = `
+                        <div>
+                            <p class="font-bold text-yellow-400">${kw.keyword}</p>
+                            <p class="text-sm text-gray-300 truncate">${kw.reply_text || kw.reply_prompt || 'Flex/Image/RichMenu/Template'}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            ${kw.require_vip ? '<span class="text-xs font-bold text-yellow-400 bg-yellow-900 px-2 py-1 rounded-full">VIP</span>' : ''}
+                            <button class="edit-btn p-2 hover:bg-gray-700 rounded-full" data-keyword='${safeKeywordData}'>✏️</button>
+                            <button class="delete-btn p-2 hover:bg-gray-700 rounded-full" data-id="${kw.id}">🗑️</button>
+                        </div>
+                     `;
+                     keywordList.appendChild(keywordCard);
+                 });
+             } catch(error) {
+                 keywordList.innerHTML = `<p class="text-center text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+             }
+        }
+        
+        keywordList.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (editBtn) openKeywordModal(JSON.parse(editBtn.dataset.keyword));
+            if (deleteBtn) deleteKeyword(deleteBtn.dataset.id);
+        });
+
+       function openKeywordModal(keyword = null) {
+            keywordForm.reset();
+            if (keyword) {
+                document.getElementById('modalTitle').textContent = 'แก้ไขคีย์เวิร์ด';
+                document.getElementById('keywordId').value = keyword.id;
+                document.getElementById('keywordInput').value = keyword.keyword || '';
+                document.getElementById('replyTextInput').value = keyword.reply_text || '';
+                document.getElementById('replyFlexInput').value = keyword.reply_flex || '';
+                document.getElementById('replyImageInput').value = keyword.reply_image || '';
+                document.getElementById('replyRichmenuInput').value = keyword.reply_richmenu || '';
+                document.getElementById('replyPromptInput').value = keyword.reply_prompt || '';
+                document.getElementById('replyTemplateInput').value = keyword.reply_template || '';
+                document.getElementById('replyPostbackInput').value = keyword.reply_postback || '';
+                document.getElementById('requireVipInput').checked = keyword.require_vip || false;
+            } else {
+                document.getElementById('modalTitle').textContent = 'เพิ่มคีย์เวิร์ดใหม่';
+                document.getElementById('keywordId').value = '';
+            }
+            keywordModal.classList.remove('hidden');
+        }
+
+        function closeKeywordModal() {
+            keywordModal.classList.add('hidden');
+        }
+
+       keywordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('keywordId').value;
+            const keywordData = {
+                id: id || undefined,
+                keyword: document.getElementById('keywordInput').value.trim(),
+                reply_text: document.getElementById('replyTextInput').value.trim() || null,
+                reply_flex: document.getElementById('replyFlexInput').value.trim() || null,
+                reply_image: document.getElementById('replyImageInput').value.trim() || null,
+                reply_richmenu: document.getElementById('replyRichmenuInput').value.trim() || null,
+                reply_prompt: document.getElementById('replyPromptInput').value.trim() || null,
+                reply_template: document.getElementById('replyTemplateInput').value.trim() || null,
+                reply_postback: document.getElementById('replyPostbackInput').value.trim() || null,
+                require_vip: document.getElementById('requireVipInput').checked
+            };
+            
+            showLoading(id ? 'กำลังแก้ไข...' : 'กำลังเพิ่ม...');
+            try {
+                const method = id ? 'PUT' : 'POST';
+                await apiFetch('/keyword', { method, body: JSON.stringify(keywordData) });
+                Toastify({ text: `บันทึกคีย์เวิร์ดสำเร็จ` }).showToast();
+                closeKeywordModal();
+                await loadKeywords();
+            } catch (error) {
+                Swal.fire({ title: 'ผิดพลาด!', text: error.message, icon: 'error', background: '#1F2937', color: '#F9FAFB' });
+            } finally {
+                hideLoading();
+            }
+        });
+
+        function deleteKeyword(id) {
+             Swal.fire({
+                title: 'ยืนยันการลบ?', text: "คุณจะไม่สามารถกู้คืนคีย์เวิร์ดนี้ได้!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!', cancelButtonText: 'ยกเลิก',
+                background: '#1F2937', color: '#F9FAFB'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading('กำลังลบคีย์เวิร์ด...');
+                    try {
+                        await apiFetch('/keyword', { method: 'DELETE', body: JSON.stringify({ id }) });
+                        Swal.fire({ title: 'ลบแล้ว!', text: 'คีย์เวิร์ดถูกลบเรียบร้อย', icon: 'success', background: '#1F2937', color: '#F9FAFB' });
+                        loadKeywords();
+                    } catch (error) {
+                        Swal.fire({ title: 'ผิดพลาด!', text: error.message, icon: 'error', background: '#1F2937', color: '#F9FAFB' });
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            });
+        }
+
+        // --- VIP Permission Management ---
+        document.getElementById('addPermissionBtn').addEventListener('click', () => openPermissionModal());
+        document.getElementById('cancelPermissionBtn').addEventListener('click', () => closePermissionModal());
+        
+        let permissionSearchTimeout;
+        permissionSearchInput.addEventListener('keyup', () => {
+            clearTimeout(permissionSearchTimeout);
+            permissionSearchTimeout = setTimeout(() => loadPermissions(permissionSearchInput.value), 500);
+        });
+
+        async function loadPermissions(searchTerm = '') {
+            permissionList.innerHTML = `<p class="text-center text-gray-400">กำลังโหลดสิทธิ์ VIP...</p>`;
+            try {
+                const permissions = await apiFetch(`/permissions?search=${encodeURIComponent(searchTerm)}`);
+                permissionList.innerHTML = '';
+                if (permissions.length === 0) {
+                    permissionList.innerHTML = `<p class="text-center text-gray-500">ไม่พบข้อมูลสิทธิ์</p>`;
+                } else {
+                    permissions.forEach(perm => {
+                        const permCard = document.createElement('div');
+                        permCard.className = 'flex items-center justify-between bg-gray-800 p-4 rounded-lg animate-fadeIn';
+                        permCard.innerHTML = `
+                            <div>
+                                <p class="font-bold text-green-400">${perm.keyword}</p>
+                                <p class="text-xs text-gray-400">${perm.userId}</p>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <span class="text-sm font-medium ${perm.vip ? 'text-green-400' : 'text-gray-500'}">${perm.vip ? 'VIP Active' : 'Inactive'}</span>
+                                <button class="edit-perm-btn p-2 hover:bg-gray-700 rounded-full" data-permission='${JSON.stringify(perm)}'>✏️</button>
+                                <button class="delete-perm-btn p-2 hover:bg-gray-700 rounded-full" data-id="${perm.id}">🗑️</button>
+                            </div>
+                        `;
+                        permissionList.appendChild(permCard);
+                    });
+                }
+            } catch (error) {
+                // permissionList.innerHTML = `<p class="text-center text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+                 console.error("เกิดข้อผิดพลาด:", error.message);
+                permissionList.innerHTML = `<div  class="text-center "><h2 class="text-3xl font-bold text-red-500">ขอโทษด้วย</h2><p class="mt-2 text-gray-400">คุณไม่มีสิทธิ์เข้าใช้งานหน้านี้</p>
+        </div>`;
+       
+            }
+        }
+
+        permissionList.addEventListener('click', (e) => {
+            const editBtn = e.target.closest('.edit-perm-btn');
+            const deleteBtn = e.target.closest('.delete-perm-btn');
+            if (editBtn) openPermissionModal(JSON.parse(editBtn.dataset.permission));
+            if (deleteBtn) deletePermission(deleteBtn.dataset.id);
+        });
+
+        function openPermissionModal(perm = null) {
+            permissionForm.reset();
+            if (perm) {
+                document.getElementById('permissionModalTitle').textContent = 'แก้ไขสิทธิ์ VIP';
+                document.getElementById('permissionId').value = perm.id;
+                document.getElementById('permissionUserIdInput').value = perm.userId || '';
+                document.getElementById('permissionKeywordInput').value = perm.keyword || '';
+                document.getElementById('permissionVipInput').checked = perm.vip || false;
+            } else {
+                document.getElementById('permissionModalTitle').textContent = 'เพิ่มสิทธิ์ VIP ใหม่';
+                document.getElementById('permissionId').value = '';
+            }
+            permissionModal.classList.remove('hidden');
+        }
+
+        function closePermissionModal() {
+            permissionModal.classList.add('hidden');
+        }
+
+        permissionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('permissionId').value;
+            const permissionData = {
+                id: id || undefined,
+                userId: document.getElementById('permissionUserIdInput').value.trim(),
+                keyword: document.getElementById('permissionKeywordInput').value.trim(),
+                vip: document.getElementById('permissionVipInput').checked
+            };
+            showLoading('กำลังบันทึกสิทธิ์...');
+            try {
+                const method = id ? 'PUT' : 'POST';
+                await apiFetch('/permission', { method, body: JSON.stringify(permissionData) });
+                Toastify({ text: `บันทึกสิทธิ์ VIP สำเร็จ`, style: { background: "linear-gradient(to right, #16A34A, #22C55E)"} }).showToast();
+                closePermissionModal();
+                loadPermissions();
+            } catch (error) {
+                Swal.fire({ title: 'ผิดพลาด!', text: error.message, icon: 'error', background: '#1F2937', color: '#F9FAFB' });
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        function deletePermission(id) {
+            Swal.fire({
+                title: 'ยืนยันการลบสิทธิ์?', text: "คุณแน่ใจหรือไม่ที่จะลบสิทธิ์นี้?", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!', cancelButtonText: 'ยกเลิก',
+                background: '#1F2937', color: '#F9FAFB'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading('กำลังลบสิทธิ์...');
+                    try {
+                        await apiFetch('/permission', { method: 'DELETE', body: JSON.stringify({ id }) });
+                        Swal.fire({ title: 'ลบแล้ว!', text: 'สิทธิ์ VIP ถูกลบเรียบร้อย', icon: 'success', background: '#1F2937', color: '#F9FAFB' });
+                        loadPermissions();
+                    } catch (error) {
+                        Swal.fire({ title: 'ผิดพลาด!', text: error.message, icon: 'error', background: '#1F2937', color: '#F9FAFB' });
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            })
+        }
+
+       let chatUserSearchTimeout;
+        chatUserSearchInput.addEventListener('keyup', () => {
+            clearTimeout(chatUserSearchTimeout);
+            chatUserSearchTimeout = setTimeout(() => loadChatUsers(chatUserSearchInput.value), 500);
+        });
+
+        async function loadChatUsers(searchTerm = '') {
+            chatUserList.innerHTML = `<p class="text-center text-gray-400">กำลังโหลดรายชื่อ...</p>`;
+            try {
+                const users = await apiFetch(`/chatusers?search=${encodeURIComponent(searchTerm)}`);
+                chatUserList.innerHTML = '';
+                if (users.length === 0) {
+                    chatUserList.innerHTML = `<p class="text-center text-gray-500">ไม่พบผู้ใช้ที่มีประวัติการสนทนา</p>`;
+                } else {
+                    users.forEach(user => {
+                        const userCard = document.createElement('div');
+                        userCard.className = 'flex items-center justify-between bg-gray-800 p-4 rounded-lg animate-fadeIn';
+                        userCard.innerHTML = `
+                            <div>
+                                <p class="font-bold text-white">${user.displayName || 'Unknown User'}</p>
+                                <p class="text-xs text-gray-400">${user.userId}</p>
+                            </div>
+                            <button class="view-chat-btn bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-500 text-sm" data-userid="${user.userId}" data-displayname="${user.displayName || 'Unknown User'}">ดูประวัติ</button>
+                        `;
+                        chatUserList.appendChild(userCard);
+                    });
+                }
+            } catch (error) {
+                chatUserList.innerHTML = `<p class="text-center text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+            }
+        }
+
+        chatUserList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('view-chat-btn')) {
+                const userId = e.target.dataset.userid;
+                const displayName = e.target.dataset.displayname;
+                showChatHistory(userId, displayName);
+            }
+        });
+
+        async function showChatHistory(userId, displayName) {
+            const modalTitle = document.getElementById('chatHistoryModalTitle');
+            const modalBody = document.getElementById('chatHistoryModalBody');
+            
+            modalTitle.textContent = `ประวัติการสนทนา: ${displayName}`;
+            modalBody.innerHTML = `<p class="text-center text-gray-400">กำลังโหลดประวัติ...</p>`;
+            chatHistoryModal.classList.remove('hidden');
+
+            try {
+                const history = await apiFetch(`/chathistory?userId=${userId}`);
+                modalBody.innerHTML = '';
+                if (history.length === 0) {
+                    modalBody.innerHTML = `<p class="text-center text-gray-500">ไม่พบประวัติการสนทนา</p>`;
+                } else {
+                    history.forEach(msg => {
+                        const bubble = document.createElement('div');
+                        bubble.className = `chat-bubble ${msg.role === 'user' ? 'user-bubble' : 'model-bubble'}`;
+                        bubble.textContent = msg.message;
+                        modalBody.appendChild(bubble);
+                    });
+                    // Scroll to the bottom
+                    modalBody.scrollTop = modalBody.scrollHeight;
+                }
+            } catch (error) {
+                modalBody.innerHTML = `<p class="text-center text-red-500">เกิดข้อผิดพลาด: ${error.message}</p>`;
+            }
+        }
+        
+        document.getElementById('closeChatHistoryBtn').addEventListener('click', () => {
+            chatHistoryModal.classList.add('hidden');
+        });
+        chatHistoryModal.addEventListener('click', (e) => {
+            if (e.target === chatHistoryModal) {
+                chatHistoryModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
