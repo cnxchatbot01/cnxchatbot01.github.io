@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Message</title>
+    <meta name="description" content="shareTargetPicker for LIFF App" />
+    <meta name="author" content="T42" />
+    <meta property="og:title" content="shareTargetPicker-T42-thailand" />
+    <meta property="og:description" content="shareTargetPicker for LIFF App" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://wusxtldmqsleacfcibum.supabase.co/storage/v1/object/public/user-images/U48c16d105f55ec3ad6a6b52f72142abd/1758902020164.jpeg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap');
+
+    body { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family: 'Prompt', sans-serif; background-color: #f1f5f9; }
+    #status { font-size: 1.2rem; margin-bottom: 20px; text-align:center; }
+    #sendBtn { display:none; padding:10px 20px; background:#06C755; color:#fff; border-radius:10px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div id="status">กำลังโหลด...</div>
+  <button id="sendBtn">📤 กดเพื่อส่งข้อความ</button>
+
+  <script>
+    const LIFF_ID = "2008089908-dyrB31Ll"; 
+    const OA_FRIEND_LINK = "@656lqtnp";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get("img") || "ไม่มีค่า img";
+
+    async function checkFriendship() {
+      try {
+        const data = await liff.getFriendship();
+        if (!data.friendFlag) {
+          await Swal.fire({
+            title: "เดี๋ยวก่อน!",
+            text: "คุณยังไม่ได้เป็นเพื่อนกับเรา",
+            icon: "warning",
+            confirmButtonText: "เพิ่มเพื่อนเลย"
+          });
+          window.location.href = "https://line.me/R/ti/p/" + OA_FRIEND_LINK;
+          return false;
+        }
+        return true;
+      } catch (err) {
+        console.warn("⚠️ getFriendship ล้มเหลว (อาจเปิดจาก browser):", err);
+        return true; 
+      }
+    }
+
+    async function sendFlex(eventId) {
+      const flexMessage = [{
+  "type": "image",
+  "originalContentUrl": eventId,
+  "previewImageUrl": eventId
+},{
+        "type": "flex",
+        "altText": "ป้ายยาเพื่อน",
+        "contents": {
+  "type": "bubble",
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "แนะนำ",
+        "contents": [
+          {
+            "type": "span",
+            "text": "แนะนำโดย: "
+          },
+          {
+            "type": "span",
+            "text": liff.getDecodedIDToken().name,
+            "weight": "bold",
+            "color": "#ce915e"
+          }
+        ],
+           "wrap": true
+      },
+      {
+        "type": "button",
+        "action": {
+          "type": "uri",
+          "label": "เพิ่มเพื่อนเลย",
+          "uri": "https://line.me/R/ti/p/" + OA_FRIEND_LINK
+        },
+        "height": "sm",
+        "style": "primary",
+        "margin": "md"
+      },
+      {
+        "type": "button",
+        "action": {
+          "type": "uri",
+          "label": "แชร์ให้เพื่อน",
+          "uri": `https://liff.line.me/${LIFF_ID}?img=${encodeURIComponent(eventId)}`
+        },
+        "margin": "md"
+      }
+    ]
+  },
+  "size": "hecto"
+}
+      }];
+
+      try {
+        const res = await liff.shareTargetPicker(flexMessage);
+        if (res) {
+          document.getElementById("status").innerText = "✅ ส่งข้อความเรียบร้อย!";
+          if (liff.isInClient()) setTimeout(() => liff.closeWindow(), 1500);
+        } else {
+          document.getElementById("status").innerText = "❌ ผู้ใช้กดยกเลิก";
+          setTimeout(() => liff.closeWindow(), 1500);
+        }
+      } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการส่ง:", error);
+        document.getElementById("status").innerText = "❌ ไม่สามารถแชร์ได้: " + error.message;
+      }
+    }
+
+    async function main() {
+      try {
+        await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+
+        const isFriend = await checkFriendship();
+        if (!isFriend) return;
+
+        if (liff.isInClient()) {
+          
+          sendFlex(eventId);
+          return;
+        }
+
+       
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          document.getElementById("status").innerText = "⚠️ คุณเปิดหน้านี้ใน Browser มือถือ\nกรุณาเปิดใน LINE App";
+          document.getElementById("sendBtn").innerText = "🔗 เปิดใน LINE App";
+          document.getElementById("sendBtn").style.display = "block";
+          document.getElementById("sendBtn").onclick = () => {
+            
+            window.location.href = `https://liff.line.me/${LIFF_ID}?img=${encodeURIComponent(eventId)}`;
+          };
+        } else {
+       
+          document.getElementById("status").innerText = "คุณอยู่บน Desktop สามารถกดเพื่อแชร์ได้";
+          document.getElementById("sendBtn").innerText = "📤 กดเพื่อแชร์";
+          document.getElementById("sendBtn").style.display = "block";
+          document.getElementById("sendBtn").onclick = () => sendFlex(eventId);
+        }
+
+      } catch (err) {
+        console.error("LIFF init error:", err);
+        document.getElementById("status").innerText = "❌ เกิดข้อผิดพลาด: " + err.message;
+      }
+    }
+
+    main();
+
+     const message = "ไม่อนุญาตให้คลิกขวาครับ";
+
+    document.addEventListener("contextmenu", function (e) {
+        Swal.fire('Oh!', message, 'error');
+    
+        e.preventDefault();
+    });
+
+    document.addEventListener("mousedown", function (e) {
+        if (e.button === 2 || e.button === 1) {
+        Swal.fire('Oh!', message, 'error');
+        
+        e.preventDefault();
+        }
+    });
+  </script>
+</body>
+</html>
