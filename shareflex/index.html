@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flex Message Share - MINI App</title>
+  <meta name="description" content="Flex Message Admin for LIFF" />
+  <meta name="author" content="ADMIN" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ 
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap');
+    body { font-family: 'Prompt', sans-serif; background-color: #272838; color: #F0F0F0; }
+    .gradient-bg { background: linear-gradient(135deg, #272838 0%, #5d536b 100%); }
+    .btn-primary { background: linear-gradient(135deg, #347fc4 0%, #5d536b 100%); transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(52, 127, 196, 0.2); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52, 127, 196, 0.3); }
+    .btn-danger { background: linear-gradient(135deg, #c43434 0%, #6b5353 100%); transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(196, 52, 52, 0.2); }
+    .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196, 52, 52, 0.3); }
+    
+    .btn-share { background: linear-gradient(135deg, #10b981 0%, #059669 100%); transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); }
+    .btn-share:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3); }
+    
+    .btn-copy { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2); }
+    .btn-copy:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3); }
+
+    .swal2-popup { background-color: #272838 !important; color: #F0F0F0 !important; border: 1px solid #7d6b91; border-radius: 1rem !important; }
+    .swal2-title { color: #989fce !important; }
+    .swal2-html-container { color: #F0F0F0 !important; margin: 0 !important; text-align: left !important; }
+    
+    .swal-form-input { 
+      box-sizing: border-box;
+      width: 100%;
+      background-color: #272838 !important; 
+      border: 1px solid #7d6b91 !important;
+      color: #F0F0F0 !important;
+      border-radius: 0.5rem !important;
+      padding: 0.75rem;
+    }
+    .swal-form-input:focus { 
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(152, 159, 206, 0.5) !important; 
+        border-color: #989fce !important;
+    }
+
+    .swal2-container { align-items: center !important; }
+
+    button, a, label, [role=button] { -webkit-tap-highlight-color: transparent; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    #loading-overlay { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background-color: rgba(39, 40, 56, 0.8); backdrop-filter: blur(5px); 
+      display: none; justify-content: center; align-items: center; 
+      z-index: 9999; flex-direction: column; gap: 1rem; 
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen">
+
+  <div id="loading-overlay">
+    <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="w-16 h-16">
+    <p id="loading-text" class="text-lg text-[#989fce]">กำลังโหลด...</p>
+  </div>
+
+  <div class="container mx-auto p-4 md:p-8">
+    <header class="text-center mb-8 fade-in">
+      <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#989fce] to-[#347fc4]">
+        Message Share for MINI App
+      </h1>
+      <p class="text-lg text-gray-300">จัดการและแชร์ Message</p>
+    </header>
+
+    <div class="mb-4 w-full max-w-lg mx-auto fade-in" style="animation-delay: 0.1s;">
+        <input type="text" id="search-input" class="swal-form-input" placeholder="🔍 ค้นหาด้วยชื่อเรื่อง...">
+    </div>
+
+    <div class="mb-8 flex justify-center gap-4 fade-in" style="animation-delay: 0.2s;">
+      <button id="add-new-flex-btn" class="btn-primary font-bold py-3 px-8 rounded-lg text-lg">
+        + เพิ่ม Message ใหม่
+      </button>
+    </div>
+
+    <main id="flex-list" class="space-y-4">
+      
+    </main>
+  </div>
+
+  <script type="module">
+    const LIFF_ID = "2008089908-J3n6oQbE";
+    const SUPABASE_URL = "https://wusxtldmqsleacfcibum.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1c3h0bGRtcXNsZWFjZmNpYnVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyOTE5NTEsImV4cCI6MjA2OTg2Nzk1MX0.qiChtXkvDonyePfsP3MSpsizcm1708RFazGTZqtUZ8I";
+
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingText = document.getElementById('loading-text');
+    const flexListContainer = document.getElementById('flex-list');
+    const addNewFlexBtn = document.getElementById('add-new-flex-btn');
+    const searchInput = document.getElementById('search-input');
+    let searchDebounce;
+
+    const showLoading = (text = 'กำลังโหลด...') => {
+        loadingText.textContent = text;
+        loadingOverlay.style.display = 'flex';
+    };
+    const hideLoading = () => {
+        loadingOverlay.style.display = 'none';
+    };
+    const showToast = (icon, title) => {
+        Swal.fire({
+            icon: icon, title: title, toast: true, position: 'top-end',
+            showConfirmButton: false, timer: 3000, timerProgressBar: true,
+            customClass: { popup: '!bg-[#5d536b] !text-white' }
+        });
+    };
+
+    function renderFlexItem(item) {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'message-item bg-[#5d536b]/50 border border-white/10 rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center fade-in';
+        itemEl.innerHTML = `
+            <div class="flex-grow text-center md:text-left">
+                <h3 class="font-bold text-lg text-[#989fce]">${item.title}</h3>
+                <p class="text-sm text-gray-300 capitalize">${item.category || 'Message'}</p>
+            </div>
+            <div class="flex gap-2 flex-wrap justify-center flex-shrink-0">
+                <button class="copy-link-btn btn-copy p-2 rounded-lg text-sm font-semibold">คัดลอกลิงก์</button>
+                <button class="share-btn btn-share p-2 rounded-lg text-sm font-semibold">แชร์</button>
+                <button class="edit-btn btn-primary p-2 rounded-lg text-sm font-semibold">แก้ไข</button>
+                <button class="delete-btn btn-danger p-2 rounded-lg text-sm font-semibold">ลบ</button>
+            </div>
+        `;
+
+        itemEl.querySelector('.copy-link-btn').addEventListener('click', () => handleCopyLink(item.share_uuid));
+        itemEl.querySelector('.share-btn').addEventListener('click', () => handleShare(item.flex_json, false));
+        itemEl.querySelector('.edit-btn').addEventListener('click', () => openFormModal(item));
+        itemEl.querySelector('.delete-btn').addEventListener('click', () => handleDelete(item.id, item.title));
+        
+        return itemEl;
+    }
+    
+    function renderList(items, isSearchResult = false) {
+        flexListContainer.innerHTML = '';
+        if (!items || items.length === 0) {
+            const message = isSearchResult ? `ไม่พบรายการที่ตรงกับ "${searchInput.value}"` : "ยังไม่มี Message ที่บันทึกไว้";
+            flexListContainer.innerHTML = `<p class="text-center text-gray-400 p-4">${message}</p>`;
+        } else {
+            items.forEach(item => {
+                flexListContainer.appendChild(renderFlexItem(item));
+            });
+        }
+    }
+
+    async function loadInitialMessages() {
+        showLoading('กำลังโหลดรายการล่าสุด...');
+        try {
+            const { data, error } = await supabaseClient
+                .from('shareflex')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(20);
+            
+            if (error) throw error;
+            renderList(data, false);
+        } catch (err) {
+            console.error("Failed to load initial messages:", err);
+            throw err;
+        } finally {
+            hideLoading();
+        }
+    }
+    
+    async function searchMessages() {
+        const searchTerm = searchInput.value.trim();
+        
+        if (!searchTerm) {
+            await loadInitialMessages();
+            return;
+        }
+        
+        showLoading('กำลังค้นหา...');
+        try {
+            const { data, error } = await supabaseClient
+                .from('shareflex')
+                .select('*')
+                .ilike('title', `%${searchTerm}%`)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            renderList(data, true);
+        } catch(err) {
+            console.error("Search failed:", err);
+            showToast('error', 'การค้นหาล้มเหลว');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function copyToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed'; 
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('success', 'คัดลอกลิงก์แล้ว!');
+        } catch (err) {
+            showToast('error', 'ไม่สามารถคัดลอกได้');
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function handleCopyLink(share_uuid) {
+        const liffUrl = `https://liff.line.me/${LIFF_ID}`;
+        const shareUrl = `${liffUrl}?share=${share_uuid}`;
+        copyToClipboard(shareUrl);
+    }
+
+    async function handleShare(messagePayload, shouldCloseAfterShare = false) {
+        if (!liff.isApiAvailable('shareTargetPicker')) {
+            showToast('error', 'เบราว์เซอร์ของคุณไม่รองรับการแชร์');
+            if (shouldCloseAfterShare) liff.closeWindow();
+            return;
+        }
+        try {
+           
+            const messages = Array.isArray(messagePayload) ? messagePayload : [messagePayload];
+            const result = await liff.shareTargetPicker(messages, { isMultiple: true });
+
+            if (result && !shouldCloseAfterShare) {
+                showToast('success', 'แชร์ข้อความสำเร็จ!');
+            }
+        } catch (err) {
+            console.error(err);
+            if (!shouldCloseAfterShare) {
+                showToast('error', `เกิดข้อผิดพลาด: ${err.message}`);
+            }
+        } finally {
+            if (shouldCloseAfterShare) {
+                liff.closeWindow();
+            }
+        }
+    }
+
+    async function handleAutoShare(share_uuid) {
+        showLoading('กำลังเตรียมข้อความสำหรับแชร์...');
+        try {
+            const { data, error } = await supabaseClient
+                .from('shareflex')
+                .select('flex_json')
+                .eq('share_uuid', share_uuid)
+                .single();
+            
+            if (error) throw new Error("ไม่พบข้อความที่ต้องการแชร์");
+
+            if (data && data.flex_json) {
+                await handleShare(data.flex_json, true);
+            } else {
+                throw new Error("ข้อมูลข้อความไม่ถูกต้อง");
+            }
+        } catch (err) {
+            showToast('error', err.message);
+            hideLoading();
+            liff.closeWindow();
+        }
+    }
+
+    async function handleDelete(id, title) {
+        Swal.fire({
+            title: `แน่ใจหรือไม่ที่จะลบ "${title}"?`,
+            text: "การกระทำนี้ไม่สามารถย้อนกลับได้!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก',
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                showLoading('กำลังลบ...');
+                try {
+                    const { error } = await supabaseClient.from('shareflex').delete().eq('id', id);
+                    if (error) throw error;
+                    showToast('success', 'ลบสำเร็จ');
+                    searchInput.value = '';
+                    await loadInitialMessages();
+                } catch (err) {
+                    console.error(err);
+                    showToast('error', 'ลบไม่สำเร็จ');
+                } finally {
+                    hideLoading();
+                }
+            }
+        });
+    }
+
+    async function openFormModal(item = null) {
+        const isEditing = item !== null;
+        const validTypes = ['flex', 'text', 'image'];
+        let initialType = 'flex';
+        if (isEditing) {
+            initialType = validTypes.includes(item.category) ? item.category : 'custom';
+        }
+
+        Swal.fire({
+            title: isEditing ? 'แก้ไข Message' : 'เพิ่ม Message ใหม่',
+            html: `
+                <div class="p-2 text-left space-y-4">
+                    <div class="flex flex-col">
+                        <label for="swal-title" class="mb-2 text-sm font-medium text-gray-300">ชื่อเรื่อง</label>
+                        <input id="swal-title" class="swal-form-input" value="${isEditing ? item.title : ''}" placeholder="เช่น โปรโมชั่นเดือนตุลาคม">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="swal-type" class="mb-2 text-sm font-medium text-gray-300">ประเภท Message</label>
+                        <select id="swal-type" class="swal-form-input">
+                            <option value="flex">Flex</option>
+                            <option value="text">Text</option>
+                            <option value="image">Image</option>
+                            <option value="custom">Custom JSON</option>
+                        </select>
+                    </div>
+
+                    <div id="swal-input-group-container">
+                        <div id="swal-input-group-text" class="flex flex-col" style="display: none;">
+                            <label for="swal-text-input" class="mb-2 text-sm font-medium text-gray-300">ข้อความ</label>
+                            <textarea id="swal-text-input" class="swal-form-input" rows="5" placeholder="สวัสดีครับ..."></textarea>
+                        </div>
+
+                        <div id="swal-input-group-image" class="flex flex-col" style="display: none;">
+                            <label for="swal-image-input" class="mb-2 text-sm font-medium text-gray-300">Image URL</label>
+                            <input id="swal-image-input" class="swal-form-input" placeholder="https://example.com/image.jpg">
+                        </div>
+                        
+                        <div id="swal-input-group-custom" class="flex flex-col" style="display: none;">
+                            <label for="swal-custom-input" class="mb-2 text-sm font-medium text-gray-300">Custom JSON</label>
+                            <textarea id="swal-custom-input" class="swal-form-input" rows="10" placeholder="วาง Message JSON ที่นี่ (หากมีหลายอัน ให้คั่นด้วยจุลภาค ,)"></textarea>
+                        </div>
+                        
+                        <div id="swal-input-group-flex" class="flex flex-col" style="display: none;">
+                            <label for="swal-flex-input" class="mb-2 text-sm font-medium text-gray-300">Flex Contents JSON</label>
+                            <textarea id="swal-flex-input" class="swal-form-input" rows="10" placeholder='{ "type": "bubble", "body": { ... } }'></textarea>
+                        </div>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'บันทึก',
+            cancelButtonText: 'ยกเลิก',
+            didOpen: () => {
+                const typeSelect = document.getElementById('swal-type');
+                const groups = {
+                    text: document.getElementById('swal-input-group-text'),
+                    image: document.getElementById('swal-input-group-image'),
+                    custom: document.getElementById('swal-input-group-custom'),
+                    flex: document.getElementById('swal-input-group-flex'),
+                };
+
+                const toggleInputs = (type) => {
+                    Object.values(groups).forEach(group => group.style.display = 'none');
+                    if (groups[type]) groups[type].style.display = 'block';
+                };
+
+                typeSelect.addEventListener('change', (e) => toggleInputs(e.target.value));
+
+                if (isEditing) {
+                    typeSelect.value = initialType;
+                    const json = item.flex_json;
+                    if (initialType === 'text') document.getElementById('swal-text-input').value = json.text;
+                    else if (initialType === 'image') document.getElementById('swal-image-input').value = json.originalContentUrl;
+                    else if (initialType === 'custom') document.getElementById('swal-custom-input').value = JSON.stringify(json, null, 2);
+                    else if (initialType === 'flex') document.getElementById('swal-flex-input').value = JSON.stringify(json.contents, null, 2);
+                }
+                
+                toggleInputs(typeSelect.value);
+            },
+            preConfirm: () => {
+                const title = document.getElementById('swal-title').value;
+                const type = document.getElementById('swal-type').value;
+
+                if (!title) {
+                    Swal.showValidationMessage('กรุณากรอกชื่อเรื่อง');
+                    return false;
+                }
+
+                let finalJson = {};
+                try {
+                    switch (type) {
+                        case 'text':
+                            const text = document.getElementById('swal-text-input').value;
+                            if (!text) { Swal.showValidationMessage('กรุณากรอกข้อความ'); return false; }
+                            finalJson = { type: 'text', text: text };
+                            break;
+                        case 'image':
+                            const imageUrl = document.getElementById('swal-image-input').value;
+                            if (!imageUrl || !imageUrl.startsWith('https://')) {
+                                Swal.showValidationMessage('กรุณากรอก URL ของรูปภาพให้ถูกต้อง (https://)');
+                                return false;
+                            }
+                            finalJson = { type: 'image', originalContentUrl: imageUrl, previewImageUrl: imageUrl };
+                            break;
+                        case 'custom':
+                            const customJsonString = document.getElementById('swal-custom-input').value;
+                            if (!customJsonString) { Swal.showValidationMessage('กรุณากรอก JSON'); return false; }
+                            let parsedJson;
+                            try {
+                               
+                                parsedJson = JSON.parse(customJsonString);
+                            } catch (e) {
+                               
+                                try {
+                                    parsedJson = JSON.parse(`[${customJsonString}]`);
+                                } catch (e2) {
+                                    throw new Error('JSON ไม่ถูกต้อง');
+                                }
+                            }
+                            finalJson = parsedJson;
+                            break;
+                        case 'flex':
+                            const flexContentsString = document.getElementById('swal-flex-input').value;
+                            if (!flexContentsString) { Swal.showValidationMessage('กรุณากรอก Flex Contents JSON'); return false; }
+                            const contents = JSON.parse(flexContentsString);
+                            finalJson = { type: 'flex', altText: title, contents: contents };
+                            break;
+                    }
+                    return { title, category: type, flex_json: finalJson };
+                } catch (e) {
+                    Swal.showValidationMessage(`JSON ไม่ถูกต้อง หรือข้อมูลผิดพลาด: ${e.message}`);
+                    return false;
+                }
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                showLoading('กำลังบันทึก...');
+                try {
+                    const payload = {
+                        title: result.value.title,
+                        category: result.value.category,
+                        flex_json: result.value.flex_json
+                    };
+                    
+                    const { error } = isEditing 
+                        ? await supabaseClient.from('shareflex').update(payload).eq('id', item.id)
+                        : await supabaseClient.from('shareflex').insert(payload);
+
+                    if (error) throw error;
+                    showToast('success', 'บันทึกสำเร็จ');
+                    searchInput.value = '';
+                    await loadInitialMessages();
+                } catch (err) {
+                    console.error(err);
+                    showToast('error', `บันทึกไม่สำเร็จ: ${err.message}`);
+                } finally {
+                    hideLoading();
+                }
+            }
+        });
+    }
+
+    addNewFlexBtn.addEventListener('click', () => openFormModal());
+    
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            searchMessages();
+        }, 500);
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            showLoading('กำลังเริ่มต้น...');
+            await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+            
+            if (!liff.isLoggedIn()) {
+                liff.login({ redirectUri: window.location.href });
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const shareUuid = urlParams.get('share');
+
+            if (shareUuid) {
+                const mainContainer = document.querySelector('.container');
+                if (mainContainer) mainContainer.style.display = 'none';
+                await handleAutoShare(shareUuid);
+            } else {
+                await loadInitialMessages();
+            }
+
+        } catch (err) {
+            console.error('Critical Error:', err);
+            showToast('error', 'เกิดข้อผิดพลาด ไม่สามารถโหลดแอปได้');
+            const mainContainer = document.querySelector('.container');
+            if (mainContainer) mainContainer.style.display = 'none';
+            document.body.innerHTML += `<p class="text-center text-red-400 p-8">เกิดข้อผิดพลาด: ${err.message}<br><br>กรุณาตรวจสอบการตั้งค่า RLS Policy ของตาราง shareflex ใน Supabase</p>`;
+        } finally {
+           
+        }
+    });
+  </script>
+</body>
+</html>
