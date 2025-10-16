@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LINE OA</title>
+    <meta name="description" content="Admin Send Message Dashboard for LIFF App" />
+    <meta name="author" content="T42" />
+    <meta property="og:title" content="Admin Send Message Dashboard-T42-thailand" />
+    <meta property="og:description" content="Admin Send Message Dashboard for LIFF App" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://wusxtldmqsleacfcibum.supabase.co/storage/v1/object/public/user-images/U69f69a6d9b1bbb632a0ff7db6e67eeac/1757423533327.jpeg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+       
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #272838;
+            color: #F0F0F0;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #272838 0%, #5d536b 100%);
+        }
+
+        .main-card {
+            background-color: rgba(93, 83, 107, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #347fc4 0%, #5d536b 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 127, 196, 0.2);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 127, 196, 0.3);
+        }
+
+        .swal2-popup {
+            background-color: #272838 !important;
+            color: #F0F0F0 !important;
+            border: 1px solid #7d6b91;
+        }
+        .swal2-title, .swal2-html-container {
+             color: #F0F0F0 !important;
+        }
+        .swal2-select {
+            background-color: #5d536b !important;
+            color: #F0F0F0 !important;
+            border-color: #7d6b91 !important;
+        }
+
+      
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .pulse-anim {
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+       
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #272838; }
+        ::-webkit-scrollbar-thumb { background: #7d6b91; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #989fce; }
+
+        
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(39, 40, 56, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+
+   
+    <div id="loading-overlay">
+        <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" alt="Loading..." class="w-16 h-16">
+        <p id="loading-text" class="text-lg text-[#989fce]">กำลังโหลด...</p>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8 fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#989fce] to-[#347fc4]">
+                Admin Send Message Dashboard
+            </h1>
+            <p class="text-lg text-gray-300">ระบบจัดการการส่งข้อความ LINE OA</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           
+            <div class="lg:col-span-2 main-card rounded-2xl p-6 fade-in" style="animation-delay: 0.2s;">
+                <h2 class="text-2xl font-semibold mb-4 text-[#989fce]">รายชื่อผู้ใช้</h2>
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <input type="text" id="search-input" placeholder="ค้นหาด้วย userId หรือ displayName..."
+                           class="flex-grow bg-[#272838] border border-[#5d536b] rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#989fce] focus:outline-none transition">
+                </div>
+                
+               
+                <div class="overflow-y-auto max-h-[60vh] pr-2">
+                    <table class="w-full text-left">
+                        <thead class="sticky top-0 bg-[#5d536b]/80 backdrop-blur-sm">
+                            <tr>
+                                <th class="p-3 w-12"><input type="checkbox" id="select-all" class="form-checkbox h-5 w-5 bg-transparent rounded border-[#989fce] text-[#347fc4] focus:ring-0"></th>
+                                <th class="p-3">User</th>
+                                <th class="p-3 hidden md:table-cell">User ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list">
+                            <!-- User rows  -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 flex justify-center">
+                    <button id="load-more-btn" class="btn-primary font-bold py-2 px-6 rounded-lg">
+                        โหลดเพิ่มเติม
+                    </button>
+                </div>
+            </div>
+
+         
+            <div class="lg:col-span-1 main-card rounded-2xl p-6 fade-in" style="animation-delay: 0.4s;">
+                <h2 class="text-2xl font-semibold mb-4 text-[#989fce]">เครื่องมือส่งข้อความ</h2>
+                
+                <div class="mb-4">
+                    <label for="message-json" class="block mb-2 text-sm font-medium">JSON Message</label>
+                    <textarea id="message-json" rows="10" 
+                              class="w-full bg-[#272838] border border-[#5d536b] rounded-lg p-3 focus:ring-2 focus:ring-[#989fce] focus:outline-none transition"
+                              placeholder='{
+    "type": "text",
+    "text": "สวัสดีครับ! นี่คือข้อความทดสอบ"
+}'></textarea>
+                </div>
+                
+                <div class="space-y-3">
+                    <button id="send-push-btn" class="w-full btn-primary font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        📩 Push (ส่งหา 1 คน)
+                    </button>
+                    <button id="send-multicast-btn" class="w-full btn-primary font-bold py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        📨 Multicast (ส่งหาคนที่เลือก)
+                    </button>
+                    <button id="send-broadcast-btn" class="w-full btn-primary font-bold py-3 rounded-lg pulse-anim">
+                        📣 Broadcast (ส่งหาทุกคน)
+                    </button>
+                     <button id="send-narrowcast-btn" class="w-full btn-primary font-bold py-3 rounded-lg">
+                        🎯 Narrowcast (ส่งหากลุ่มเป้าหมาย)
+                    </button>
+                </div>
+
+                <div class="mt-6 space-y-3">
+                    <button id="view-logs-btn" class="w-full bg-transparent border border-[#7d6b91] text-[#989fce] font-bold py-3 rounded-lg hover:bg-[#7d6b91] hover:text-white transition">
+                        📜 ดูประวัติการส่งที่ไม่สำเร็จ
+                    </button>
+                    <button id="check-quota-btn" class="w-full bg-transparent border border-[#7d6b91] text-[#989fce] font-bold py-3 rounded-lg hover:bg-[#7d6b91] hover:text-white transition">
+                        📊 ตรวจสอบโควต้า
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        const LIFF_ID = "2008089908-ymkBoqP6";
+        const SUPABASE_URL = "https://zgjtgjuvlvtdmbdlqdkk.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnanRnanV2bHZ0ZG1iZGxxZGtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTE2NDUsImV4cCI6MjA3NjE4NzY0NX0.ydsjqiYEkzRxCIoqigrQkLWVtXfAzjf0Y6Yy0S6hMFA";
+        const EDGE_FUNCTION_URL = `https://zgjtgjuvlvtdmbdlqdkk.supabase.co/functions/v1/notification`;
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        
+        let currentPage = 0;
+        const PAGE_SIZE = 50;
+        let selectedUsers = new Set();
+        let isFetching = false;
+        let hasMoreUsers = true;
+
+       
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const userListBody = document.getElementById('user-list');
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        const searchInput = document.getElementById('search-input');
+        const selectAllCheckbox = document.getElementById('select-all');
+        const sendPushBtn = document.getElementById('send-push-btn');
+        const sendMulticastBtn = document.getElementById('send-multicast-btn');
+        const sendBroadcastBtn = document.getElementById('send-broadcast-btn');
+        const sendNarrowcastBtn = document.getElementById('send-narrowcast-btn');
+        const messageJsonTextarea = document.getElementById('message-json');
+        const viewLogsBtn = document.getElementById('view-logs-btn');
+        const checkQuotaBtn = document.getElementById('check-quota-btn');
+
+       
+        const showLoading = (text = 'กำลังโหลด...') => {
+            loadingText.textContent = text;
+            loadingOverlay.style.display = 'flex';
+        };
+        const hideLoading = () => {
+            loadingOverlay.style.display = 'none';
+        };
+
+        const showToast = (icon, title) => {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: '!bg-[#5d536b] !text-white',
+                }
+            });
+        };
+        
+      
+        async function fetchUsers() {
+            if (isFetching || !hasMoreUsers) return;
+            isFetching = true;
+            showLoading('กำลังดึงข้อมูลผู้ใช้...');
+            
+            const from = currentPage * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+            const searchTerm = searchInput.value.trim();
+
+            let query = supabaseClient
+                .from('user_profiles')
+                .select('userId, displayName, pictureUrl', { count: 'exact' })
+                .range(from, to)
+                .order('created_at', { ascending: false });
+
+            if (searchTerm) {
+                query = query.or(`displayName.ilike.%${searchTerm}%,userId.ilike.%${searchTerm}%`);
+            }
+
+            const { data, error, count } = await query;
+
+            if (error) {
+                console.error('Error fetching users:', error);
+                showToast('error', 'ไม่สามารถดึงข้อมูลผู้ใช้ได้');
+            } else {
+                renderUsers(data, currentPage === 0);
+                currentPage++;
+                if ((currentPage * PAGE_SIZE) >= count) {
+                    hasMoreUsers = false;
+                    loadMoreBtn.style.display = 'none';
+                }
+            }
+
+            isFetching = false;
+            hideLoading();
+        }
+
+     
+        function renderUsers(users, clear = false) {
+            if (clear) {
+                userListBody.innerHTML = '';
+            }
+            const fragment = document.createDocumentFragment();
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-[#5d536b] hover:bg-[#5d536b]/50 transition cursor-pointer';
+                tr.dataset.userId = user.userId;
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <input type="checkbox" class="user-checkbox form-checkbox h-5 w-5 bg-transparent rounded border-[#989fce] text-[#347fc4] focus:ring-0" 
+                               data-userid="${user.userId}" ${selectedUsers.has(user.userId) ? 'checked' : ''}>
+                    </td>
+                    <td class="p-3">
+                        <div class="flex items-center gap-3">
+                            <img src="${user.pictureUrl }" alt="Profile" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.src='https://img.icons8.com/?size=80&id=492ILERveW8G&format=png';">
+                            <span class="font-medium">${user.displayName}</span>
+                        </div>
+                    </td>
+                    <td class="p-3 hidden md:table-cell font-mono text-sm text-gray-400">${user.userId}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+            userListBody.appendChild(fragment);
+        }
+        
+        function updateSendButtons() {
+            sendPushBtn.disabled = selectedUsers.size !== 1;
+            sendMulticastBtn.disabled = selectedUsers.size === 0;
+        }
+
+     
+        function handleUserSelection(e) {
+            if (e.target.classList.contains('user-checkbox')) {
+                const userId = e.target.dataset.userid;
+                if (e.target.checked) {
+                    selectedUsers.add(userId);
+                } else {
+                    selectedUsers.delete(userId);
+                }
+                updateSendButtons();
+            } else if (e.target.closest('tr')) {
+                const checkbox = e.target.closest('tr').querySelector('.user-checkbox');
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        }
+        
+        async function handleSendMessage(messageType) {
+            const messageJson = messageJsonTextarea.value.trim();
+            if (!messageJson) {
+                showToast('warning', 'กรุณากรอก JSON Message');
+                return;
+            }
+
+            let message;
+            try {
+                message = JSON.parse(messageJson);
+            } catch (e) {
+                showToast('error', 'รูปแบบ JSON ไม่ถูกต้อง');
+                return;
+            }
+            
+            let recipients = [];
+            let confirmTitle = '';
+            
+            if (messageType === 'push' || messageType === 'multicast') {
+                recipients = Array.from(selectedUsers);
+                 if (recipients.length === 0) {
+                     showToast('warning', 'กรุณาเลือกผู้ใช้ก่อนส่ง');
+                     return;
+                 }
+                confirmTitle = `ยืนยันการส่ง ${messageType} ไปยัง ${recipients.length} คน?`;
+            } else {
+                confirmTitle = 'คุณแน่ใจหรือไม่ที่จะส่ง Broadcast?';
+            }
+
+            Swal.fire({
+                title: confirmTitle,
+                text: "การกระทำนี้ไม่สามารถย้อนกลับได้!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#347fc4',
+                cancelButtonColor: '#7d6b91',
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                customClass: { popup: '!bg-[#272838] !text-white' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading(`กำลังส่งข้อความแบบ ${messageType}...`);
+                    try {
+                        const { data, error } = await supabaseClient.functions.invoke('notification', {
+                            body: { messageType, recipients, message },
+                        });
+
+                        if (error) throw error;
+                        
+                        const failedSends = data.results.filter(r => r.status === 'failed');
+
+                        if (failedSends.length > 0) {
+                           Swal.fire({
+                                icon: 'warning',
+                                title: 'ส่งข้อความสำเร็จบางส่วน',
+                                text: `${failedSends.length} ข้อความส่งไม่สำเร็จ กรุณาตรวจสอบ Log`,
+                                customClass: { popup: '!bg-[#272838] !text-white' }
+                           });
+                        } else {
+                           showToast('success', 'ส่งข้อความสำเร็จ!');
+                        }
+                    } catch (err) {
+                        console.error('Error sending message:', err);
+                        const errorDetails = err.context?.details ? JSON.stringify(err.context.details) : err.message;
+                        showToast('error', `เกิดข้อผิดพลาด: ${errorDetails}`);
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            });
+        }
+        
+        async function handleSendNarrowcast() {
+            const messageJson = messageJsonTextarea.value.trim();
+            if (!messageJson) {
+                showToast('warning', 'กรุณากรอก JSON Message ก่อน');
+                return;
+            }
+
+            showLoading('กำลังโหลดกลุ่มเป้าหมาย...');
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('notification', {
+                    body: { messageType: 'getAudienceGroups' },
+                });
+
+                if (error) throw error;
+                const audienceGroups = data.audienceGroups || [];
+
+                if (audienceGroups.length === 0) {
+                    hideLoading();
+                    Swal.fire({
+                        icon: 'info', title: 'ไม่พบกลุ่มเป้าหมาย',
+                        text: 'กรุณาสร้างกลุ่มเป้าหมายใน LINE Official Account Manager ก่อน',
+                        customClass: { popup: '!bg-[#272838] !text-white' }
+                    });
+                    return;
+                }
+
+                const inputOptions = audienceGroups.reduce((acc, group) => {
+                    acc[group.audienceGroupId] = `${group.description} (${group.audienceCount.toLocaleString()} คน)`;
+                    return acc;
+                }, {});
+
+                hideLoading();
+
+                const { value: selectedAudienceGroupId } = await Swal.fire({
+                    title: 'เลือกกลุ่มเป้าหมายที่จะส่ง',
+                    input: 'select',
+                    inputOptions,
+                    inputPlaceholder: '--- เลือกกลุ่มเป้าหมาย ---',
+                    showCancelButton: true,
+                    confirmButtonText: 'ยืนยันการส่ง',
+                    cancelButtonText: 'ยกเลิก',
+                    confirmButtonColor: '#347fc4',
+                    cancelButtonColor: '#7d6b91',
+                    customClass: { 
+                        popup: '!bg-[#272838] !text-white', 
+                        select: '!w-full !p-2 !mt-4 !bg-[#5d536b] !text-white !border-[#7d6b91]'
+                    }
+                });
+
+                if (selectedAudienceGroupId) {
+                    let message;
+                    try { message = JSON.parse(messageJson); } 
+                    catch (e) { showToast('error', 'รูปแบบ JSON ไม่ถูกต้อง'); return; }
+
+                    showLoading('กำลังส่งข้อความ Narrowcast...');
+                    try {
+                        const { data: sendData, error: sendError } = await supabaseClient.functions.invoke('notification', {
+                            body: {
+                                messageType: 'narrowcast',
+                                recipientAudienceGroupId: selectedAudienceGroupId,
+                                message: message
+                            },
+                        });
+
+                        if (sendError) throw sendError;
+                        
+                        if (sendData.results.some(r => r.status === 'failed')) {
+                            showToast('error', 'การส่ง Narrowcast ล้มเหลว! ตรวจสอบ Log');
+                        } else {
+                            showToast('success', 'ส่ง Narrowcast สำเร็จ!');
+                        }
+                    } catch (err) {
+                        console.error('Error sending narrowcast:', err);
+                        showToast('error', `เกิดข้อผิดพลาด: ${err.message}`);
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            } catch (err) {
+                hideLoading();
+                console.error('Error fetching audience groups:', err);
+                showToast('error', `ไม่สามารถโหลดกลุ่มเป้าหมายได้: ${err.message}`);
+            }
+        }
+        
+        async function displayFailedLogs() {
+            showLoading('กำลังโหลดประวัติ...');
+            const { data, error } = await supabaseClient
+                .from('message_logs')
+                .select('*')
+                .eq('status', 'failed')
+                .order('created_at', { ascending: false })
+                .limit(100);
+            
+            hideLoading();
+            
+            if (error) {
+                showToast('error', 'ไม่สามารถโหลดประวัติได้');
+                return;
+            }
+
+            let logHtml = `<div class="text-left max-h-[60vh] overflow-y-auto pr-2">`;
+            if (data.length === 0) {
+                logHtml += '<p>ไม่พบประวัติการส่งที่ล้มเหลว</p>';
+            } else {
+                data.forEach(log => {
+                    logHtml += `
+                        <div class="p-3 border-b border-[#5d536b]">
+                            <p><strong>เวลา:</strong> ${new Date(log.created_at).toLocaleString()}</p>
+                            <p><strong>ผู้รับ/กลุ่ม:</strong> ${log.recipient}</p>
+                            <p class="text-red-400"><strong>ข้อผิดพลาด:</strong> ${log.error_message}</p>
+                            <details class="mt-2">
+                                <summary class="cursor-pointer text-[#989fce]">ดู Payload</summary>
+                                <pre class="mt-1 p-2 bg-[#272838] rounded text-xs whitespace-pre-wrap">${JSON.stringify(log.message_payload, null, 2)}</pre>
+                            </details>
+                        </div>
+                    `;
+                });
+            }
+            logHtml += `</div>`;
+            
+            Swal.fire({
+                title: 'ประวัติการส่งที่ไม่สำเร็จ',
+                html: logHtml,
+                width: '80%',
+                confirmButtonText: 'ปิด',
+                customClass: { popup: '!bg-[#272838] !text-white' }
+            });
+        }
+        
+        async function displayQuota() {
+            showLoading('กำลังตรวจสอบโควต้า...');
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('notification', {
+                    body: { messageType: 'getQuota' },
+                });
+
+                if (error) throw error;
+                
+                const usage = data.usage;
+                const limit = data.limit;
+
+                if (typeof usage === 'undefined' || typeof limit === 'undefined') {
+                    throw new Error('Invalid quota data received from server.');
+                }
+
+                const percentage = (limit > 0) ? (usage / limit) * 100 : 0;
+                
+                const quotaHtml = `
+                    <div class="text-center text-lg">
+                        <p class="mb-4">ใช้ไปแล้ว <span class="font-bold text-2xl text-[#989fce]">${usage.toLocaleString()}</span> / ${limit > 0 ? limit.toLocaleString() : 'ไม่จำกัด'} ข้อความ</p>
+                        ${limit > 0 ? `
+                        <div class="w-full bg-[#272838] rounded-full h-4 border border-[#5d536b]">
+                            <div class="bg-gradient-to-r from-[#347fc4] to-[#989fce] h-4 rounded-full" style="width: ${percentage.toFixed(2)}%"></div>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-300">${percentage.toFixed(2)}%</p>
+                        ` : ''}
+                    </div>
+                `;
+
+                Swal.fire({
+                    title: 'โควต้าการส่งข้อความประจำเดือน',
+                    html: quotaHtml,
+                    confirmButtonText: 'ปิด',
+                    customClass: { popup: '!bg-[#272838] !text-white' }
+                });
+
+            } catch (err) {
+                console.error('Error fetching quota:', err);
+                showToast('error', `ไม่สามารถดึงข้อมูลโควต้าได้: ${err.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+       
+        document.addEventListener('DOMContentLoaded', async () => {
+            showLoading('กำลังเริ่มต้น LIFF...');
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true  });
+                if (!liff.isLoggedIn()) {
+                    liff.login({ redirectUri: window.location.href });
+                    return;
+                }
+                showToast('success', 'เริ่มต้นระบบสำเร็จ');
+            } catch (err) {
+                console.error(err);
+                showToast('error', 'LIFF Init Failed');
+            }
+            hideLoading();
+            
+            await fetchUsers();
+
+            
+            loadMoreBtn.addEventListener('click', fetchUsers);
+            
+            let searchTimeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentPage = 0;
+                    hasMoreUsers = true;
+                    loadMoreBtn.style.display = 'block';
+                    fetchUsers();
+                }, 500); 
+            });
+
+            userListBody.addEventListener('change', handleUserSelection);
+            userListBody.addEventListener('click', handleUserSelection);
+            
+            selectAllCheckbox.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                const checkboxes = document.querySelectorAll('.user-checkbox');
+                checkboxes.forEach(cb => {
+                    if (cb.checked !== isChecked) {
+                       cb.checked = isChecked;
+                       cb.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            });
+            
+            sendPushBtn.addEventListener('click', () => handleSendMessage('push'));
+            sendMulticastBtn.addEventListener('click', () => handleSendMessage('multicast'));
+            sendBroadcastBtn.addEventListener('click', () => handleSendMessage('broadcast'));
+            sendNarrowcastBtn.addEventListener('click', handleSendNarrowcast);
+            viewLogsBtn.addEventListener('click', displayFailedLogs);
+            checkQuotaBtn.addEventListener('click', displayQuota);
+        });
+    </script>
+</body>
+</html>
