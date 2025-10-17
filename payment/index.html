@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <title>บัญชีธนาคาร</title>
+  <meta name="description" content="คัดลอกเลขบัญชีธนาคาร">
+  <link id="favicon" rel="icon" href="https://img.icons8.com/clouds/100/000000/bank-building.png" type="image/x-icon">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:title" content="T42">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="บัญชีธนาคาร">
+  <meta property="og:url" content="https://www.google.com/">
+  <meta property="og:site_name" content="บัญชีธนาคาร"
+  <meta property="og:image" content="https://img.icons8.com/clouds/100/000000/bank-building.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+       <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+   
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: #f0f9ff;
+    }
+    .bank-option {
+      transition: all 0.3s ease;
+    }
+    .bank-option:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .bank-option.selected {
+      border-color: #0369a1;
+      background-color: #e0f2fe;
+    }
+    .copy-btn {
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      transform: scale(1.05);
+    }
+    .copy-btn:active {
+      transform: scale(0.98);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .notification {
+      animation: fadeIn 0.3s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8 px-4">
+  <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    
+    <div class="bg-gradient-to-r from-blue-500 to-sky-600 py-6 px-4">
+      <h1 class="text-white text-center text-2xl font-bold">เลือกบัญชีธนาคาร</h1>
+      <p class="text-sky-100 text-center mt-2">เลือกธนาคารและคัดลอกเลขบัญชี</p>
+    </div>
+    
+    
+    <div class="bg-amber-50 p-4 border-b border-amber-100">
+      <div class="flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-amber-800">
+          ชื่อบัญชี <span class="font-bold">ทนงศักดิ์ ดีพาชู</span> สาขา <span class="font-bold">เชียงใหม่</span>
+        </p>
+      </div>
+    </div>
+    
+    
+    <div class="p-6">
+      <div class="space-y-3" id="bank-options">
+        <div class="bank-option selected p-3 border rounded-lg flex items-center cursor-pointer" data-account="2642136235">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTeA7kxAunPRI0H5chiwlR-6jfNi_6V30fz0KW5y4cCPPZ3kaJu&usqp=CAU" class="w-8 h-8 object-contain" alt="SCB">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">SCB ไทยพาณิชย์</p>
+            <p class="text-gray-600 font-bold">1234567890</p>
+          </div>
+        </div>
+        
+        <div class="bank-option p-3 border rounded-lg flex items-center cursor-pointer" data-account="1830209906">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRieSzy1y0M5N_WYfSqppqlU57Y07tPjbgqF-aC2ADDedsik9l_&usqp=CAU" class="w-8 h-8 object-contain" alt="KTC">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">KTC กรุงไทย</p>
+            <p class="text-gray-600 font-bold">6635953434</p>
+          </div>
+        </div>
+        
+        <div class="bank-option p-3 border rounded-lg flex items-center cursor-pointer" data-account="7582497669">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://www.kasikornbank.com/SiteCollectionDocuments/about/img/logo/logo.png" class="w-8 h-8 object-contain" alt="Kbank">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">Kbank กสิกร</p>
+            <p class="text-gray-600 font-bold">1192448340</p>
+          </div>
+        </div>
+        
+        <div class="bank-option p-3 border rounded-lg flex items-center cursor-pointer" data-account="1185161088">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSlD3yL0FPK9Y3nEhjAiSbvWv521UESSVQznrggaoaDhHk5YyzO&usqp=CAU" class="w-8 h-8 object-contain" alt="BBL">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">BBL กรุงเทพ</p>
+            <p class="text-gray-600 font-bold">9600088356</p>
+          </div>
+        </div>
+        
+        <div class="bank-option p-3 border rounded-lg flex items-center cursor-pointer" data-account="1259723838">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://i.pinimg.com/736x/ed/80/c6/ed80c67f6f6b484e3a09c85801a5e3c2.jpg" class="w-8 h-8 object-contain" alt="BAY">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">BAY กรุงศรี</p>
+            <p class="text-gray-600 font-bold">7911073199</p>
+          </div>
+        </div>
+        
+        <div class="bank-option p-3 border rounded-lg flex items-center cursor-pointer" data-account="9222888514">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://images.seeklogo.com/logo-png/40/2/ttb-logo-png_seeklogo-408469.png" class="w-8 h-8 object-contain" alt="TTB">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">TTB ทหารไทย</p>
+            <p class="text-gray-600 font-bold">1234567890</p>
+          </div>
+        </div>
+        
+        <div class="bank-option p-3 border rounded-lg flex items-center cursor-pointer" data-account="0615145563">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTSP3q8goX-Cf6G0Ad_I3Yt5PA9fu8RNOz88huM-HYiZ2FV7aZV&usqp=CAU" class="w-8 h-8 object-contain" alt="True Wallet">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">True Wallet</p>
+            <p class="text-gray-600 font-bold">0639242143</p>
+          </div>
+        </div>
+        
+        <div class="bank-option p-3 border rounded-lg flex items-center cursor-pointer" data-account="0615145563">
+          <div class="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+            <img src="https://www.bot.or.th/content/dam/bot/icons/icon-thaiqr.png" class="w-8 h-8 object-contain" alt="promptpay">
+          </div>
+          <div class="ml-4 flex-grow">
+            <p class="font-medium text-gray-800">Promptpay</p>
+            <p class="text-gray-600 font-bold">0639242143</p>
+          </div>
+        </div>
+      </div>
+      
+     
+      <div class="mt-8 flex justify-center">
+        <button id="copy-btn" class="copy-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+          </svg>
+          คัดลอกเลขบัญชี
+        </button>
+      </div>
+      
+      
+      <div id="notification" class="hidden notification fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-md flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span id="notification-text">คัดลอกเลขบัญชีแล้ว</span>
+      </div>
+    </div>
+    <footer class="bg-gray-800 text-white py-4 px-6">
+            <div class="container mx-auto text-center text-sm">
+                <p>Dev by T42 © 2025</p>
+            </div>
+        </footer>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const bankOptions = document.querySelectorAll('.bank-option');
+      const copyBtn = document.getElementById('copy-btn');
+      const notification = document.getElementById('notification');
+      const notificationText = document.getElementById('notification-text');
+      let selectedAccount = "2642136235"; 
+      
+     
+      bankOptions.forEach(option => {
+        option.addEventListener('click', function() {
+         
+          bankOptions.forEach(opt => opt.classList.remove('selected'));
+          
+          
+          this.classList.add('selected');
+          
+          
+          selectedAccount = this.dataset.account;
+        });
+      });
+      
+      
+      copyBtn.addEventListener('click', function() {
+       
+        const tempInput = document.createElement('input');
+        tempInput.value = selectedAccount;
+        document.body.appendChild(tempInput);
+        
+       
+        tempInput.select();
+        document.execCommand('copy');
+        
+       
+        document.body.removeChild(tempInput);
+        
+        
+        const selectedBank = document.querySelector('.bank-option.selected');
+        const bankName = selectedBank.querySelector('p:first-child').textContent;
+        
+       
+        notificationText.textContent = `คัดลอกเลขบัญชี ${bankName} แล้ว`;
+        notification.classList.remove('hidden');
+        
+       
+        setTimeout(() => {
+          notification.classList.add('hidden');
+        }, 3000);
+      });
+    });
+  </script>
+</body>
+</html>
