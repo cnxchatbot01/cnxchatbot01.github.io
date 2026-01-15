@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chingju Beauty Specialist Portal</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/128/4803/4803130.png">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/4803/4803130.png">
+    <meta name="description" content="Chingju Beauty Specialist Portal" />
+    <meta name="author" content="Chingju Beauty" />
+    <meta property="og:title" content="Chingju Beauty Specialist Portal" />
+    <meta property="og:description" content="Chingju Beauty Specialist Portal" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://google.com" />
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/128/4803/4803130.png" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beauty: {
+                            pink: '#ea526f',    // Primary
+                            dark: '#070600',    // Text
+                            light: '#f7f7ff',   // Background
+                            cyan: '#23b5d3',    // Accent
+                            blue: '#279af1'     // Secondary
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 30px -5px rgba(0,0,0,0.05)',
+                        'glow-pink': '0 0 20px rgba(234, 82, 111, 0.3)',
+                        'glow-green': '0 0 20px rgba(34, 197, 94, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f7f7ff;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #f7f7ff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .hidden-opacity {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+
+        .toggle-label {
+            transition: all 0.3s ease;
+            background-color: #e5e7eb;
+        }
+
+        .toggle-checkbox {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            left: 4px;
+        }
+
+        .toggle-checkbox:checked {
+            transform: translateX(24px);
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #22c55e;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+        }
+
+
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 24px;
+            width: 12px;
+            height: 12px;
+            background-color: #ea526f;
+            border: 3px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 8px rgba(234, 82, 111, 0.3);
+        }
+
+        .swal2-popup {
+            border-radius: 2.5rem !important;
+        }
+
+        .booking-card {
+            transition: all 0.3s ease;
+        }
+
+        .booking-card:active {
+            transform: scale(0.98);
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+    </style>
+</head>
+
+<body class="bg-beauty-light min-h-screen pb-24 selection:bg-beauty-pink selection:text-white">
+
+
+    <div id="loader">
+        <div class="relative w-20 h-20 flex items-center justify-center mb-4">
+            <div class="absolute inset-0 rounded-full border-4 border-beauty-pink/20"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-beauty-pink border-t-transparent animate-spin">
+            </div>
+            <i class="fa-solid fa-spa text-beauty-pink text-2xl"></i>
+        </div>
+        <h2 class="text-xl font-bold text-beauty-dark tracking-tight">Specialist Portal</h2>
+        <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Synchronizing Data</p>
+    </div>
+
+    <div id="app-container" class="max-w-md mx-auto relative opacity-0 transition-opacity duration-700">
+
+
+        <header
+            class="glass-header shadow-soft sticky top-0 z-30 rounded-b-[2.5rem] border-b border-white/40 overflow-hidden">
+            <div class="px-6 pt-6 pb-4 flex justify-between items-start">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <img id="doc-img" src="https://cdn-icons-png.flaticon.com/128/4803/4803130.png"
+                            class="w-16 h-16 rounded-3xl border-2 border-white object-cover shadow-soft bg-white">
+                        <div
+                            class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-white rounded-full">
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Specialist</p>
+                        <h1 class="font-bold text-beauty-dark text-xl leading-none mt-1" id="doc-name">สวัสดี</h1>
+                        <p class="text-xs text-beauty-pink font-bold mt-1" id="doc-spec">...</p>
+                    </div>
+                </div>
+                <button onclick="logout()"
+                    class="w-10 h-10 rounded-2xl bg-gray-50 text-gray-400 hover:text-red-500 transition flex items-center justify-center">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+
+
+            <div class="px-6 pb-6 mt-2">
+                <div class="bg-beauty-dark/5 p-4 rounded-3xl flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-bold text-gray-700">สถานะปฏิบัติงาน</p>
+                        <p class="text-[10px] text-gray-400 font-medium">สลับเพื่อเปิด/ปิดรับจองคิวใหม่</p>
+                    </div>
+                    <div class="relative inline-block w-14 h-8 align-middle select-none">
+                        <input type="checkbox" id="status-toggle"
+                            class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-none appearance-none cursor-pointer top-1 z-10 shadow-md"
+                            onclick="toggleWorkStatus(this)" />
+                        <label for="status-toggle"
+                            class="toggle-label block overflow-hidden h-8 rounded-full cursor-pointer"></label>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+
+        <div class="px-6 mt-6">
+            <div
+                class="bg-white p-6 rounded-[2.5rem] shadow-soft border border-white/60 flex items-center justify-between overflow-hidden relative">
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-beauty-blue/5 rounded-full blur-xl"></div>
+                <div class="relative z-10 flex-1 border-r border-gray-100">
+                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Total</p>
+                    <div class="flex items-baseline gap-1">
+                        <h2 class="text-4xl font-black text-beauty-dark" id="count-total">0</h2>
+                        <span class="text-xs text-gray-400">งาน</span>
+                    </div>
+                </div>
+                <div class="relative z-10 flex-1 pl-6">
+                    <p class="text-[10px] text-beauty-pink font-black uppercase tracking-widest mb-1">Pending</p>
+                    <div class="flex items-baseline gap-1">
+                        <h2 class="text-4xl font-black text-beauty-pink" id="count-pending">0</h2>
+                        <span class="text-xs text-gray-400">รอ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="px-6 mt-8">
+            <div class="flex justify-between items-end mb-6 px-1">
+                <div>
+                    <h2 class="text-xl font-bold text-beauty-dark tracking-tight">คิวงานวันนี้</h2>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1" id="today-date">-</p>
+                </div>
+                <button onclick="fetchTodaySchedule()"
+                    class="w-10 h-10 rounded-2xl bg-white text-beauty-pink hover:bg-beauty-pink hover:text-white transition shadow-sm border border-gray-100 flex items-center justify-center group">
+                    <i
+                        class="fa-solid fa-arrows-rotate text-sm group-active:rotate-180 transition-transform duration-500"></i>
+                </button>
+            </div>
+
+            <div class="relative space-y-6" id="appointment-container">
+                <div class="timeline-line"></div>
+
+            </div>
+        </div>
+
+
+        <div class="fixed bottom-6 right-6 z-40">
+            <button onclick="handleEmergencyLeave()"
+                class="bg-red-500 text-white w-14 h-14 rounded-2xl shadow-glow-pink flex items-center justify-center hover:bg-red-600 transition-all transform active:scale-90 group border-2 border-white/20">
+                <i class="fa-solid fa-triangle-exclamation text-xl group-hover:scale-110 transition-transform"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const LIFF_ID = "2008898928-9e2vzAav";
+        const SUPABASE_URL = "https://zpvaqvdrulqmbdbhibqp.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwdmFxdmRydWxxbWJkYmhpYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NTYzNzgsImV4cCI6MjA4NDAzMjM3OH0.N99vPrimot1PkuS5qiLDSPTtFaIpNfMFlZd6T8ui6pU";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentSpecialistId = null;
+        let currentAppointments = [];
+        let realtimeSubscription = null;
+
+        const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/notify`;
+
+
+        function getThaiDate() {
+            const date = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            return date.toLocaleDateString('th-TH', options);
+        }
+
+        function getLocalISODate() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+            customClass: { popup: 'rounded-xl' }
+        });
+
+
+        async function initializePortal() {
+            try {
+                document.getElementById('today-date').innerText = getThaiDate();
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                await liff.ready;
+                if (!liff.isLoggedIn()) { liff.login({ redirectUri: window.location.href }); return; }
+
+                const profile = await liff.getProfile();
+
+
+                const { data: specialist, error } = await supabaseClient
+                    .from('specialists')
+                    .select('*')
+                    .eq('profile_id', profile.userId)
+                    .single();
+
+                if (error || !specialist) {
+                    Swal.fire({
+                        icon: 'error', title: 'Access Denied',
+                        text: 'ไม่พบข้อมูลผู้เชี่ยวชาญที่ผูกกับบัญชีนี้ โปรดติดต่อผู้ดูแลระบบ',
+                        confirmButtonText: 'ปิด', confirmButtonColor: '#ea526f'
+                    }).then(() => liff.closeWindow());
+                    return;
+                }
+
+                currentSpecialistId = specialist.id;
+                document.getElementById('doc-name').innerText = `สวัสดี, ${specialist.name.split(' ')[0]}`;
+                document.getElementById('doc-spec').innerText = specialist.expertise || 'Beauty Specialist';
+                document.getElementById('doc-img').src = specialist.image_url || profile.pictureUrl;
+
+                const toggle = document.getElementById('status-toggle');
+                toggle.checked = specialist.is_active;
+
+                await fetchTodaySchedule();
+                setupRealtimeListener();
+
+                document.getElementById('loader').classList.add('hidden-opacity');
+                document.getElementById('app-container').classList.add('opacity-100');
+            } catch (err) {
+                console.error(err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'การเชื่อมต่อขัดข้อง กรุณาตรวจสอบอินเทอร์เน็ต' });
+            }
+        }
+
+        function setupRealtimeListener() {
+            if (realtimeSubscription) return;
+            realtimeSubscription = supabaseClient.channel('realtime:bookings')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `specialist_id=eq.${currentSpecialistId}` }, () => {
+                    fetchTodaySchedule();
+                }).subscribe();
+        }
+
+        async function fetchTodaySchedule() {
+            const today = getLocalISODate();
+            const { data, error } = await supabaseClient
+                .from('bookings')
+                .select(`*, profiles(display_name, picture_url, phone_number)`)
+                .eq('specialist_id', currentSpecialistId)
+                .eq('booking_date', today)
+                .in('status', ['confirmed', 'completed'])
+                .order('booking_time', { ascending: true });
+
+            if (error) return;
+            currentAppointments = data;
+            renderTimeline(data);
+            updateStats(data);
+        }
+
+        function renderTimeline(appointments) {
+            const container = document.getElementById('appointment-container');
+            container.innerHTML = '<div class="timeline-line"></div>';
+
+            if (appointments.length === 0) {
+                container.innerHTML += `
+                    <div class="relative pl-14 py-10">
+                        <div class="bg-white/50 border-2 border-dashed border-gray-200 rounded-[2rem] p-8 text-center">
+                            <i class="fa-solid fa-mug-hot text-3xl text-gray-200 mb-2"></i>
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">No jobs today yet</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            appointments.forEach((appt, index) => {
+                const patient = appt.profiles;
+                const isCompleted = appt.status === 'completed';
+                const timeStr = appt.booking_time ? appt.booking_time.slice(0, 5) : '--:--';
+
+                const html = `
+                    <div class="relative pl-14 pb-4 animate-fade-in ${isCompleted ? 'opacity-50' : ''}">
+                        <div class="timeline-dot top-5 ${isCompleted ? 'bg-gray-300' : 'bg-beauty-pink'}"></div>
+                        
+                        <div class="booking-card bg-white p-5 rounded-[2.5rem] shadow-soft border border-gray-100 relative group overflow-hidden">
+                            ${isCompleted ? '<div class="absolute -right-4 -top-4 w-12 h-12 bg-green-500 text-white flex items-center justify-center rounded-full pt-4 pr-4"><i class="fa-solid fa-check text-xs"></i></div>' : ''}
+                            
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-[10px] font-black text-beauty-blue bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">Time: ${timeStr} น.</span>
+                                <span class="text-[10px] font-black text-gray-300 uppercase tracking-widest">#Queue ${index + 1}</span>
+                            </div>
+
+                            <div class="flex items-center gap-3 mb-4">
+                                <img src="${patient.picture_url || 'https://cdn-icons-png.flaticon.com/128/4803/4803130.png'}" class="w-12 h-12 rounded-2xl object-cover shadow-sm bg-gray-50 border border-gray-100">
+                                <div>
+                                    <h3 class="font-bold text-beauty-dark text-sm">${patient.display_name}</h3>
+                                    <a href="tel:${patient.phone_number}" class="text-[10px] text-beauty-blue font-bold flex items-center gap-1">
+                                        <i class="fa-solid fa-phone-volume text-[8px]"></i> ${patient.phone_number || '-'}
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-beauty-light/50 p-4 rounded-3xl text-[11px] text-gray-600 mb-4 border border-white">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <i class="fa-solid fa-sparkles text-beauty-pink text-[10px]"></i>
+                                    <p class="font-black text-beauty-dark uppercase tracking-tighter">Service Detail:</p>
+                                </div>
+                                <p class="leading-relaxed font-medium">${appt.service_details || 'ไม่ได้ระบุรายละเอียด'}</p>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                ${!isCompleted ? `
+                                    <button onclick="completeJob(${appt.id})" class="w-full py-3 bg-beauty-dark text-white rounded-2xl text-xs font-bold shadow-soft hover:bg-black transition active:scale-95 flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-clipboard-check"></i> บันทึกงานเสร็จสิ้น
+                                    </button>
+                                ` : `
+                                    <div class="w-full py-3 bg-green-50 text-green-600 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-check-double"></i> Completed Successfully
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function updateStats(data) {
+            document.getElementById('count-total').innerText = data.length;
+            const pending = data.filter(x => x.status === 'confirmed').length;
+            document.getElementById('count-pending').innerText = pending;
+        }
+
+        async function toggleWorkStatus(checkbox) {
+            const isActive = checkbox.checked;
+            if (!isActive) {
+                const pendingCount = currentAppointments.filter(x => x.status === 'confirmed').length;
+                if (pendingCount > 0) {
+                    checkbox.checked = true;
+                    await Swal.fire({
+                        title: 'ยังมีคิวค้างอยู่!',
+                        text: `คุณยังมีลูกค้าค้างอยู่ ${pendingCount} ท่าน โปรดจัดการงานให้เสร็จก่อนพักเบรก`,
+                        icon: 'warning',
+                        confirmButtonText: 'ตกลง', confirmButtonColor: '#ea526f',
+                        customClass: { popup: 'rounded-[2.5rem]' }
+                    });
+                    return;
+                }
+            }
+
+            const { error } = await supabaseClient.from('specialists').update({ is_active: isActive }).eq('id', currentSpecialistId);
+            if (error) {
+                checkbox.checked = !isActive;
+                Toast.fire({ icon: 'error', title: 'อัปเดตสถานะไม่สำเร็จ' });
+            } else {
+                Toast.fire({ icon: 'success', title: isActive ? 'พร้อมปฏิบัติงาน' : 'พักเบรกชั่วคราว' });
+            }
+        }
+
+        async function completeJob(apptId) {
+            const appt = currentAppointments.find(a => a.id === apptId);
+            const { value: note } = await Swal.fire({
+                title: '<span class="text-xl font-bold">บันทึกสรุปงาน</span>',
+                html: `<div class="text-left px-2"><p class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">Service Note / Tips for customer</p><textarea id="t-note" class="w-full border-2 border-gray-100 rounded-3xl p-4 focus:border-beauty-pink outline-none transition" rows="4" placeholder="ระบุสิ่งที่ทำให้ลูกค้า หรือคำแนะนำเบื้องต้น..."></textarea></div>`,
+                showCancelButton: true, confirmButtonText: 'บันทึกงาน', confirmButtonColor: '#070600',
+                customClass: { popup: 'rounded-[2.5rem]' },
+                preConfirm: () => document.getElementById('t-note').value
+            });
+
+            if (note !== undefined) {
+                Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading(), backdrop: false });
+
+                const { error: updateError } = await supabaseClient.from('bookings').update({ status: 'completed' }).eq('id', apptId);
+
+                if (!updateError) {
+                    const msg = `💇‍♀️ **บริการเสร็จสิ้นแล้ว!**\n📅 วันที่: ${getThaiDate()}\n📝 บันทึกจากช่าง: ${note || 'ให้บริการเรียบร้อยค่ะ'}\n\nขอบคุณที่ไว้วางใจให้เราดูแลนะคะ ❤️`;
+                    await supabaseClient.from('notifications').insert({ user_id: appt.customer_id, message: msg, type: 'personal', status: 'unread' });
+
+                    Swal.fire({ icon: 'success', title: 'งานเสร็จสิ้น!', text: 'ประวัติถูกส่งถึงลูกค้าแล้ว', confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2.5rem]' } });
+                    fetchTodaySchedule();
+                }
+            }
+        }
+
+        async function handleEmergencyLeave() {
+            const pendingCount = currentAppointments.filter(x => x.status === 'confirmed').length;
+            const { value: reason } = await Swal.fire({
+                title: 'แจ้งเหตุฉุกเฉิน / ลาด่วน',
+                html: `<div class="text-left"><p class="mb-4 text-[11px] text-red-500 font-bold bg-red-50 p-3 rounded-2xl border border-red-100">คำเตือน: คุณยังมีงานค้าง ${pendingCount} คิว ระบบจะแจ้งเตือนแอดมินทันที</p><textarea id="l-reason" class="w-full border border-gray-200 rounded-2xl p-4 focus:ring-2 focus:ring-red-500 outline-none transition" rows="3" placeholder="ระบุเหตุจำเป็น..."></textarea></div>`,
+                icon: 'error', showCancelButton: true, confirmButtonText: 'ส่งเรื่องลาด่วน', confirmButtonColor: '#ef4444',
+                customClass: { popup: 'rounded-[2.5rem]' },
+                preConfirm: () => {
+                    const r = document.getElementById('l-reason').value;
+                    if (!r) return Swal.showValidationMessage('กรุณาระบุสาเหตุ');
+                    return r;
+                }
+            });
+
+            if (reason) {
+                Swal.fire({ title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading() });
+
+                await supabaseClient.from('specialists').update({ is_active: false }).eq('id', currentSpecialistId);
+                document.getElementById('status-toggle').checked = false;
+
+                const docName = document.getElementById('doc-name').innerText.replace('สวัสดี, ', '');
+                const msg = `🆘 **แจ้งเหตุฉุกเฉิน (Specialist Leave)**\n👤 *ช่าง:* ${docName}\n💬 *สาเหตุ:* ${reason}\n👥 *งานค้าง:* ${pendingCount} คิว\n\nโปรดตรวจสอบระบบหลังบ้านด่วน!`;
+
+                await fetch(EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+
+                Swal.fire({
+                    icon: 'success', title: 'แจ้งเรื่องเรียบร้อย',
+                    text: 'ระบบได้แจ้งแอดมินและปรับสถานะของคุณแล้ว',
+                    confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2.5rem]' }
+                });
+            }
+        }
+
+        function logout() { liff.logout(); window.location.reload(); }
+        window.onload = () => { setTimeout(initializePortal, 300); };
+    </script>
+</body>
+
+</html>
