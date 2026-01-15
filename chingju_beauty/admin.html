@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chingju Beauty</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/128/1807/1807383.png">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/1807/1807383.png">
+    <meta name="description" content="Beauty & Wellness" />
+    <meta name="author" content="Chingju Beauty" />
+    <meta property="og:title" content="Beauty & Wellness" />
+    <meta property="og:description" content="Chingju Beauty" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://google.co.th" />
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/128/1807/1807383.png" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beauty: {
+                            pink: '#ea526f',    // Primary
+                            dark: '#070600',    // Text
+                            light: '#f7f7ff',   // Background
+                            cyan: '#23b5d3',    // Accent
+                            blue: '#279af1',    // Secondary
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f7f7ff;
+        }
+
+        .sidebar-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ea526f;
+        }
+
+
+        @media (max-width: 768px) {
+            .responsive-table thead {
+                display: none;
+            }
+
+            .responsive-table tbody tr {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 1rem;
+                border: 1px solid #f3f4f6;
+                border-radius: 1.5rem;
+                background: white;
+                padding: 1.25rem;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            }
+
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                width: 100%;
+            }
+
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #9ca3af;
+                font-size: 0.8rem;
+            }
+        }
+
+
+        .swal2-popup {
+            border-radius: 2rem !important;
+            padding: 2rem !important;
+        }
+
+        .swal2-title {
+            font-size: 1.5rem !important;
+            color: #070600 !important;
+            font-weight: 700 !important;
+        }
+
+        .swal2-input,
+        .swal2-textarea {
+            border-radius: 1rem !important;
+            border-color: #e5e7eb !important;
+            font-family: 'Kanit', sans-serif !important;
+        }
+
+        .swal2-input:focus,
+        .swal2-textarea:focus {
+            border-color: #ea526f !important;
+            box-shadow: 0 0 0 3px rgba(234, 82, 111, 0.1) !important;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-active {
+            background: white !important;
+            color: #ea526f !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body
+    class="flex h-screen overflow-hidden bg-beauty-light text-beauty-dark selection:bg-beauty-pink selection:text-white">
+
+
+    <div id="auth-loader"
+        class="fixed inset-0 z-[60] bg-[#f7f7ff] flex flex-col justify-center items-center transition-opacity duration-500">
+        <div class="relative w-20 h-20 mb-6">
+            <div class="absolute inset-0 rounded-full border-4 border-beauty-pink/20"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-beauty-pink border-t-transparent animate-spin">
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center text-beauty-pink text-2xl"><i
+                    class="fa-solid fa-spa"></i></div>
+        </div>
+        <h2 class="text-2xl font-bold text-beauty-dark">กำลังตรวจสอบสิทธิ์...</h2>
+        <p class="text-sm text-gray-400 mt-2">Beauty & Wellness System</p>
+    </div>
+
+
+    <div id="mobile-backdrop" onclick="toggleSidebar()"
+        class="fixed inset-0 bg-black/20 z-40 hidden md:hidden transition-opacity duration-300 backdrop-blur-sm"></div>
+
+
+    <aside id="sidebar"
+        class="sidebar-transition fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-br from-beauty-pink to-[#c92a48] text-white shadow-2xl transform -translate-x-full md:relative md:translate-x-0 flex flex-col flex-shrink-0 md:rounded-r-[2.5rem]">
+
+        <div class="p-8 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i> Admin Panel
+                </h1>
+                <p class="text-xs text-white/70 mt-1">จัดการร้านและบริการ</p>
+            </div>
+            <button onclick="toggleSidebar()" class="md:hidden text-white/80 hover:text-white transition"><i
+                    class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
+
+        <div class="p-4 flex-1 overflow-y-auto space-y-6">
+            <div
+                class="mx-2 p-4 bg-white/10 rounded-3xl flex items-center gap-3 backdrop-blur-md border border-white/10">
+                <img id="sidebar-img" src="https://cdn-icons-png.flaticon.com/128/16842/16842358.png"
+                    class="w-12 h-12 rounded-full border-2 border-white/50 object-cover shadow-sm">
+                <div class="overflow-hidden">
+                    <p id="sidebar-name" class="font-bold truncate text-sm">ผู้จัดการ</p>
+                    <div class="flex items-center gap-1 mt-0.5">
+                        <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                        <span class="text-[10px] text-white/80">ออนไลน์</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="space-y-1 px-2">
+                <a href="javascript:void(0)" onclick="switchTab('dashboard')" id="nav-dashboard"
+                    class="nav-item group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/90 hover:bg-white/10 transition-all">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-beauty-pink transition-colors">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <span class="font-medium">ภาพรวมร้าน</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('appointments')" id="nav-appointments"
+                    class="nav-item group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/90 hover:bg-white/10 transition-all">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-beauty-pink transition-colors">
+                        <i class="fa-regular fa-calendar-check"></i>
+                    </div>
+                    <span class="flex-1 font-medium">คิวบริการ</span>
+                    <span id="badge-pending"
+                        class="hidden bg-white text-beauty-pink text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">0</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('patients')" id="nav-patients"
+                    class="nav-item group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/90 hover:bg-white/10 transition-all">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-beauty-pink transition-colors">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <span class="font-medium">ฐานข้อมูลลูกค้า</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('specialists')" id="nav-specialists"
+                    class="nav-item group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/90 hover:bg-white/10 transition-all">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-beauty-pink transition-colors">
+                        <i class="fa-solid fa-user-doctor"></i>
+                    </div>
+                    <span class="font-medium">ช่าง/ผู้เชี่ยวชาญ</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('products')" id="nav-products"
+                    class="nav-item group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/90 hover:bg-white/10 transition-all">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-beauty-pink transition-colors">
+                        <i class="fa-solid fa-images"></i>
+                    </div>
+                    <span class="font-medium">จัดการสินค้า/สไตล์</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('news')" id="nav-news"
+                    class="nav-item group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/90 hover:bg-white/10 transition-all">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-beauty-pink transition-colors">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <span class="font-medium">โปรโมชั่น</span>
+                </a>
+                <a href="javascript:void(0)" onclick="switchTab('admins')" id="nav-admins"
+                    class="nav-item group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/90 hover:bg-white/10 transition-all">
+                    <div
+                        class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-beauty-pink transition-colors">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <span class="font-medium">จัดการสิทธิ์แอดมิน</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="p-6">
+            <button onclick="logout()"
+                class="w-full py-3 px-4 rounded-2xl bg-white/10 hover:bg-red-500/20 text-white hover:text-red-100 transition flex items-center justify-center gap-2 backdrop-blur-sm border border-white/5">
+                <i class="fa-solid fa-right-from-bracket"></i> <span class="text-sm font-medium">ออกจากระบบ</span>
+            </button>
+        </div>
+    </aside>
+
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative opacity-0 transition-opacity duration-700"
+        id="main-content">
+
+        <header class="glass-panel sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()"
+                    class="md:hidden text-beauty-pink w-10 h-10 rounded-xl bg-pink-50 hover:bg-pink-100 flex items-center justify-center transition">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h2 id="page-title" class="text-xl font-bold text-beauty-dark hidden sm:block tracking-tight">Dashboard
+                </h2>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold text-beauty-dark" id="topbar-name">Admin</p>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-wider">System Manager</p>
+                </div>
+                <img id="topbar-img" src="https://cdn-icons-png.flaticon.com/128/16842/16842358.png"
+                    class="w-10 h-10 rounded-full border border-gray-200 object-cover">
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 relative scroll-smooth bg-[#f7f7ff]">
+
+
+            <div id="tab-dashboard" class="space-y-6 max-w-7xl mx-auto animate-fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div
+                        class="bg-white p-6 rounded-[2rem] shadow-sm border border-pink-100/50 hover:shadow-lg transition-all">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">รอการยืนยัน</p>
+                                <h3 id="stat-pending" class="text-4xl font-black text-beauty-pink mt-1">...</h3>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center text-beauty-pink text-xl">
+                                <i class="fa-regular fa-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-[2rem] shadow-sm border border-blue-100/50 hover:shadow-lg transition-all">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">คิววันนี้</p>
+                                <h3 id="stat-today" class="text-4xl font-black text-beauty-blue mt-1">...</h3>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-beauty-blue text-xl">
+                                <i class="fa-regular fa-calendar-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-[2rem] shadow-sm border border-cyan-100/50 hover:shadow-lg transition-all">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">ช่างพร้อมบริการ</p>
+                                <h3 id="stat-specialists" class="text-4xl font-black text-beauty-cyan mt-1">...</h3>
+                            </div>
+                            <div
+                                class="w-12 h-12 bg-cyan-50 rounded-2xl flex items-center justify-center text-beauty-cyan text-xl">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-gray-100/50 h-80">
+                    <canvas id="bookingChart"></canvas>
+                </div>
+            </div>
+
+
+            <div id="tab-appointments" class="hidden space-y-6 max-w-7xl mx-auto animate-fade-in">
+                <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+                    <div class="flex gap-2 p-1 bg-gray-100 rounded-2xl w-fit shadow-inner">
+                        <button onclick="fetchAppointments('pending')"
+                            class="px-6 py-2 rounded-xl text-sm font-bold transition-all"
+                            id="btn-filter-pending">รออนุมัติ</button>
+                        <button onclick="fetchAppointments('all')"
+                            class="px-6 py-2 rounded-xl text-sm font-bold transition-all"
+                            id="btn-filter-all">ทั้งหมด</button>
+                    </div>
+                    <button onclick="fetchAppointments('all')"
+                        class="bg-white px-4 py-2 rounded-xl shadow-sm text-sm border border-gray-100 text-gray-500 hover:text-beauty-pink transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate"></i> รีเฟรชข้อมูล
+                    </button>
+                </div>
+                <div
+                    class="bg-white rounded-[2.5rem] shadow-sm overflow-hidden p-6 border border-gray-100 min-h-[400px]">
+                    <table class="w-full responsive-table text-left">
+                        <thead class="text-gray-400 text-xs uppercase tracking-wider font-bold border-b border-gray-50">
+                            <tr>
+                                <th class="pb-4 pl-4">วัน/เวลา</th>
+                                <th class="pb-4">ลูกค้า</th>
+                                <th class="pb-4">บริการ</th>
+                                <th class="pb-4">ช่าง</th>
+                                <th class="pb-4">สถานะ</th>
+                                <th class="pb-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointment-list" class="divide-y divide-gray-50 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <div id="tab-patients" class="hidden space-y-6 max-w-7xl mx-auto animate-fade-in">
+                <div class="bg-white p-2 rounded-[2rem] shadow-sm border border-gray-100 flex gap-2 max-w-2xl mx-auto">
+                    <input type="text" id="patient-search-input" placeholder="ค้นหาชื่อ หรือ เบอร์โทร..."
+                        class="flex-1 bg-transparent border-none focus:ring-0 p-3 text-sm">
+                    <button onclick="searchPatients()"
+                        class="px-8 py-3 bg-beauty-dark text-white rounded-2xl hover:bg-black transition font-bold shadow-lg">ค้นหา</button>
+                </div>
+                <div id="patient-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+
+
+            <div id="tab-specialists" class="hidden space-y-6 max-w-7xl mx-auto animate-fade-in">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-beauty-dark">Specialist Team</h2>
+                    <button onclick="openSpecialistModal()"
+                        class="px-6 py-3 bg-beauty-cyan text-white rounded-2xl shadow-lg hover:bg-cyan-500 transition font-bold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> เพิ่มช่างใหม่
+                    </button>
+                </div>
+                <div id="specialist-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+
+            <div id="tab-products" class="hidden space-y-6 max-w-7xl mx-auto animate-fade-in">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-beauty-dark">Product Lookbook & Styles</h2>
+                    <button onclick="openProductModal()"
+                        class="px-6 py-3 bg-beauty-blue text-white rounded-2xl shadow-lg hover:bg-blue-600 transition font-bold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> เพิ่มสินค้า/สไตล์
+                    </button>
+                </div>
+                <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+            </div>
+
+
+            <div id="tab-news" class="hidden space-y-6 max-w-7xl mx-auto animate-fade-in">
+                <div
+                    class="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-[2rem] p-8 text-white shadow-lg flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black uppercase italic">Promotions</h2>
+                        <p class="opacity-90">สร้างและกระจายข่าวสารให้ลูกค้า</p>
+                    </div>
+                    <button onclick="handleCreateNewsClick()"
+                        class="px-6 py-3 bg-white text-orange-500 rounded-2xl font-bold hover:shadow-xl transition">สร้างประกาศ</button>
+                </div>
+                <div id="news-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+            </div>
+
+
+            <div id="tab-admins" class="hidden space-y-6 max-w-7xl mx-auto animate-fade-in">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-xl font-bold text-beauty-dark">Admin Management</h2>
+                        <p class="text-xs text-gray-400 mt-1">จัดการสิทธิ์การเข้าถึงระบบหลังบ้าน</p>
+                    </div>
+                    <button onclick="openAddAdminModal()"
+                        class="px-6 py-3 bg-beauty-pink text-white rounded-2xl shadow-lg hover:bg-pink-600 transition font-bold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> เพิ่มแอดมินใหม่
+                    </button>
+                </div>
+                <div id="admin-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+        </main>
+    </div>
+
+
+    <div id="patient-history-view"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-scale-in">
+            <div
+                class="bg-gradient-to-r from-beauty-pink to-beauty-blue text-white p-6 flex justify-between items-start shrink-0">
+                <div class="flex items-center gap-4">
+                    <img id="history-p-img" src=""
+                        class="w-16 h-16 rounded-full border-4 border-white/30 object-cover shadow-md bg-white">
+                    <div>
+                        <h4 id="history-p-name" class="text-xl font-bold">...</h4>
+                        <p id="history-p-phone" class="text-sm opacity-90">...</p>
+                    </div>
+                </div>
+                <button onclick="closePatientHistory()"
+                    class="bg-white/20 hover:bg-white/40 w-8 h-8 rounded-full flex items-center justify-center transition"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                <div class="mb-8">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">ส่งข้อความ /
+                        บันทึก (Private Note)</label>
+                    <div class="relative">
+                        <textarea id="new-history-note" rows="3"
+                            class="w-full p-4 border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-beauty-pink/30 transition resize-none"
+                            placeholder="พิมพ์ข้อความ..."></textarea>
+                        <button onclick="savePatientHistory()"
+                            class="absolute bottom-3 right-3 px-4 py-1.5 bg-beauty-pink text-white rounded-xl text-xs font-bold hover:bg-pink-600 transition shadow-sm">บันทึก</button>
+                    </div>
+                </div>
+                <h4 class="font-bold text-beauty-dark mb-4 flex items-center gap-2"><i
+                        class="fa-solid fa-clock-rotate-left text-beauty-blue"></i> ประวัติย้อนหลัง</h4>
+                <div id="history-list-container" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const LIFF_ID = "2008898928-B1GsDB89";
+        const SUPABASE_URL = "https://zpvaqvdrulqmbdbhibqp.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwdmFxdmRydWxxbWJkYmhpYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NTYzNzgsImV4cCI6MjA4NDAzMjM3OH0.N99vPrimot1PkuS5qiLDSPTtFaIpNfMFlZd6T8ui6pU";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+         let currentPatientId = null;
+
+
+        function formatThaiDate(dateString) {
+            if (!dateString) return '-';
+            const parts = dateString.split('-');
+            if (parts.length < 3) return dateString;
+            const year = parseInt(parts[0]) + 543;
+            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${parseInt(parts[2])} ${months[parseInt(parts[1]) - 1]} ${year}`;
+        }
+
+        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, customClass: { popup: 'rounded-xl' } });
+
+
+        async function initializeAdmin() {
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                if (!liff.isLoggedIn()) { liff.login({ redirectUri: window.location.href }); return; }
+                const profile = await liff.getProfile();
+
+
+                const { data: userProfile, error: authError } = await supabaseClient.from('profiles').select('role').eq('line_user_id', profile.userId).single();
+
+                if (authError || !userProfile || userProfile.role !== 'admin') {
+                    document.getElementById('auth-loader').innerHTML = `<div class="p-8 text-center bg-white rounded-3xl shadow-xl max-w-sm mx-auto animate-scale-in"><i class="fa-solid fa-lock text-red-500 text-5xl mb-4"></i><h2 class="text-xl font-bold">Access Denied</h2><p class="text-gray-500 mt-2">ขออภัย บัญชีของคุณไม่มีสิทธิ์เข้าถึงระบบนี้</p><button onclick="liff.closeWindow()" class="mt-6 px-6 py-2 bg-beauty-pink text-white rounded-xl font-bold">ปิดหน้าต่าง</button></div>`;
+                    return;
+                }
+
+                document.getElementById('sidebar-img').src = profile.pictureUrl;
+                document.getElementById('sidebar-name').innerText = profile.displayName;
+                document.getElementById('topbar-name').innerText = profile.displayName;
+                document.getElementById('topbar-img').src = profile.pictureUrl;
+
+                document.getElementById('auth-loader').classList.add('opacity-0', 'pointer-events-none');
+                document.getElementById('main-content').classList.remove('opacity-0');
+
+                document.getElementById('patient-search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') searchPatients(); });
+
+                initDashboard();
+            } catch (err) { console.error(err); }
+        }
+
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const backdrop = document.getElementById('mobile-backdrop');
+            if (sb.classList.contains('-translate-x-full')) { sb.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
+            else { sb.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('main > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-active'));
+            document.getElementById(`nav-${tabId}`).classList.add('nav-active');
+
+            const titles = {
+                'dashboard': 'ภาพรวมร้าน',
+                'appointments': 'คิวบริการ',
+                'patients': 'ฐานข้อมูลลูกค้า',
+                'specialists': 'ทีมผู้เชี่ยวชาญ',
+                'products': 'จัดการสินค้า/สไตล์',
+                'news': 'โปรโมชั่น',
+                'admins': 'จัดการสิทธิ์แอดมิน'
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+
+            if (tabId === 'dashboard') initDashboard();
+            if (tabId === 'appointments') fetchAppointments('all');
+            if (tabId === 'specialists') fetchSpecialists();
+            if (tabId === 'products') fetchProducts();
+            if (tabId === 'news') fetchNews();
+            if (tabId === 'admins') fetchAdmins();
+
+            if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar();
+        }
+
+
+        async function initDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const { count: pending } = await supabaseClient.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+            const { count: todayCount } = await supabaseClient.from('bookings').select('*', { count: 'exact', head: true }).eq('booking_date', today);
+            const { count: specCount } = await supabaseClient.from('specialists').select('*', { count: 'exact', head: true }).eq('is_active', true);
+
+            document.getElementById('stat-pending').innerText = pending || 0;
+            document.getElementById('stat-today').innerText = todayCount || 0;
+            document.getElementById('stat-specialists').innerText = specCount || 0;
+
+            const badge = document.getElementById('badge-pending');
+            if (pending > 0) { badge.innerText = pending; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); }
+            initChart();
+        }
+
+        async function initChart() {
+            const today = new Date();
+            const dates = [];
+            const labels = [];
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const dateStr = `${yyyy}-${mm}-${dd}`;
+                dates.push(dateStr);
+                labels.push(`${d.getDate()} ${monthNames[d.getMonth()]}`);
+            }
+
+            const { data } = await supabaseClient
+                .from('bookings')
+                .select('booking_date')
+                .gte('booking_date', dates[0])
+                .neq('status', 'cancelled');
+
+            const counts = {};
+            dates.forEach(date => counts[date] = 0);
+
+            if (data) {
+                data.forEach(b => {
+                    const bDate = b.booking_date.split('T')[0];
+                    if (counts[bDate] !== undefined) {
+                        counts[bDate]++;
+                    }
+                });
+            }
+
+            const chartData = dates.map(d => counts[d]);
+
+
+            const ctx = document.getElementById('bookingChart').getContext('2d');
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Bookings',
+                        data: chartData,
+                        borderColor: '#ea526f',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(234, 82, 111, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 } // Ensure integers for counts
+                        }
+                    }
+                }
+            });
+        }
+
+
+        async function fetchAppointments(filter = 'all') {
+            const btnP = document.getElementById('btn-filter-pending');
+            const btnA = document.getElementById('btn-filter-all');
+            if (filter === 'pending') { btnP.classList.add('bg-white', 'shadow-sm', 'text-beauty-pink'); btnA.classList.remove('bg-white', 'shadow-sm', 'text-beauty-pink'); }
+            else { btnA.classList.add('bg-white', 'shadow-sm', 'text-beauty-pink'); btnP.classList.remove('bg-white', 'shadow-sm', 'text-beauty-pink'); }
+
+            let query = supabaseClient.from('bookings').select(`*, profiles(display_name, phone_number), specialists(name)`).order('booking_date', { ascending: false });
+            if (filter === 'pending') query = query.eq('status', 'pending');
+            const { data } = await query;
+            const tbody = document.getElementById('appointment-list');
+            tbody.innerHTML = data?.map(appt => {
+                let statusBadge = `<span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-orange-100 text-orange-600">รออนุมัติ</span>`;
+                if (appt.status === 'confirmed') statusBadge = `<span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-green-100 text-green-600">ยืนยันแล้ว</span>`;
+                else if (appt.status === 'completed') statusBadge = `<span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-600">เสร็จสิ้น</span>`;
+                else if (appt.status === 'cancelled') statusBadge = `<span class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-gray-100 text-gray-500">ยกเลิก</span>`;
+
+                const editBtn = `<button onclick="openEditBookingModal(${appt.id}, '${appt.booking_date}', '${appt.booking_time.slice(0, 5)}')" class="w-8 h-8 rounded-lg bg-blue-50 text-beauty-blue hover:bg-beauty-blue hover:text-white transition flex items-center justify-center shadow-sm" title="แก้ไขเวลา"><i class="fa-solid fa-clock-rotate-left"></i></button>`;
+
+                let actions = '';
+                if (appt.status === 'pending') {
+                    actions = `
+                        <div class="flex gap-2 justify-center">
+                            ${editBtn}
+                            <button onclick="approveBooking(${appt.id})" class="w-8 h-8 rounded-lg bg-green-50 text-green-500 hover:bg-green-500 hover:text-white transition flex items-center justify-center shadow-sm"><i class="fa-solid fa-check"></i></button>
+                            <button onclick="updateStatus(${appt.id}, 'cancelled')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+                        </div>`;
+                } else if (appt.status === 'confirmed') {
+                    actions = `
+                        <div class="flex gap-2 justify-center">
+                            ${editBtn}
+                            <button onclick="updateStatus(${appt.id}, 'completed')" class="w-8 h-8 rounded-lg bg-cyan-50 text-beauty-cyan hover:bg-beauty-cyan hover:text-white transition flex items-center justify-center shadow-sm"><i class="fa-solid fa-check-double"></i></button>
+                        </div>`;
+                } else {
+                    actions = '<span class="text-gray-300 text-xs">-</span>';
+                }
+
+                return `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-4" data-label="วัน/เวลา"><b>${formatThaiDate(appt.booking_date)}</b><br><span class="text-xs text-beauty-blue font-mono">${appt.booking_time.slice(0, 5)} น.</span></td>
+                    <td class="p-4" data-label="ลูกค้า"><b>${appt.profiles?.display_name || 'N/A'}</b><br><span class="text-xs text-gray-400">${appt.profiles?.phone_number || '-'}</span></td>
+                    <td class="p-4" data-label="บริการ"><span class="bg-gray-50 px-2 py-1 rounded text-[10px] text-gray-600 border border-gray-100">${appt.service_details || '-'}</span></td>
+                    <td class="p-4" data-label="ช่าง"><span class="font-bold text-gray-700">${appt.specialists?.name || '<span class="text-gray-400 italic">รอจัดช่าง</span>'}</span></td>
+                    <td class="p-4" data-label="สถานะ">${statusBadge}</td>
+                    <td class="p-4 text-center">${actions}</td>
+                </tr>
+            `}).join('') || '';
+        }
+
+        async function openEditBookingModal(id, date, time) {
+            const { value: form } = await Swal.fire({
+                title: 'แก้ไขเวลานัดหมาย',
+                html: `
+                    <div class="text-left space-y-4">
+                        <div><label class="text-xs font-bold text-gray-500">วันที่</label><input type="date" id="eb-date" value="${date}" class="swal2-input !m-0 w-full"></div>
+                        <div><label class="text-xs font-bold text-gray-500">เวลา</label><input type="time" id="eb-time" value="${time}" class="swal2-input !m-0 w-full"></div>
+                    </div>`,
+                confirmButtonText: 'อัปเดตเวลา', confirmButtonColor: '#279af1', showCancelButton: true,
+                customClass: { popup: 'rounded-[2rem]' },
+                preConfirm: () => ({ date: document.getElementById('eb-date').value, time: document.getElementById('eb-time').value })
+            });
+            if (form && form.date) saveEditedBooking(id, form.date, form.time);
+        }
+
+        async function saveEditedBooking(id, date, time) {
+            const { error } = await supabaseClient.from('bookings').update({ booking_date: date, booking_time: time }).eq('id', id);
+            if (!error) { Toast.fire({ icon: 'success', title: 'อัปเดตเวลาสำเร็จ' }); fetchAppointments(); }
+            else Swal.fire('Error', error.message, 'error');
+        }
+
+        async function approveBooking(id) {
+            const { data: specs } = await supabaseClient.from('specialists').select('id, name').eq('is_active', true);
+            const ops = {}; specs?.forEach(s => ops[s.id] = s.name);
+            const { value: sid } = await Swal.fire({ title: 'จัดสรรช่าง', input: 'select', inputOptions: ops, showCancelButton: true, confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2rem]' } });
+            if (sid) { await supabaseClient.from('bookings').update({ status: 'confirmed', specialist_id: sid }).eq('id', id); fetchAppointments(); initDashboard(); }
+        }
+
+        async function updateStatus(id, status) { await supabaseClient.from('bookings').update({ status }).eq('id', id); fetchAppointments(); initDashboard(); }
+
+
+        async function fetchSpecialists() {
+            const { data } = await supabaseClient.from('specialists').select('*').order('id');
+            const container = document.getElementById('specialist-list');
+            container.innerHTML = data?.map(s => {
+                const isLinked = s.profile_id && s.profile_id.startsWith('U');
+                const lineStatus = isLinked
+                    ? `<span class="text-[#06C755] bg-green-50 px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1"><i class="fa-brands fa-line"></i> Linked</span>`
+                    : `<span class="text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1"><i class="fa-brands fa-line grayscale"></i> Unlinked</span>`;
+
+                return `
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-4 relative group">
+                    <img src="${s.image_url || 'https://cdn-icons-png.flaticon.com/128/16842/16842358.png'}" class="w-16 h-16 rounded-2xl object-cover border-2 border-beauty-cyan shadow-sm">
+                    <div class="flex-1 overflow-hidden">
+                        <h4 class="font-bold text-beauty-dark truncate">${s.name}</h4>
+                        <p class="text-[10px] text-beauty-blue font-bold uppercase tracking-wide">${s.expertise}</p>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${s.is_active ? 'bg-green-500' : 'bg-gray-300'}"></span>
+                            ${lineStatus}
+                        </div>
+                    </div>
+                    <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <button onclick="editSpecialist(${s.id}, '${encodeURIComponent(JSON.stringify(s))}')" class="w-7 h-7 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition flex items-center justify-center text-xs"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteSpecialist(${s.id})" class="w-7 h-7 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('') || '';
+        }
+
+        async function openSpecialistModal() {
+            const { value: val } = await Swal.fire({
+                title: 'เพิ่มช่างใหม่',
+                html: `<div class="space-y-4 text-left">
+                    <input id="s-name" class="swal2-input !m-0 w-full" placeholder="ชื่อ-สกุล">
+                    <input id="s-exp" class="swal2-input !m-0 w-full" placeholder="ความถนัด (เช่น ช่างตัดผม)">
+                    <input id="s-img" class="swal2-input !m-0 w-full" placeholder="URL รูปโปรไฟล์">
+                    <input id="s-lid" class="swal2-input !m-0 w-full" placeholder="LINE User ID (Uxxxx...)">
+                </div>`,
+                confirmButtonColor: '#ea526f',
+                confirmButtonText: 'บันทึกข้อมูล',
+                customClass: { popup: 'rounded-[2rem]' },
+                preConfirm: () => ({ name: document.getElementById('s-name').value, expertise: document.getElementById('s-exp').value, image_url: document.getElementById('s-img').value, profile_id: document.getElementById('s-lid').value.trim() || null, is_active: true })
+            });
+            if (val && val.name) {
+                const { error } = await supabaseClient.from('specialists').insert(val);
+                if (error) {
+                    if (error.code === '23503') Swal.fire('Error', 'ไม่พบ LINE User ID นี้ในระบบ โปรดแจ้งให้ช่าง Login ก่อน', 'error');
+                    else Swal.fire('Error', error.message, 'error');
+                } else { Toast.fire({ icon: 'success', title: 'เพิ่มเรียบร้อย' }); fetchSpecialists(); }
+            }
+        }
+
+        async function editSpecialist(id, str) {
+            const s = JSON.parse(decodeURIComponent(str));
+            const { value: val } = await Swal.fire({
+                title: 'แก้ไขข้อมูลช่าง',
+                html: `<div class="space-y-4 text-left">
+                    <input id="es-name" class="swal2-input !m-0 w-full" value="${s.name}" placeholder="ชื่อ-สกุล">
+                    <input id="es-exp" class="swal2-input !m-0 w-full" value="${s.expertise}" placeholder="ความถนัด">
+                    <input id="es-img" class="swal2-input !m-0 w-full" value="${s.image_url || ''}" placeholder="URL รูปโปรไฟล์">
+                    <input id="es-lid" class="swal2-input !m-0 w-full" value="${s.profile_id || ''}" placeholder="LINE User ID">
+                </div>`,
+                confirmButtonColor: '#279af1', confirmButtonText: 'บันทึกการแก้ไข',
+                customClass: { popup: 'rounded-[2rem]' },
+                preConfirm: () => ({ name: document.getElementById('es-name').value, expertise: document.getElementById('es-exp').value, image_url: document.getElementById('es-img').value, profile_id: document.getElementById('es-lid').value.trim() || null })
+            });
+            if (val) {
+                const { error } = await supabaseClient.from('specialists').update(val).eq('id', id);
+                if (error) Swal.fire('Error', error.message, 'error');
+                else { Toast.fire({ icon: 'success', title: 'แก้ไขเรียบร้อย' }); fetchSpecialists(); }
+            }
+        }
+
+        async function deleteSpecialist(id) {
+            const r = await Swal.fire({ title: 'ลบข้อมูลช่าง?', text: 'การลบจะไม่สามารถเรียกคืนได้', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
+            if (r.isConfirmed) { await supabaseClient.from('specialists').delete().eq('id', id); fetchSpecialists(); }
+        }
+
+
+        async function fetchProducts() {
+            const { data } = await supabaseClient.from('products').select('*').order('id', { ascending: false });
+            const container = document.getElementById('product-list');
+            container.innerHTML = data?.map(p => `
+                <div class="bg-white rounded-[2rem] shadow-sm overflow-hidden border border-gray-100 group relative flex flex-col">
+                    <div class="h-48 bg-gray-100 overflow-hidden">
+                        <img src="${p.image_url}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </div>
+                    <div class="p-5 flex-1">
+                        <h4 class="font-bold text-beauty-dark line-clamp-1">${p.name}</h4>
+                        <p class="text-[10px] text-gray-400 mt-1 line-clamp-2">${p.description || '-'}</p>
+                        <p class="mt-3 font-bold text-beauty-pink">${Number(p.price).toLocaleString('en-US')} บาท</p>
+                    </div>
+                    <div class="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition">
+                        <button onclick="editProduct(${p.id}, '${encodeURIComponent(JSON.stringify(p))}')" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur text-blue-500 shadow-sm flex items-center justify-center hover:bg-blue-500 hover:text-white transition"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteProduct(${p.id})" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur text-red-500 shadow-sm flex items-center justify-center hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </div>
+                </div>
+            `).join('') || '<div class="col-span-full text-center py-10 text-gray-400">ยังไม่มีสินค้า/สไตล์แนะนำ</div>';
+        }
+
+        async function openProductModal() {
+            const { value: val } = await Swal.fire({
+                title: 'เพิ่มสไตล์แนะนำใหม่',
+                html: `<div class="space-y-4 text-left">
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">ชื่อสไตล์/สินค้า</label><input id="p-name" class="swal2-input !m-0 w-full" placeholder="เช่น ทรงผม Layer Cut"></div>
+                    <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">รายละเอียด</label><textarea id="p-desc" class="swal2-textarea !m-0 w-full" placeholder="อธิบายสไตล์เบื้องต้น..."></textarea></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">ราคาเริ่มต้น</label><input id="p-price" type="number" class="swal2-input !m-0 w-full" placeholder="0"></div>
+                        <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">URL รูปภาพ</label><input id="p-img" class="swal2-input !m-0 w-full" placeholder="https://..."></div>
+                    </div>
+                </div>`,
+                confirmButtonColor: '#ea526f', confirmButtonText: 'บันทึกลง Lookbook',
+                customClass: { popup: 'rounded-[2rem]' },
+                preConfirm: () => ({ name: document.getElementById('p-name').value, description: document.getElementById('p-desc').value, price: document.getElementById('p-price').value, image_url: document.getElementById('p-img').value })
+            });
+            if (val && val.name) {
+                const { error } = await supabaseClient.from('products').insert(val);
+                if (error) Swal.fire('Error', error.message, 'error'); else { Toast.fire({ icon: 'success', title: 'เพิ่มเรียบร้อย' }); fetchProducts(); }
+            }
+        }
+
+        async function editProduct(id, str) {
+            const p = JSON.parse(decodeURIComponent(str));
+            const { value: val } = await Swal.fire({
+                title: 'แก้ไขข้อมูลสไตล์',
+                html: `<div class="space-y-4 text-left">
+                    <input id="ep-name" class="swal2-input !m-0 w-full" value="${p.name}">
+                    <textarea id="ep-desc" class="swal2-textarea !m-0 w-full">${p.description || ''}</textarea>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input id="ep-price" type="number" class="swal2-input !m-0 w-full" value="${p.price}">
+                        <input id="ep-img" class="swal2-input !m-0 w-full" value="${p.image_url}">
+                    </div>
+                </div>`,
+                confirmButtonColor: '#279af1', preConfirm: () => ({ name: document.getElementById('ep-name').value, description: document.getElementById('ep-desc').value, price: document.getElementById('ep-price').value, image_url: document.getElementById('ep-img').value })
+            });
+            if (val) { await supabaseClient.from('products').update(val).eq('id', id); Toast.fire({ icon: 'success', title: 'แก้ไขแล้ว' }); fetchProducts(); }
+        }
+
+        async function deleteProduct(id) {
+            const r = await Swal.fire({ title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
+            if (r.isConfirmed) { await supabaseClient.from('products').delete().eq('id', id); fetchProducts(); }
+        }
+
+
+        async function fetchAdmins() {
+            const { data, error } = await supabaseClient.from('profiles').select('*').eq('role', 'admin').order('display_name');
+            const container = document.getElementById('admin-list');
+            container.innerHTML = data?.map(adm => `
+                <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-4 relative group">
+                    <img src="${adm.picture_url || 'https://cdn-icons-png.flaticon.com/128/16842/16842358.png'}" class="w-14 h-14 rounded-full object-cover border-2 border-beauty-pink shadow-sm">
+                    <div class="flex-1 overflow-hidden">
+                        <h4 class="font-bold text-beauty-dark truncate">${adm.display_name}</h4>
+                        <p class="text-xs text-gray-400 truncate">${adm.phone_number || '-'}</p>
+                        <span class="text-[9px] font-black text-beauty-pink bg-pink-50 px-2 py-0.5 rounded-full mt-1 inline-block uppercase tracking-tighter tracking-widest">Administrator</span>
+                    </div>
+                    <button onclick="removeAdminRole('${adm.line_user_id}', '${adm.display_name}')" class="w-8 h-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition flex items-center justify-center opacity-0 group-hover:opacity-100 shadow-sm"><i class="fa-solid fa-user-minus text-xs"></i></button>
+                </div>
+            `).join('') || '<div class="col-span-full text-center text-gray-400 py-10">ไม่พบรายชื่อแอดมิน</div>';
+        }
+
+        async function openAddAdminModal() {
+            const { value: keyword } = await Swal.fire({ title: 'ค้นหาผู้ใช้งาน', input: 'text', inputPlaceholder: 'พิมพ์ชื่อ หรือ เบอร์โทร...', showCancelButton: true, confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2rem]' } });
+            if (!keyword) return;
+            const { data: users } = await supabaseClient.from('profiles').select('*').or(`display_name.ilike.%${keyword}%,phone_number.ilike.%${keyword}%`).limit(5);
+            if (!users?.length) { Swal.fire('ไม่พบผู้ใช้งาน', '', 'info'); return; }
+            const options = {}; users.forEach(u => options[u.line_user_id] = `${u.display_name} (${u.phone_number || '-'})`);
+            const { value: selectedId } = await Swal.fire({ title: 'เลือกผู้ใช้งาน', input: 'radio', inputOptions: options, confirmButtonText: 'มอบสิทธิ์แอดมิน', confirmButtonColor: '#ea526f', showCancelButton: true, customClass: { popup: 'rounded-[2rem]' } });
+            if (selectedId) {
+                const { error } = await supabaseClient.from('profiles').update({ role: 'admin' }).eq('line_user_id', selectedId);
+                if (!error) { Swal.fire('สำเร็จ!', `มอบสิทธิ์เรียบร้อย`, 'success'); fetchAdmins(); }
+            }
+        }
+
+        async function removeAdminRole(uid, name) {
+            const currentProfile = await liff.getProfile();
+            if (uid === currentProfile.userId) { Swal.fire('ขออภัย', 'คุณไม่สามารถถอนสิทธิ์ตัวเองได้', 'warning'); return; }
+            const { isConfirmed } = await Swal.fire({ title: 'ถอนสิทธิ์แอดมิน?', text: `คุณต้องการถอนสิทธิ์ของ ${name} หรือไม่?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#ef4444', customClass: { popup: 'rounded-[2rem]' } });
+            if (isConfirmed) { await supabaseClient.from('profiles').update({ role: 'user' }).eq('line_user_id', uid); Toast.fire({ icon: 'success', title: 'ถอนสิทธิ์เรียบร้อย' }); fetchAdmins(); }
+        }
+
+
+        async function searchPatients() {
+            const k = document.getElementById('patient-search-input').value;
+            if (!k) return;
+            const { data } = await supabaseClient.from('profiles').select('*').or(`display_name.ilike.%${k}%,phone_number.ilike.%${k}%`).limit(15);
+            const container = document.getElementById('patient-results');
+            container.innerHTML = data?.map(u => `
+                <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-lg transition cursor-pointer" onclick='openPatientHistory(${JSON.stringify(u)})'>
+                    <img src="${u.picture_url}" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm">
+                    <div><h4 class="font-bold text-beauty-dark">${u.display_name}</h4><p class="text-xs text-gray-400">${u.phone_number || '-'}</p></div>
+                </div>
+            `).join('') || '<div class="col-span-full text-center text-gray-400 py-10">ไม่พบข้อมูล</div>';
+        }
+
+        async function openPatientHistory(user) {
+            currentPatientId = user.line_user_id;
+            document.getElementById('patient-history-view').classList.remove('hidden');
+            document.getElementById('history-p-name').innerText = user.display_name;
+            document.getElementById('history-p-phone').innerText = user.phone_number || '-';
+            document.getElementById('history-p-img').src = user.picture_url;
+            fetchPatientHistoryItems();
+        }
+
+        async function fetchPatientHistoryItems() {
+            const list = document.getElementById('history-list-container');
+            const { data } = await supabaseClient.from('notifications').select('*').eq('user_id', currentPatientId).eq('type', 'personal').order('created_at', { ascending: false });
+            list.innerHTML = data?.map(item => `
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm relative group">
+                    <p class="whitespace-pre-wrap text-gray-700">${item.message}</p>
+                    <p class="text-[9px] text-gray-300 mt-2 text-right">${formatThaiDate(item.created_at)}</p>
+                    <button onclick="deletePatientHistory(${item.id})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('') || '<p class="text-center text-gray-300 py-4 text-xs italic">ไม่มีประวัติบันทึก</p>';
+        }
+
+        async function savePatientHistory() {
+            const val = document.getElementById('new-history-note').value;
+            if (!val) return;
+            await supabaseClient.from('notifications').insert({ user_id: currentPatientId, message: val, type: 'personal', status: 'unread' });
+            document.getElementById('new-history-note').value = '';
+            Toast.fire({ icon: 'success', title: 'บันทึกแล้ว' }); fetchPatientHistoryItems();
+        }
+
+        async function deletePatientHistory(id) { await supabaseClient.from('notifications').delete().eq('id', id); fetchPatientHistoryItems(); }
+        function closePatientHistory() { document.getElementById('patient-history-view').classList.add('hidden'); currentPatientId = null; }
+
+
+        async function fetchNews() {
+            const { data } = await supabaseClient.from('news').select('*').order('created_at', { ascending: false });
+            const container = document.getElementById('news-list');
+            container.innerHTML = data?.map(n => `
+                <div class="bg-white rounded-[2rem] shadow-sm overflow-hidden border border-gray-100 group flex flex-col">
+                    <div class="h-40 bg-gray-100"><img src="${n.image_url}" class="w-full h-full object-cover"></div>
+                    <div class="p-6">
+                        <h4 class="font-bold text-beauty-dark">${n.title}</h4>
+                        <p class="text-xs text-gray-400 mt-2 line-clamp-2">${n.detail || '-'}</p>
+                        <div class="mt-4 flex gap-2">
+                            <button onclick="confirmBroadcast('${encodeURIComponent(JSON.stringify(n))}')" class="flex-1 py-2 bg-beauty-blue text-white rounded-xl text-xs font-bold hover:bg-blue-600 transition flex items-center justify-center gap-2"><i class="fa-solid fa-paper-plane"></i> Broadcast</button>
+                            <button onclick="deleteNews(${n.id})" class="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `).join('') || '';
+        }
+
+        async function handleCreateNewsClick() {
+            const { value: type } = await Swal.fire({ title: 'ประเภทประกาศ', input: 'radio', inputOptions: { 'public': '📢 ทั่วไป', 'personal': '👤 รายบุคคล' }, confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2rem]' } });
+            if (type === 'public') openPublicNewsModal(); else if (type === 'personal') openPersonalNewsFlow();
+        }
+
+        async function openPublicNewsModal() {
+            const { value: v } = await Swal.fire({ title: 'สร้างประกาศ', html: `<div class="space-y-4"><input id="n-ti" class="swal2-input !m-0 w-full" placeholder="หัวข้อ"><textarea id="n-de" class="swal2-textarea !m-0 w-full" placeholder="รายละเอียด"></textarea><input id="n-im" class="swal2-input !m-0 w-full" placeholder="รูปภาพ URL"></div>`, confirmButtonColor: '#ea526f', preConfirm: () => ({ title: document.getElementById('n-ti').value, detail: document.getElementById('n-de').value, image_url: document.getElementById('n-im').value }) });
+            if (v) { await supabaseClient.from('news').insert(v); fetchNews(); }
+        }
+
+        async function openPersonalNewsFlow() {
+            const { value: k } = await Swal.fire({ title: 'ค้นหาลูกค้า', input: 'text', confirmButtonText: 'ค้นหา', confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2rem]' } });
+            if (!k) return;
+            const { data } = await supabaseClient.from('profiles').select('*').or(`display_name.ilike.%${k}%,phone_number.ilike.%${k}%`).limit(5);
+            if (!data?.length) { Swal.fire('ไม่พบผู้ใช้', '', 'info'); return; }
+            const ops = {}; data.forEach(u => ops[u.line_user_id] = `${u.display_name} (${u.phone_number || '-'})`);
+            const { value: uid } = await Swal.fire({ title: 'เลือกผู้รับ', input: 'radio', inputOptions: ops, confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2rem]' } });
+            if (uid) openPersonalMessageForm(uid, ops[uid]);
+        }
+
+        async function openPersonalMessageForm(uid, name) {
+            const { value: msg } = await Swal.fire({
+                title: `ถึง: ${name.split(' (')[0]}`,
+                html: `<div class="space-y-4 text-left"><input id="pm-ti" class="swal2-input !m-0 w-full" placeholder="หัวข้อ"><textarea id="pm-de" class="swal2-textarea !m-0 w-full" placeholder="ข้อความ..."></textarea><div class="bg-gray-50 p-4 rounded-2xl flex justify-between items-center"><span class="text-xs font-bold text-gray-500">ส่ง LINE แจ้งเตือน</span><input type="checkbox" id="pm-line" class="w-5 h-5 accent-beauty-pink" checked></div></div>`,
+                confirmButtonText: 'ส่งข้อความ', confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2rem]' },
+                preConfirm: () => ({ title: document.getElementById('pm-ti').value, detail: document.getElementById('pm-de').value, sendLine: document.getElementById('pm-line').checked })
+            });
+            if (msg) {
+                await supabaseClient.from('notifications').insert({ user_id: uid, message: `**${msg.title}**\n${msg.detail}`, type: 'personal', status: 'unread' });
+                if (msg.sendLine) {
+                    fetch('https://zpvaqvdrulqmbdbhibqp.supabase.co/functions/v1/notify', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                            type: 'line_multicast', targets: [uid], content: {
+                                "type": "flex",
+                                "altText": "คุณมีข้อความใหม่จากร้าน",
+                                "contents": {
+                                    "type": "bubble",
+                                    "size": "mega",
+                                    "header": {
+                                        "type": "box",
+                                        "layout": "vertical",
+                                        "contents": [
+                                            {
+                                                "type": "box",
+                                                "layout": "vertical",
+                                                "contents": [
+                                                    {
+                                                        "type": "text",
+                                                        "text": "คุณมีข้อความใหม่จากร้าน",
+                                                        "color": "#ffffff",
+                                                        "size": "xl",
+                                                        "flex": 4,
+                                                        "weight": "bold",
+                                                        "wrap": true
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "paddingAll": "20px",
+                                        "backgroundColor": "#8cba80",
+                                        "spacing": "md",
+                                        "paddingTop": "22px"
+                                    },
+                                    "body": {
+                                        "type": "box",
+                                        "layout": "vertical",
+                                        "contents": [
+                                            {
+                                                "type": "text",
+                                                "text": `${msg.title}`,
+                                                "weight": "bold",
+                                                "size": "lg",
+                                                "wrap": true
+                                            },
+                                            {
+                                                "type": "separator",
+                                                "margin": "md"
+                                            },
+                                            {
+                                                "type": "text",
+                                                "text": `${msg.detail}`,
+                                                "size": "sm",
+                                                "wrap": true,
+                                                "margin": "md"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        })
+                    });
+                }
+                Toast.fire({ icon: 'success', title: 'ส่งเรียบร้อย' });
+            }
+        }
+
+        async function confirmBroadcast(newsStr) {
+            const n = JSON.parse(decodeURIComponent(newsStr));
+            if ((await Swal.fire({ title: 'ยืนยัน Broadcast?', text: 'ส่งให้ลูกค้าทุกคนผ่าน LINE', icon: 'question', showCancelButton: true, confirmButtonColor: '#ea526f', customClass: { popup: 'rounded-[2rem]' } })).isConfirmed) {
+                const { data } = await supabaseClient.from('profiles').select('line_user_id');
+                const targets = data.map(p => p.line_user_id).filter(id => id);
+                fetch('https://zpvaqvdrulqmbdbhibqp.supabase.co/functions/v1/notify', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                        type: 'line_multicast', targets: targets, content: {
+                            "type": "flex",
+                            "altText": "📢 ประกาศใหม่",
+                            "contents": {
+                                "type": "bubble",
+                                "size": "mega",
+                                "header": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "contents": [
+                                        {
+                                            "type": "box",
+                                            "layout": "vertical",
+                                            "contents": [
+                                                {
+                                                    "type": "text",
+                                                    "text": "คุณมีข้อความใหม่จากร้าน",
+                                                    "color": "#ffffff",
+                                                    "size": "xl",
+                                                    "flex": 4,
+                                                    "weight": "bold",
+                                                    "wrap": true
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "paddingAll": "20px",
+                                    "backgroundColor": "#8cba80",
+                                    "spacing": "md",
+                                    "paddingTop": "22px"
+                                },
+                                "body": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "contents": [
+                                        {
+                                            "type": "text",
+                                            "text": `${n.title}`,
+                                            "weight": "bold",
+                                            "size": "lg",
+                                            "wrap": true
+                                        },
+                                        {
+                                            "type": "separator",
+                                            "margin": "md"
+                                        },
+                                        {
+                                            "type": "text",
+                                            "text": `${n.detail}`,
+                                            "size": "sm",
+                                            "wrap": true,
+                                            "margin": "md"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    })
+                });
+                Swal.fire('ส่งสำเร็จ', '', 'success');
+            }
+        }
+
+        async function deleteNews(id) { if ((await Swal.fire({ title: 'ลบประกาศ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' })).isConfirmed) { await supabaseClient.from('news').delete().eq('id', id); fetchNews(); } }
+
+        function logout() { liff.logout(); window.location.reload(); }
+        window.onload = initializeAdmin;
+    </script>
+</body>
+
+</html>
