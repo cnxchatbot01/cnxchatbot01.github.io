@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chingju Beauty</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/128/1807/1807383.png">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/1807/1807383.png">
+    <meta name="description" content="Beauty & Wellness" />
+    <meta name="author" content="Chingju Beauty" />
+    <meta property="og:title" content="Beauty & Wellness" />
+    <meta property="og:description" content="Chingju Beauty" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://google.co.th" />
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/128/1807/1807383.png" />
+
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        beauty: {
+                            pink: '#ea526f',
+                            dark: '#070600',
+                            light: '#f7f7ff',
+                            cyan: '#23b5d3',
+                            blue: '#279af1',
+                            surface: '#ffffff',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'glow': '0 0 20px rgba(234, 82, 111, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f7f7ff;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .swal2-popup {
+            border-radius: 24px !important;
+        }
+
+        .swal-custom-input label {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .swal-custom-input input,
+        .swal-custom-input select,
+        .swal-custom-input textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .swal-custom-input input:focus,
+        .swal-custom-input select:focus {
+            outline: none;
+            border-color: #ea526f;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(234, 82, 111, 0.1);
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #f7f7ff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.4s;
+        }
+
+        .hidden-loader {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .nav-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item:active {
+            transform: scale(0.9);
+        }
+
+        .lookbook-card {
+            width: 160px;
+            height: 220px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .lookbook-card:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body class="bg-beauty-light text-beauty-dark pb-28 antialiased selection:bg-beauty-pink selection:text-white">
+
+
+    <div id="loader">
+        <div class="w-16 h-16 relative">
+            <div class="absolute inset-0 rounded-full border-4 border-beauty-pink/20"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-beauty-pink border-t-transparent animate-spin">
+            </div>
+        </div>
+        <p class="mt-4 text-beauty-pink font-medium animate-pulse text-sm uppercase tracking-widest">Loading Beauty</p>
+    </div>
+
+
+    <div id="login-overlay"
+        class="fixed inset-0 bg-white/80 backdrop-blur-md z-50 flex flex-col items-center justify-center hidden p-6 text-center">
+        <div
+            class="w-20 h-20 bg-gradient-to-tr from-beauty-pink to-beauty-blue rounded-3xl flex items-center justify-center text-white text-3xl shadow-glow rotate-3 mb-6">
+            <i class="fa-solid fa-spa"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Beauty & Wellness</h2>
+        <p class="text-gray-500 mb-8 text-sm text-center">บริการความงามครบวงจร
+            จองคิวง่ายๆ<br>เช็คโปรโมชั่นและสไตล์ที่ชอบได้ทันที</p>
+        <button onclick="login()"
+            class="w-full bg-[#06C755] hover:bg-[#05b34c] text-white py-4 rounded-2xl font-bold shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-brands fa-line text-xl"></i> เข้าสู่ระบบด้วย LINE
+        </button>
+    </div>
+
+    <div id="app-container" class="max-w-md mx-auto min-h-screen relative opacity-0 transition-opacity duration-700">
+
+
+        <header class="pt-8 pb-4 px-6 bg-white sticky top-0 z-20">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <img id="profile-img" src="https://cdn-icons-png.flaticon.com/128/1807/1807383.png"
+                            class="w-12 h-12 rounded-full border-2 border-beauty-pink object-cover p-0.5">
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full">
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Welcome Back</p>
+                        <h1 id="display-name" class="text-lg font-bold leading-tight truncate w-32 text-beauty-dark">
+                            Guest</h1>
+                    </div>
+                </div>
+                <button onclick="logout()"
+                    class="w-10 h-10 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 transition"><i
+                        class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </header>
+
+        <main class="px-6 space-y-8 mt-4">
+
+
+            <div id="next-appt-wrapper">
+                <div id="next-appt-card" class="hidden animate-fade-in">
+                    <div
+                        class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest flex justify-between items-center px-1">
+                        <span>นัดหมายถัดไป</span>
+                        <span class="text-beauty-pink bg-pink-50 px-2 py-0.5 rounded-full"
+                            id="next-appt-status-thai">ยืนยันแล้ว</span>
+                    </div>
+                    <div class="bg-gradient-to-r from-beauty-pink to-[#c92a48] rounded-[2rem] p-6 text-white shadow-glow relative overflow-hidden group cursor-pointer transition transform active:scale-[0.98]"
+                        onclick="handleMenuClick('history')">
+                        <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+                        <div class="relative z-10 flex justify-between items-center">
+                            <div>
+                                <p id="next-appt-date" class="text-xs font-medium opacity-80 mb-1 tracking-wide">
+                                    --/--/----</p>
+                                <h2 id="next-appt-time" class="text-4xl font-black tracking-tighter">--:--</h2>
+                                <p id="next-appt-doc"
+                                    class="text-xs font-bold mt-2 bg-white/20 px-2 py-1 rounded-lg w-fit"><i
+                                        class="fa-solid fa-user-sparkles mr-1"></i> ...</p>
+                            </div>
+                            <div
+                                class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner">
+                                <i class="fa-solid fa-calendar-check text-3xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div id="no-appt-placeholder"
+                    class="bg-white rounded-[2rem] p-6 text-center border border-dashed border-gray-300">
+                    <div
+                        class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-2 text-gray-300">
+                        <i class="fa-regular fa-calendar"></i>
+                    </div>
+                    <p class="text-sm text-gray-400">ยังไม่มีนัดหมายเร็วๆ นี้</p>
+                    <button onclick="handleMenuClick('booking')"
+                        class="mt-3 text-xs text-beauty-pink font-bold hover:underline tracking-tight">จองคิวรับบริการเลย</button>
+                </div>
+            </div>
+
+
+            <section id="lookbook-section">
+                <div class="flex justify-between items-end mb-4">
+                    <h3 class="text-lg font-bold text-beauty-dark">สไตล์แนะนำ</h3>
+                    <span class="text-[10px] font-bold text-beauty-cyan uppercase tracking-wider">ดูแบบทั้งหมด</span>
+                </div>
+                <div id="products-container" class="flex overflow-x-auto hide-scroll gap-4 pb-2 -mx-6 px-6">
+                    <!-- Skeletons -->
+                    <div class="lookbook-card bg-white rounded-[2.5rem] animate-pulse"></div>
+                    <div class="lookbook-card bg-white rounded-[2.5rem] animate-pulse"></div>
+                    <div class="lookbook-card bg-white rounded-[2.5rem] animate-pulse"></div>
+                </div>
+            </section>
+
+
+            <section>
+                <h3 class="text-lg font-bold mb-4 text-beauty-dark text-center">เมนูด่วน</h3>
+                <div class="grid grid-cols-4 gap-4">
+                    <div onclick="handleMenuClick('booking')"
+                        class="flex flex-col items-center gap-2 group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-xl text-beauty-pink group-hover:bg-beauty-pink group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">จองคิว</span>
+                    </div>
+                    <div onclick="handleMenuClick('history')"
+                        class="flex flex-col items-center gap-2 group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-xl text-beauty-blue group-hover:bg-beauty-blue group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-history"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">ประวัติ</span>
+                    </div>
+                    <div onclick="handleMenuClick('specialists')"
+                        class="flex flex-col items-center gap-2 group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-xl text-beauty-cyan group-hover:bg-beauty-cyan group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-wand-sparkles"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">ช่าง</span>
+                    </div>
+                    <div onclick="handleMenuClick('profile')"
+                        class="flex flex-col items-center gap-2 group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center text-xl text-gray-400 group-hover:bg-beauty-dark group-hover:text-white transition-all duration-300">
+                            <i class="fa-solid fa-user-gear"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase">ข้อมูล</span>
+                    </div>
+                </div>
+            </section>
+
+
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-beauty-dark">โปรโมชั่น</h3>
+                    <span class="text-xs text-beauty-blue font-bold" onclick="handleMenuClick('news')">ดูทั้งหมด</span>
+                </div>
+                <div id="news-container" class="flex overflow-x-auto hide-scroll gap-4 pb-4 -mx-6 px-6"></div>
+            </section>
+
+
+            <div id="personal-news-section" class="hidden">
+                <h3 class="text-lg font-bold mb-4 text-beauty-dark">ข้อความถึงคุณ</h3>
+                <div id="personal-news-container" class="space-y-3 pb-4"></div>
+            </div>
+
+        </main>
+
+
+        <nav
+            class="fixed bottom-6 left-6 right-6 h-16 bg-white/90 backdrop-blur-xl rounded-full shadow-2xl border border-white/50 flex justify-between items-center px-10 z-50 max-w-sm mx-auto">
+            <div class="nav-item cursor-pointer text-2xl text-beauty-pink"
+                onclick="window.scrollTo({top:0, behavior:'smooth'})"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item cursor-pointer text-2xl text-gray-300 hover:text-beauty-blue"
+                onclick="handleMenuClick('history')"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <div class="nav-item cursor-pointer text-2xl text-gray-300 hover:text-beauty-cyan"
+                onclick="window.location.href='https://line.me/R/oaMessage/@945etnft'"><i
+                    class="fa-brands fa-line"></i></div>
+            <div class="nav-item cursor-pointer text-2xl text-gray-300 hover:text-gray-600"
+                onclick="handleMenuClick('profile')"><i class="fa-solid fa-circle-user"></i></div>
+        </nav>
+    </div>
+
+    <script>
+        // --- Config ---
+        const LIFF_ID = "2008898262-jBqLQ3c3";
+        const SUPABASE_URL = "https://zpvaqvdrulqmbdbhibqp.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwdmFxdmRydWxxbWJkYmhpYnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NTYzNzgsImV4cCI6MjA4NDAzMjM3OH0.N99vPrimot1PkuS5qiLDSPTtFaIpNfMFlZd6T8ui6pU";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/notify`;
+
+        let profile = null;
+
+
+        const toggleLoader = (show) => {
+            const el = document.getElementById('loader');
+            if (show) el.classList.remove('hidden-loader');
+            else {
+                el.classList.add('hidden-loader');
+                document.getElementById('app-container').classList.remove('opacity-0');
+            }
+        };
+
+        function formatThaiDate(dateString) {
+            if (!dateString) return '-';
+            const parts = dateString.split('-');
+            if (parts.length < 3) return dateString;
+            const year = parseInt(parts[0]) + 543;
+            const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            return `${parseInt(parts[2])} ${months[parseInt(parts[1]) - 1]} ${year}`;
+        }
+
+
+        function getThaiStatus(status) {
+            const map = {
+                'pending': { text: 'รอการยืนยัน', color: 'text-orange-500' },
+                'confirmed': { text: 'ยืนยันแล้ว', color: 'text-green-500' },
+                'completed': { text: 'เสร็จสิ้น', color: 'text-blue-500' },
+                'cancelled': { text: 'ยกเลิก', color: 'text-red-500' }
+            };
+            return map[status] || { text: status, color: 'text-gray-500' };
+        }
+
+        async function sendNotification(bookingData) {
+            try {
+                const thaiDate = formatThaiDate(bookingData.date);
+                const message = `🛎️ *มีลูกค้าจองคิวใหม่*\n👤 *ลูกค้า:* ${bookingData.customerName}\n📅 *วันที่:* ${thaiDate}\n⏰ *เวลา:* ${bookingData.time}\n🏢 *สาขา:* ${bookingData.branch}\n✂️ *บริการ:* ${bookingData.category}\n📝 *หมายเหตุ:* ${bookingData.note || '-'}`.trim();
+                await fetch(EDGE_FUNCTION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message }) });
+            } catch (error) { console.error(error); }
+        }
+
+        // --- Core ---
+        async function init() {
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                await liff.ready;
+                if (liff.isLoggedIn()) {
+                    profile = await liff.getProfile();
+                    document.getElementById('display-name').innerText = profile.displayName;
+                    document.getElementById('profile-img').src = profile.pictureUrl;
+                    await supabaseClient.from('profiles').upsert({ line_user_id: profile.userId, display_name: profile.displayName, picture_url: profile.pictureUrl, updated_at: new Date() }, { onConflict: 'line_user_id' });
+                    await loadData();
+                    toggleLoader(false);
+                } else {
+                    document.getElementById('login-overlay').classList.remove('hidden');
+                    toggleLoader(false);
+                }
+            } catch (e) { toggleLoader(false); Swal.fire('Error', 'Connection Failed', 'error'); }
+        }
+
+        async function loadData() {
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+
+            const { data: next } = await supabaseClient.from('bookings').select('*, specialists(name)').eq('customer_id', profile.userId).eq('status', 'confirmed').gte('booking_date', today).order('booking_date').limit(1).maybeSingle();
+
+            const cardEl = document.getElementById('next-appt-card');
+            const placeholderEl = document.getElementById('no-appt-placeholder');
+
+            if (next) {
+                document.getElementById('next-appt-time').innerText = next.booking_time.slice(0, 5);
+                document.getElementById('next-appt-date').innerText = formatThaiDate(next.booking_date);
+                document.getElementById('next-appt-doc').innerText = next.specialists?.name || 'ช่างผู้เชี่ยวชาญ';
+                document.getElementById('next-appt-status-thai').innerText = getThaiStatus(next.status).text;
+                cardEl.classList.remove('hidden');
+                placeholderEl.classList.add('hidden');
+            } else {
+                cardEl.classList.add('hidden');
+                placeholderEl.classList.remove('hidden');
+            }
+
+
+            const { data: prods } = await supabaseClient.from('products').select('*').limit(10);
+            const pc = document.getElementById('products-container'); pc.innerHTML = '';
+            if (prods && prods.length > 0) {
+                prods.forEach(p => {
+                    const pStr = encodeURIComponent(JSON.stringify(p));
+                    pc.innerHTML += `
+                        <div class="lookbook-card relative flex-shrink-0 bg-white rounded-[2.5rem] overflow-hidden shadow-soft cursor-pointer" onclick="showProductDetail('${pStr}')">
+                            <img src="${p.image_url}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-4">
+                                <p class="text-white font-bold text-xs truncate">${p.name}</p>
+                                <p class="text-beauty-pink font-bold text-[10px]">${p.price ? Number(p.price).toLocaleString('en-US') : '0'} บาท</p>
+                            </div>
+                        </div>`;
+                });
+            } else {
+                pc.innerHTML = '<div class="text-gray-400 text-xs py-10 w-full text-center">ยังไม่มีรายการสไตล์แนะนำ</div>';
+            }
+
+
+            const { data: news } = await supabaseClient.from('news').select('*').order('created_at', { ascending: false }).limit(5);
+            const nc = document.getElementById('news-container'); nc.innerHTML = '';
+            news?.forEach(n => {
+                const nStr = encodeURIComponent(JSON.stringify(n));
+                nc.innerHTML += `
+                    <div class="w-[280px] flex-shrink-0 bg-white rounded-[2rem] p-4 shadow-soft border border-gray-100 flex flex-col cursor-pointer transition transform active:scale-95" onclick="showNewsDetail('${nStr}')">
+                        <div class="h-32 w-full rounded-2xl bg-gray-100 overflow-hidden mb-3">
+                            <img src="${n.image_url || 'https://cdn-icons-png.flaticon.com/128/1807/1807383.png'}" class="w-full h-full object-cover">
+                        </div>
+                        <h4 class="font-bold text-sm text-beauty-dark truncate">${n.title}</h4>
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-lg font-bold">${formatThaiDate(n.created_at.split('T')[0])}</span>
+                            <button onclick="event.stopPropagation(); shareNews('${nStr}')" class="w-8 h-8 rounded-full bg-blue-50 text-beauty-blue flex items-center justify-center text-xs"><i class="fa-solid fa-share"></i></button>
+                        </div>
+                    </div>`;
+            });
+
+
+            const { data: pn } = await supabaseClient.from('notifications').select('*').eq('user_id', profile.userId).order('created_at', { ascending: false }).limit(3);
+            if (pn && pn.length > 0) {
+                document.getElementById('personal-news-section').classList.remove('hidden');
+                const pnc = document.getElementById('personal-news-container'); pnc.innerHTML = '';
+                pn.forEach(n => {
+                    pnc.innerHTML += `
+                        <div class="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 flex gap-4 items-start">
+                            <div class="w-10 h-10 rounded-full bg-cyan-50 text-beauty-cyan flex items-center justify-center flex-shrink-0 text-lg"><i class="fa-solid fa-envelope-open-text"></i></div>
+                            <div>
+                                <p class="text-xs text-gray-700 leading-relaxed">${n.message}</p>
+                                <p class="text-[9px] text-gray-400 mt-2 font-bold uppercase tracking-widest">${formatThaiDate(n.created_at.split('T')[0])}</p>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
+        async function handleMenuClick(action, autoNote = "") {
+            if (action === 'booking') {
+                const { data: branches } = await supabaseClient.from('branches').select('name');
+                const { data: cats } = await supabaseClient.from('categories').select('name');
+
+                const { value: form } = await Swal.fire({
+                    title: '<span class="text-xl font-bold">จองคิวบริการ</span>',
+                    html: `
+                        <div class="text-left space-y-3 mt-2">
+                            <div class="swal-custom-input"><label>สาขา</label><select id="b-id">${branches.map(b => `<option>${b.name}</option>`).join('')}</select></div>
+                            <div class="swal-custom-input"><label>บริการ</label><select id="c-id">${cats.map(c => `<option>${c.name}</option>`).join('')}</select></div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="swal-custom-input"><label>วันที่</label><input type="date" id="b-date"></div>
+                                <div class="swal-custom-input"><label>เวลา</label><input type="time" id="b-time"></div>
+                            </div>
+                            <div class="swal-custom-input"><label>รายละเอียดเพิ่มเติม</label><textarea id="b-note" rows="2">${autoNote}</textarea></div>
+                        </div>`,
+                    confirmButtonText: 'ยืนยันการจอง', confirmButtonColor: '#ea526f', showCancelButton: true,
+                    preConfirm: () => ({ branch: document.getElementById('b-id').value, cat: document.getElementById('c-id').value, date: document.getElementById('b-date').value, time: document.getElementById('b-time').value, note: document.getElementById('b-note').value })
+                });
+
+                if (form && form.date) {
+                    const { error } = await supabaseClient.from('bookings').insert({ customer_id: profile.userId, booking_date: form.date, booking_time: form.time, service_details: `${form.branch} - ${form.cat}: ${form.note}`, status: 'pending' });
+                    if (!error) {
+                        sendNotification({ customerName: profile.displayName, date: form.date, time: form.time, branch: form.branch, category: form.cat, note: form.note });
+                        Swal.fire({ icon: 'success', title: 'จองสำเร็จ!', text: 'เราได้รับข้อมูลการจองของคุณแล้ว', confirmButtonColor: '#ea526f' }).then(() => loadData());
+                    }
+                }
+            } else if (action === 'specialists') {
+                const { data: specs } = await supabaseClient.from('specialists').select('*').eq('is_active', true);
+                let html = '<div class="space-y-3 text-left">';
+                specs.forEach(s => { html += `<div class="flex items-center gap-4 bg-gray-50 p-3 rounded-2xl"><img src="${s.image_url}" class="w-12 h-12 rounded-full object-cover"><div><h5 class="font-bold text-gray-800">${s.name}</h5><p class="text-xs text-gray-500">${s.expertise}</p></div></div>`; });
+                Swal.fire({ title: 'ช่างผู้เชี่ยวชาญ', html: html || 'ไม่มีช่างว่าง', confirmButtonColor: '#23b5d3' });
+            } else if (action === 'history') {
+                const { data: hist } = await supabaseClient.from('bookings').select('*, specialists(name)').eq('customer_id', profile.userId).order('booking_date', { ascending: false }).limit(10);
+                let html = '<div class="space-y-3 text-left max-h-60 overflow-y-auto pr-2">';
+                if (!hist?.length) html = '<p class="text-center text-gray-400 text-sm">ไม่มีประวัติการจอง</p>';
+                else hist.forEach(h => {
+                    const st = getThaiStatus(h.status);
+                    html += `<div class="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm"><div class="flex justify-between mb-1"><span class="font-bold text-beauty-pink text-xs">${formatThaiDate(h.booking_date)} ${h.booking_time.slice(0, 5)} น.</span><span class="text-[9px] font-bold ${st.color} uppercase px-2 py-0.5 bg-gray-50 rounded-full">${st.text}</span></div><p class="text-[10px] text-gray-600 line-clamp-2 mt-1 leading-relaxed">${h.service_details}</p></div>`;
+                });
+                Swal.fire({ title: 'ประวัติการจอง', html: html, confirmButtonColor: '#070600' });
+            } else if (action === 'profile') {
+                const { data: u } = await supabaseClient.from('profiles').select('*').eq('line_user_id', profile.userId).single();
+                const { value: tel } = await Swal.fire({ title: 'ข้อมูลส่วนตัว', html: `<div class="text-left mt-2 swal-custom-input"><label>เบอร์โทรศัพท์</label><input type="tel" id="p-tel" value="${u.phone_number || ''}"></div>`, confirmButtonText: 'บันทึก', confirmButtonColor: '#ea526f', showCancelButton: true, preConfirm: () => document.getElementById('p-tel').value });
+                if (tel) { await supabaseClient.from('profiles').update({ phone_number: tel }).eq('line_user_id', profile.userId); Swal.fire({ icon: 'success', title: 'บันทึกแล้ว', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 }); }
+            }
+        }
+
+        window.showProductDetail = (pStr) => {
+            const p = JSON.parse(decodeURIComponent(pStr));
+            Swal.fire({
+                title: p.name,
+                html: `<div class="text-left"><img src="${p.image_url}" class="w-full rounded-[2rem] mb-4 shadow-lg h-64 object-cover"><p class="text-sm text-gray-600 leading-relaxed">${p.description || 'สไตล์แนะนำสำหรับคุณ'}</p><p class="mt-4 text-lg font-bold text-beauty-pink text-center">ราคาโดยประมาณ: ${p.price ? Number(p.price).toLocaleString('en-US') : '0'} บาท</p></div>`,
+                confirmButtonText: 'จองสไตล์นี้', confirmButtonColor: '#ea526f', showCancelButton: true, cancelButtonText: 'ปิด'
+            }).then(r => { if (r.isConfirmed) handleMenuClick('booking', `สนใจสไตล์: ${p.name}`); });
+        }
+
+        window.showNewsDetail = (nStr) => {
+            const n = JSON.parse(decodeURIComponent(nStr));
+            Swal.fire({ title: n.title, html: `<div class="text-left"><img src="${n.image_url}" class="w-full rounded-2xl mb-4 object-cover shadow-md"><p class="text-sm text-gray-600 leading-relaxed">${n.detail}</p></div>`, confirmButtonText: 'ปิด', confirmButtonColor: '#070600' });
+        }
+
+        async function shareNews(nStr) {
+            const n = JSON.parse(decodeURIComponent(nStr));
+            if (liff.isApiAvailable('shareTargetPicker')) {
+                await liff.shareTargetPicker([{ type: "flex", altText: n.title, contents: { type: "bubble", hero: { type: "image", url: n.image_url, size: "full", aspectRatio: "20:13", aspectMode: "cover" }, body: { type: "box", layout: "vertical", contents: [{ type: "text", text: n.title, weight: "bold", size: "xl", wrap: true }, { type: "text", text: n.detail, size: "sm", wrap: true, color: "#666666" }] } } }]);
+            }
+        }
+
+        function login() { liff.login({ redirectUri: window.location.href }); }
+        function logout() { liff.logout(); location.reload(); }
+        window.onload = init;
+    </script>
+</body>
+
+</html>
