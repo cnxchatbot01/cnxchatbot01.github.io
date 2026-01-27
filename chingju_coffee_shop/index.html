@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE Chatbot Admin • 2026</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/128/9977/9977388.png">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/9977/9977388.png">
+    <meta name="description" content="LINE Chatbot Admin" />
+    <meta name="author" content="chingju cooffee shop" />
+    <meta property="og:title" content="LINE Chatbot Admin" />
+    <meta property="og:description" content="LINE Chatbot Admin-chingju cooffee shop" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://google.com" />
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/128/9977/9977388.png" />
+
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/128/9977/9977388.png">
+    <meta name="description" content="LINE Chatbot Admin Panel" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --surface: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.4);
+        }
+
+        .font-display {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--primary);
+            border-radius: 0 4px 4px 0;
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-active {
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0) 100%);
+            color: var(--primary-dark);
+        }
+
+        .nav-active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-active i {
+            color: var(--primary);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            box-shadow: 0 4px 15px -3px rgba(79, 70, 229, 0.4), 0 2px 6px -2px rgba(79, 70, 229, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.5);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast-enter {
+            transform: translateX(100%) scale(0.9);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-enter-active {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+
+        .toast-exit-active {
+            transform: translateX(100%) scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease-in;
+        }
+
+
+        .table-row-hover:hover td {
+            background-color: rgba(248, 250, 252, 0.8);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app" class="min-h-screen"></div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3"></div>
+
+    <div id="modal-overlay"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-[100] hidden transition-all duration-300 p-4 opacity-0"
+        onclick="if(event.target === this) closeModal()">
+        <div class="glass w-full max-w-2xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden transform scale-95 transition-all duration-300"
+            id="modal-container">
+            <div class="flex items-center justify-between px-8 py-6 border-b border-gray-100/50 bg-white/40">
+                <h2 id="modal-title" class="text-2xl font-bold text-slate-800 font-display">Title</h2>
+                <button onclick="closeModal()"
+                    class="p-2 rounded-full hover:bg-white/50 hover:text-rose-500 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6 text-slate-400"></i>
+                </button>
+            </div>
+            <div id="modal-content" class="p-8 overflow-y-auto max-h-[75vh] bg-white/30"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================
+        //                  CONFIGURATION
+        // ==============================================
+        const LIFF_ID = "2008759540-MZ5YhefE";
+        const SUPABASE_URL = "https://cpvpeelnvmlogiwtvunp.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwdnBlZWxudm1sb2dpd3R2dW5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0OTY2MTAsImV4cCI6MjA4NTA3MjYxMH0.OFuQisHn3c1561xgex_sbdelVQhj1RvRoDg79NSPr74";
+
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let currentUserProfile = null;
+        let currentView = 'keywords';
+        let isSidebarOpen = false;
+        let currentKeywords = [];
+
+
+        let searchQuery = "";
+        let searchTimeout = null;
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 50;
+
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        async function initApp() {
+            renderLoading('กำลังยืนยันตัวตนผ่าน LINE...');
+
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                await liff.ready;
+                if (!liff.isLoggedIn()) {
+                    liff.login({ redirectUri: window.location.href });
+                    return;
+                }
+
+                const profile = await liff.getProfile();
+                currentUserProfile = profile;
+
+                renderLoading('กำลังตรวจสอบสิทธิ์ Admin...');
+
+                const { data: userProfile, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('role')
+                    .eq('userId', profile.userId)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("Database Auth Error:", error);
+                    renderAccessDenied(profile);
+                    return;
+                }
+
+                if (userProfile && userProfile.role === 'admin') {
+                    renderMainLayout();
+                    loadView('keywords');
+                } else {
+                    renderAccessDenied(profile);
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('app').innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-red-50 p-4 text-red-800 text-center">
+                        <div>
+                            <h2 class="font-bold text-xl mb-2">เกิดข้อผิดพลาดในการเชื่อมต่อ</h2>
+                            <p class="mb-4">${err.message}</p>
+                            <button onclick="window.location.reload()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow">ลองใหม่อีกครั้ง</button>
+                        </div>
+                    </div>`;
+            }
+        }
+
+
+
+        function renderLoading(message = 'กำลังโหลด...') {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+                    <div class="glass p-8 rounded-3xl flex flex-col items-center shadow-2xl slide-in">
+                        <div class="relative w-16 h-16 mb-6">
+                            <div class="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+                            <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
+                        </div>
+                        <p class="text-slate-600 font-medium animate-pulse font-display text-lg">${message}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAccessDenied(profile) {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="min-h-screen flex flex-col items-center justify-center p-4">
+                    <div class="glass p-10 rounded-3xl shadow-2xl max-w-md w-full text-center slide-in">
+                        <div class="mx-auto bg-red-50 w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                            <i data-lucide="shield-alert" class="text-red-500 w-12 h-12"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold text-slate-800 mb-2 font-display">Access Denied</h1>
+                        <p class="text-slate-500 mb-8 max-w-xs mx-auto">บัญชีนี้ไม่มีสิทธิ์ Admin ในระบบ<br>กรุณาติดต่อผู้ดูแลระบบ</p>
+                        
+                        <div class="bg-white/50 p-4 rounded-2xl border border-white/60 mb-8 text-left flex items-center gap-4 shadow-sm">
+                            <img src="${profile.pictureUrl}" class="w-14 h-14 rounded-full border-2 border-white shadow-md object-cover" alt="Profile" />
+                            <div class="min-w-0">
+                                <div class="font-bold text-slate-800 truncate text-lg">${profile.displayName}</div>
+                                <div class="text-xs text-slate-500 truncate font-mono bg-slate-100 px-2 py-0.5 rounded-full inline-block mt-1">${profile.userId}</div>
+                            </div>
+                        </div>
+                        <button onclick="window.location.reload()" class="w-full py-3.5 btn-primary text-white rounded-xl font-semibold shadow-lg shadow-indigo-200 transition-all hover:scale-[1.02]">
+                            โหลดหน้าเว็บใหม่
+                        </button>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function renderMainLayout() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <!-- Mobile Header -->
+                <div class="md:hidden glass sticky top-0 z-40 px-5 h-16 flex items-center justify-between shadow-sm backdrop-blur-md">
+                    <div class="flex items-center gap-3">
+                         <div class="bg-gradient-to-tr from-indigo-600 to-violet-600 text-white p-2 rounded-xl shadow-lg shadow-indigo-300 transform scale-90">
+                            <i data-lucide="bot" class="w-5 h-5"></i>
+                        </div>
+                        <span class="font-bold text-xl text-slate-800 tracking-tight font-display">Admin<span class="text-indigo-600">Bot</span></span>
+                    </div>
+                    <button onclick="toggleSidebar()" class="p-2.5 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all active:scale-95">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+
+                <!-- Sidebar Overlay -->
+                <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 hidden transition-opacity duration-300"></div>
+
+                <div class="flex min-h-screen pt-4 md:pt-6 pb-6 px-4 md:px-6 gap-6 max-w-[1600px] mx-auto">
+                    <!-- Sidebar -->
+                    <aside id="sidebar" class="fixed md:sticky top-0 inset-y-0 left-0 w-[280px] h-[calc(100vh-3rem)] md:top-6 glass rounded-3xl transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-out z-50 flex flex-col shadow-2xl md:shadow-lg border-white/40">
+                        
+                        <!-- Logo Area -->
+                        <div class="h-24 flex items-center px-8 border-b border-gray-100/50">
+                            <div class="flex items-center gap-3.5">
+                                <div class="bg-gradient-to-tr from-indigo-600 to-violet-600 text-white p-3 rounded-2xl shadow-lg shadow-indigo-300">
+                                    <i data-lucide="bot" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h1 class="font-bold text-2xl text-slate-800 tracking-tight font-display">Admin<span class="text-indigo-600">Bot</span></h1>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-0.5">Control Panel</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Profile Card -->
+                        <div class="mx-5 mt-6 p-4 bg-gradient-to-r from-red-50 to-white rounded-2xl border border-white shadow-sm flex items-center gap-3 relative overflow-hidden group">
+                           <div class="absolute inset-0 bg-white/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="relative z-10">
+                                <img src="${currentUserProfile.pictureUrl}" class="w-11 h-11 rounded-full border-2 border-white shadow-md object-cover" alt="" />
+                                <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-[2.5px] border-white rounded-full"></div>
+                            </div>
+                            <div class="min-w-0 relative z-10">
+                                <p class="text-sm font-bold text-slate-800 truncate">${currentUserProfile.displayName}</p>
+                                <p class="text-[10px] text-emerald-600 font-bold flex items-center gap-1 bg-emerald-100/80 px-2 py-0.5 rounded-full w-fit mt-1">
+                                    <i data-lucide="shield-check" class="w-3 h-3"></i> VERIFIED
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Navigation -->
+                        <nav class="flex-1 px-5 py-8 space-y-2 overflow-y-auto">
+                            <p class="px-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Main Menu</p>
+                            
+                            <button onclick="loadView('keywords');" id="nav-keywords" class="nav-item w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-slate-600 hover:bg-white/60 hover:text-indigo-600 text-[15px] font-medium transition-all group">
+                                <i data-lucide="message-square-plus" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                                <span>จัดการ Keyword</span>
+                            </button>
+                            
+                            <button onclick="loadView('users');" id="nav-users" class="nav-item w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-slate-600 hover:bg-white/60 hover:text-indigo-600 text-[15px] font-medium transition-all group">
+                                <i data-lucide="users" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                                <span>ผู้ใช้งาน (Users)</span>
+                            </button>
+                            
+                            <button onclick="loadView('permissions');" id="nav-permissions" class="nav-item w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-slate-600 hover:bg-white/60 hover:text-indigo-600 text-[15px] font-medium transition-all group">
+                                <i data-lucide="key" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                                <span>สิทธิ์ VIP</span>
+                            </button>
+                        </nav>
+
+                        <!-- Footer Actions -->
+                        <div class="p-5 border-t border-gray-100/50">
+                            <button onclick="liff.logout(); window.location.reload();" class="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 text-rose-600 bg-rose-50/80 hover:bg-rose-100 hover:shadow-inner rounded-xl transition-all font-semibold text-sm group">
+                                <i data-lucide="log-out" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i> ออกจากระบบ
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- Main Content -->
+                    <main class="flex-1 min-w-0 flex flex-col transition-all">
+                        <div class="flex-1 w-full" id="content-area">
+                            <!-- Dynamic Content -->
+                        </div>
+                    </main>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            isSidebarOpen = !isSidebarOpen;
+
+            if (isSidebarOpen) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+
+
+        async function loadView(viewName) {
+            currentView = viewName;
+            searchQuery = "";
+            currentPage = 1;
+            if (window.innerWidth < 768) toggleSidebar();
+
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('bg-blue-50', 'text-blue-700', 'font-semibold');
+                btn.classList.add('text-gray-600');
+            });
+            const activeBtn = document.getElementById(`nav-${viewName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-50', 'text-blue-700', 'font-semibold');
+                activeBtn.classList.remove('text-gray-600');
+            }
+
+            const content = document.getElementById('content-area');
+            content.innerHTML = '<div class="flex justify-center py-20"><div class="animate-spin text-blue-600"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg></div></div>';
+
+            if (viewName === 'keywords') await renderKeywordsTable();
+            else if (viewName === 'users') await renderUsersTable();
+            else if (viewName === 'permissions') await renderPermissionsTable();
+        }
+
+        function handleSearch(val) {
+            searchQuery = val.trim();
+            currentPage = 1;
+            if (currentView === 'keywords') renderKeywordsTable();
+            else if (currentView === 'users') renderUsersTable();
+            else if (currentView === 'permissions') renderPermissionsTable();
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            if (currentPage < 1) currentPage = 1;
+
+            if (currentView === 'keywords') renderKeywordsTable();
+            else if (currentView === 'users') renderUsersTable();
+            else if (currentView === 'permissions') renderPermissionsTable();
+        }
+
+
+
+        async function renderKeywordsTable() {
+            const from = (currentPage - 1) * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+
+            let query = supabaseClient.from('keywords').select('*', { count: 'exact' }).order('id', { ascending: false });
+
+            if (searchQuery) {
+                query = query.or(`keyword.ilike.%${searchQuery}%,reply_postback.ilike.%${searchQuery}%`);
+            }
+
+            query = query.range(from, to);
+
+            const { data, error, count } = await query;
+            if (error) { showToast(error.message, 'error'); return; }
+            currentKeywords = data;
+
+            const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+            const hasPrev = currentPage > 1;
+            const hasNext = currentPage < totalPages;
+
+            let html = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 slide-in">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3 font-display">
+                            <span class="bg-indigo-100 text-indigo-600 p-2.5 rounded-2xl shadow-sm text-shadow-sm"><i data-lucide="message-square-plus" class="w-8 h-8"></i></span>
+                            จัดการ Keyword
+                        </h1>
+                        <p class="text-slate-500 mt-2 ml-1 text-sm font-medium">ควบคุมการตอบกลับอัตโนมัติของบอท</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <div class="flex gap-2">
+                            <div class="relative group">
+                                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-indigo-700 transition-colors"></i>
+                                <input type="text" id="searchInput" placeholder="ค้นหา Keyword..." onkeydown="if(event.key === 'Enter') handleSearch(this.value)" value="${searchQuery}"
+                                    class="pl-12 pr-5 py-3 border-0 rounded-2xl w-full sm:w-60 bg-white/70 backdrop-blur-sm shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-indigo-500 transition-all outline-none" />
+                            </div>
+                            <button onclick="handleSearch(document.getElementById('searchInput').value)" class="px-4 py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-semibold hover:bg-indigo-100 transition-colors">
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <button onclick="openKeywordModal()" class="btn-primary text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all font-semibold active:scale-95 group whitespace-nowrap">
+                            <i data-lucide="plus" class="w-5 h-5 group-hover:scale-110 transition-transform"></i> เพิ่มใหม่
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass rounded-3xl overflow-hidden slide-in border-0 shadow-xl" style="animation-delay: 0.1s;">
+                    <!-- Desktop Table View -->
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-200/50 bg-slate-50/50">
+                                    <th class="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest w-1/4">Trigger</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Duration</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">VIP</th>
+                                    <th class="px-8 py-5 text-right text-xs font-bold text-slate-500 uppercase tracking-widest">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100/50">
+            `;
+
+            if (!data || data.length === 0) {
+                const emptyState = `
+                    <div class="flex flex-col items-center justify-center py-24 text-slate-400">
+                        <div class="bg-indigo-50/50 p-6 rounded-full mb-4 shadow-[0_0_20px_rgba(99,102,241,0.15)]"><i data-lucide="inbox" class="w-12 h-12 text-indigo-300"></i></div>
+                        <p class="text-xl font-bold text-slate-600 font-display">ไม่พบข้อมูล Keyword</p>
+                        <p class="text-sm mt-1">ลองค้นหาคำอื่น หรือเพิ่มข้อมูลใหม่</p>
+                    </div>
+                `;
+                html += `</tbody></table></div> <div class="md:hidden p-8 text-center">${emptyState}</div>`;
+            } else {
+                // Desktop Rows
+                data.forEach(kw => {
+
+                    let trigger = '';
+                    if (kw.keyword) trigger += `<div class="flex items-center gap-2 mb-1.5"><span class="bg-white/80 text-slate-600 px-2 py-0.5 rounded-lg text-[11px] font-mono border shadow-sm ring-1 ring-slate-100">Text</span> <span class="font-bold text-slate-800 truncate max-w-[200px] text-[15px]">${escapeHtml(kw.keyword)}</span></div>`;
+                    if (kw.reply_postback) trigger += `<div class="flex items-center gap-2"><span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[11px] font-mono border border-indigo-100">PB</span> <span class="font-mono text-xs text-slate-500 truncate max-w-[200px]">${escapeHtml(kw.reply_postback)}</span></div>`;
+
+                    let typeBadge = '';
+                    if (kw.reply_text) typeBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100/80 text-emerald-800 border border-emerald-200"><i data-lucide="type" class="w-3.5 h-3.5"></i> Text</span>`;
+                    else if (kw.reply_image) typeBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100/80 text-blue-800 border border-blue-200"><i data-lucide="image" class="w-3.5 h-3.5"></i> Image</span>`;
+                    else if (kw.reply_flex) typeBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-violet-100/80 text-violet-800 border border-violet-200"><i data-lucide="code" class="w-3.5 h-3.5"></i> Flex</span>`;
+                    else if (kw.reply_template) typeBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-orange-100/80 text-orange-800 border border-orange-200"><i data-lucide="layout-template" class="w-3.5 h-3.5"></i> Template</span>`;
+                    else if (kw.reply_prompt) typeBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-fuchsia-100/80 text-fuchsia-800 border border-fuchsia-200"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI</span>`;
+
+                    const timeInfo = (kw.startdatetime || kw.enddatetime)
+                        ? `<div class="text-xs text-gray-500 flex flex-col gap-1">
+                             ${kw.startdatetime ? `<div><span class="text-emerald-600 font-bold">Start:</span> ${kw.startdatetime}</div>` : ''}
+                             ${kw.enddatetime ? `<div><span class="text-rose-500 font-bold">End:</span> ${kw.enddatetime}</div>` : ''}
+                           </div>`
+                        : '<span class="text-xs text-gray-400 font-mono opacity-50">Empty</span>';
+
+                    html += `
+                        <tr class="table-row-hover transition-all border-b border-gray-50 last:border-0 hover:bg-indigo-50/30">
+                            <td class="px-8 py-5 align-top">${trigger}</td>
+                            <td class="px-6 py-5 align-top">${typeBadge}</td>
+                            <td class="px-6 py-5 align-top">${timeInfo}</td>
+                            <td class="px-6 py-5 align-top">${kw.require_vip ? '<div class="bg-amber-100 text-amber-700 p-1.5 rounded-lg inline-block text-center shadow-sm"><i data-lucide="lock" class="w-4 h-4"></i></div>' : '<span class="text-gray-300">-</span>'}</td>
+                            <td class="px-8 py-5 align-top text-right">
+                                <div class="flex justify-end gap-3 opacity-80 hover:opacity-100 transition-opacity">
+                                    <button onclick="openKeywordModal(${kw.id})" class="p-2 text-indigo-600 bg-indigo-50/50 rounded-xl hover:bg-indigo-100 hover:shadow-md transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteKeyword(${kw.id})" class="p-2 text-rose-600 bg-rose-50/50 rounded-xl hover:bg-rose-100 hover:shadow-md transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table></div>`;
+
+                // Mobile Card View
+                html += `<div class="md:hidden grid grid-cols-1 divide-y divide-gray-100">`;
+                data.forEach(kw => {
+
+                    let trigger = '';
+                    if (kw.keyword) trigger += `<div class="flex items-center gap-2 mb-2"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-mono border">TEXT</span> <span class="font-bold text-slate-800 text-sm break-all">${escapeHtml(kw.keyword)}</span></div>`;
+                    if (kw.reply_postback) trigger += `<div class="flex items-center gap-2 mb-2"><span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-mono border border-indigo-100">PB</span> <span class="font-mono text-xs text-slate-500 break-all">${escapeHtml(kw.reply_postback)}</span></div>`;
+
+                    let typeLabel = 'Text';
+                    let typeColor = 'bg-emerald-100 text-emerald-800';
+                    if (kw.reply_image) { typeLabel = 'Image'; typeColor = 'bg-blue-100 text-blue-800'; }
+                    else if (kw.reply_flex) { typeLabel = 'Flex'; typeColor = 'bg-violet-100 text-violet-800'; }
+                    else if (kw.reply_template) { typeLabel = 'Template'; typeColor = 'bg-orange-100 text-orange-800'; }
+                    else if (kw.reply_prompt) { typeLabel = 'AI'; typeColor = 'bg-fuchsia-100 text-fuchsia-800'; }
+
+                    const timeInfo = (kw.startdatetime || kw.enddatetime)
+                        ? `<div class="text-[11px] text-gray-500 mt-2 p-2 bg-gray-50 rounded-lg">
+                             ${kw.startdatetime ? `<div class="flex justify-between"><span>Start:</span> <span class="font-medium">${kw.startdatetime}</span></div>` : ''}
+                             ${kw.enddatetime ? `<div class="flex justify-between"><span>End:</span> <span class="font-medium">${kw.enddatetime}</span></div>` : ''}
+                           </div>`
+                        : '';
+
+                    html += `
+                        <div class="p-4 bg-white hover:bg-gray-50 transition-colors relative group">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex-1 pr-2">
+                                    ${trigger}
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="px-2 py-1 rounded text-[10px] font-bold ${typeColor} uppercase tracking-wider">${typeLabel}</span>
+                                    ${kw.require_vip ? '<span class="text-amber-500"><i data-lucide="lock" class="w-3.5 h-3.5"></i></span>' : ''}
+                                </div>
+                            </div>
+                            ${timeInfo}
+                            <div class="flex justify-end gap-3 mt-3 pt-3 border-t border-gray-50">
+                                <button onclick="openKeywordModal(${kw.id})" class="text-xs font-bold text-indigo-600 flex items-center gap-1 px-3 py-1.5 bg-indigo-50 rounded-lg"><i data-lucide="edit-3" class="w-3 h-3"></i> แก้ไข</button>
+                                <button onclick="deleteKeyword(${kw.id})" class="text-xs font-bold text-rose-600 flex items-center gap-1 px-3 py-1.5 bg-rose-50 rounded-lg"><i data-lucide="trash-2" class="w-3 h-3"></i> ลบ</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `
+            <div class="px-8 py-5 border-t border-gray-100/50 bg-slate-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                    Showing ${data.length > 0 ? from + 1 : 0} - ${Math.min(to + 1, count)} of ${count}
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="changePage(-1)" ${!hasPrev ? 'disabled' : ''} class="px-4 py-2 border border-0 bg-white shadow-sm rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        <i data-lucide="chevron-left" class="w-4 h-4 inline mr-1"></i> Prev
+                    </button>
+                    <span class="px-4 py-2 text-sm font-bold bg-white/50 border border-0 shadow-inner rounded-xl flex items-center min-w-[3rem] justify-center">${currentPage}</span>
+                    <button onclick="changePage(1)" ${!hasNext ? 'disabled' : ''} class="px-4 py-2 border border-0 bg-white shadow-sm rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        Next <i data-lucide="chevron-right" class="w-4 h-4 inline ml-1"></i>
+                    </button>
+                </div>
+            </div>
+            </div></div>`;
+            document.getElementById('content-area').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        async function deleteKeyword(id) {
+            if (!confirm('ยืนยันการลบข้อมูลนี้หรือไม่?')) return;
+            showToast('กำลังลบข้อมูล...', 'loading');
+            const { error } = await supabaseClient.from('keywords').delete().eq('id', id);
+            if (error) showToast(error.message, 'error');
+            else {
+                showToast('ลบข้อมูลเรียบร้อย');
+                renderKeywordsTable();
+            }
+        }
+
+
+
+        async function renderUsersTable() {
+            const from = (currentPage - 1) * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+
+            let query = supabaseClient.from('user_profiles').select('*', { count: 'exact' }).order('updated_at', { ascending: false });
+
+            if (searchQuery) {
+                query = query.or(`displayName.ilike.%${searchQuery}%,userId.ilike.%${searchQuery}%`);
+            }
+
+            query = query.range(from, to);
+
+            const { data, error, count } = await query;
+            if (error) { showToast(error.message, 'error'); return; }
+
+            const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+            const hasPrev = currentPage > 1;
+            const hasNext = currentPage < totalPages;
+
+            let html = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 slide-in">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3 font-display">
+                            <span class="bg-indigo-100 text-indigo-600 p-2.5 rounded-2xl shadow-sm"><i data-lucide="users" class="w-8 h-8"></i></span>
+                            ผู้ใช้งาน (Users)
+                        </h1>
+                        <p class="text-sm text-slate-500 mt-2 ml-1 font-medium">จัดการสถานะและสิทธิ์การใช้งานของสมาชิก</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <div class="relative group flex-1 md:flex-none">
+                            <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                            <input type="text" id="searchInput" placeholder="ค้นหาชื่อ หรือ User ID..." onkeydown="if(event.key === 'Enter') handleSearch(this.value)" value="${searchQuery}"
+                                class="pl-12 pr-5 py-3 border-0 rounded-2xl focus:ring-2 focus:ring-indigo-500 w-full md:w-64 bg-white/70 backdrop-blur-sm shadow-sm ring-1 ring-slate-200 transition-all outline-none" />
+                        </div>
+                        <button onclick="handleSearch(document.getElementById('searchInput').value)" class="px-4 py-3 bg-white text-indigo-600 rounded-2xl font-semibold hover:bg-indigo-50 transition-colors shadow-sm ring-1 ring-slate-200">
+                             <i data-lucide="search" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="glass rounded-3xl overflow-hidden slide-in border-0 shadow-xl" style="animation-delay: 0.1s;">
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-200/50 bg-slate-50/50">
+                                    <th class="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Profile</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Info</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Role</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Last Active</th>
+                                    <th class="px-8 py-5 text-right text-xs font-bold text-slate-500 uppercase tracking-widest">Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100/50">
+                                `;
+
+            if (!data || data.length === 0) {
+                const emptyState = `
+                                <div class="flex flex-col items-center justify-center py-24 text-slate-400">
+                                    <div class="bg-slate-50 p-6 rounded-full mb-4 shadow-sm"><i data-lucide="users" class="w-12 h-12 text-slate-300"></i></div>
+                                    <p class="text-xl font-bold text-slate-600 font-display">ไม่พบข้อมูลผู้ใช้</p>
+                                </div>
+                                `;
+                html += `</tbody></table></div> <div class="md:hidden p-8 text-center">${emptyState}</div>`;
+            } else {
+                // Desktop
+                data.forEach(u => {
+                    const userStr = encodeURIComponent(JSON.stringify(u));
+                    const thaiDate = formatThaiDateTime(u.updated_at);
+                    const statusColor = u.status === 'follow' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : (u.status === 'block' ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-rose-100 text-rose-600 border-rose-200');
+                    const roleBadge = u.role === 'admin'
+                        ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-violet-100 text-violet-700 border border-violet-200 shadow-sm"><i data-lucide="crown" class="w-3.5 h-3.5"></i> ADMIN</span>`
+                        : `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-500 border border-slate-200">User</span>`;
+
+                    html += `
+                        <tr class="table-row-hover transition-all border-b border-gray-50 last:border-0 hover:bg-indigo-50/30">
+                            <td class="px-8 py-5">
+                                <div class="relative w-fit">
+                                    <img src="${u.pictureUrl || 'https://cdn-icons-png.flaticon.com/128/1144/1144760.png'}" class="w-11 h-11 rounded-full border-2 border-white shadow-md object-cover" />
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <div class="font-bold text-slate-800 text-[15px] mb-1">${escapeHtml(u.displayName)}</div>
+                                <div class="flex items-center gap-1.5 text-xs text-slate-400 group cursor-pointer hover:text-indigo-500 transition-colors w-fit" onclick="copyToClipboard('${u.userId}')" title="Copy ID">
+                                    <span class="font-mono truncate max-w-[120px] bg-white px-1.5 py-0.5 rounded border border-slate-100 shadow-sm">${u.userId}</span>
+                                    <i data-lucide="copy" class="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">${roleBadge}</td>
+                            <td class="px-6 py-5">
+                                <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold border ${statusColor} capitalize shadow-sm">${u.status}</span>
+                            </td>
+                            <td class="px-6 py-5 text-sm text-slate-500 whitespace-nowrap font-medium">${thaiDate}</td>
+                            <td class="px-8 py-5 text-right">
+                                <button onclick="openUserModal('${userStr}')" class="p-2 text-indigo-600 bg-indigo-50/50 rounded-xl hover:bg-indigo-100 hover:shadow-md transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table></div>`;
+
+                // Mobile
+                html += `<div class="md:hidden grid grid-cols-1 divide-y divide-gray-100">`;
+                data.forEach(u => {
+                    const userStr = encodeURIComponent(JSON.stringify(u));
+                    const thaiDate = formatThaiDateTime(u.updated_at);
+                    const statusColor = u.status === 'follow' ? 'bg-emerald-100 text-emerald-700' : (u.status === 'block' ? 'bg-slate-100 text-slate-600' : 'bg-rose-100 text-rose-600');
+
+                    html += `
+                        <div class="p-4 bg-white hover:bg-gray-50 flex items-center gap-4 group transition-colors relative">
+                            <img src="${u.pictureUrl || 'https://cdn-icons-png.flaticon.com/128/1144/1144760.png'}" class="w-14 h-14 rounded-full border-2 border-white shadow-sm object-cover" />
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <div class="font-bold text-slate-800 text-base mb-0.5">${escapeHtml(u.displayName)}</div>
+                                    <div class="flex gap-1.5">
+                                        ${u.role === 'admin' ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-100 text-violet-700">ADMIN</span>' : ''}
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusColor} uppercase">${u.status}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-xs text-slate-400 font-mono bg-slate-50 px-2 py-1 rounded w-fit mb-1.5 cursor-pointer" onclick="copyToClipboard('${u.userId}')">
+                                    <span class="truncate max-w-[120px]">${u.userId}</span>
+                                    <i data-lucide="copy" class="w-3 h-3"></i>
+                                </div>
+                                <div class="text-[11px] text-gray-400">Active: ${thaiDate}</div>
+                            </div>
+                            <button onclick="openUserModal('${userStr}')" class="absolute right-4 bottom-4 p-2 text-indigo-600 bg-indigo-50 rounded-xl"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+            html += `
+            <div class="px-8 py-5 border-t border-gray-100/50 bg-slate-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                    Showing ${data.length > 0 ? from + 1 : 0} - ${Math.min(to + 1, count)} of ${count}
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="changePage(-1)" ${!hasPrev ? 'disabled' : ''} class="px-4 py-2 border border-0 bg-white shadow-sm rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        <i data-lucide="chevron-left" class="w-4 h-4 inline mr-1"></i> Prev
+                    </button>
+                    <span class="px-4 py-2 text-sm font-bold bg-white/50 border border-0 shadow-inner rounded-xl flex items-center min-w-[3rem] justify-center">${currentPage}</span>
+                    <button onclick="changePage(1)" ${!hasNext ? 'disabled' : ''} class="px-4 py-2 border border-0 bg-white shadow-sm rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        Next <i data-lucide="chevron-right" class="w-4 h-4 inline ml-1"></i>
+                    </button>
+                </div>
+            </div>
+            </div></div>`;
+
+            document.getElementById('content-area').innerHTML = html;
+            lucide.createIcons();
+        }
+
+
+
+        async function renderPermissionsTable() {
+            const from = (currentPage - 1) * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+
+            let query = supabaseClient.from('keyword_permissions').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+
+            if (searchQuery) {
+                query = query.or(`keyword.ilike.%${searchQuery}%,userId.ilike.%${searchQuery}%`);
+            }
+
+            query = query.range(from, to);
+
+            const { data, error, count } = await query;
+            if (error) { showToast(error.message, 'error'); return; }
+
+            const totalPages = Math.ceil(count / ITEMS_PER_PAGE);
+            const hasPrev = currentPage > 1;
+            const hasNext = currentPage < totalPages;
+
+            let html = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 slide-in">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-3 font-display">
+                            <div class="bg-amber-100 p-2.5 rounded-2xl shadow-sm text-amber-600"><i data-lucide="key" class="w-8 h-8"></i></div>
+                            จัดการสิทธิ์ VIP
+                        </h1>
+                        <p class="text-sm text-slate-500 mt-2 ml-1 font-medium">กำหนดว่า User คนไหน ใช้ Keyword ลับ (VIP) คำไหนได้บ้าง</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <div class="flex gap-2">
+                            <div class="relative group">
+                                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-amber-500 transition-colors"></i>
+                                <input type="text" id="searchInput" placeholder="ค้นหา Keyword หรือ UserID..." onkeydown="if(event.key === 'Enter') handleSearch(this.value)" value="${searchQuery}"
+                                    class="pl-12 pr-5 py-3 border-0 rounded-2xl focus:ring-2 focus:ring-amber-500 w-full sm:w-60 bg-white/70 backdrop-blur-sm shadow-sm ring-1 ring-slate-200 transition-all outline-none" />
+                            </div>
+                            <button onclick="handleSearch(document.getElementById('searchInput').value)" class="px-4 py-3 bg-amber-50 text-amber-600 rounded-2xl font-semibold hover:bg-amber-100 transition-colors">
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <button onclick="openPermissionModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-200 font-semibold text-sm active:scale-95 group whitespace-nowrap">
+                            <i data-lucide="plus" class="w-5 h-5 group-hover:scale-110 transition-transform"></i> เพิ่มสิทธิ์
+                        </button>
+                    </div>
+                </div>
+                <div class="glass rounded-3xl overflow-hidden slide-in border-0 shadow-xl" style="animation-delay: 0.1s;">
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-200/50 bg-slate-50/50">
+                                    <th class="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">User ID</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Target Keyword</th>
+                                    <th class="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Access</th>
+                                    <th class="px-8 py-5 text-right text-xs font-bold text-slate-500 uppercase tracking-widest">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100/50">
+            `;
+
+            if (!data || data.length === 0) {
+                const emptyState = `
+                    <div class="flex flex-col items-center justify-center py-24 text-slate-400">
+                        <div class="bg-amber-50 p-6 rounded-full mb-4 shadow-sm"><i data-lucide="shield-alert" class="w-12 h-12 text-amber-300"></i></div>
+                        <p class="text-xl font-bold text-slate-600 font-display">ไม่พบข้อมูลสิทธิ์</p>
+                    </div>
+                `;
+                html += `</tbody></table></div> <div class="md:hidden p-8 text-center">${emptyState}</div>`;
+            } else {
+                // Desktop
+                data.forEach(perm => {
+                    html += `
+                        <tr class="table-row-hover transition-all border-b border-gray-50 last:border-0 hover:bg-amber-50/30">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-2 font-mono text-sm text-slate-600 bg-white/50 px-3 py-1.5 rounded-lg border border-slate-100 w-fit cursor-pointer hover:border-indigo-300 transition-colors group" onclick="copyToClipboard('${perm.userId}')">
+                                    <span class="truncate max-w-[200px]">${escapeHtml(perm.userId)}</span>
+                                    <i data-lucide="copy" class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity text-indigo-500"></i>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span class="bg-white text-slate-700 px-3 py-1 rounded-lg border border-slate-200 font-bold text-sm shadow-sm">${escapeHtml(perm.keyword)}</span>
+                            </td>
+                            <td class="px-6 py-5">
+                                ${perm.vip ? '<span class="text-amber-600 bg-amber-100/80 px-2.5 py-1 rounded-full text-xs font-bold border border-amber-200 flex items-center gap-1 w-fit"><i data-lucide="check-circle" class="w-3 h-3"></i> VIP ALLOWED</span>' : '<span class="text-gray-400">Normal</span>'}
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                <button onclick="deletePermission(${perm.id})" class="p-2 text-rose-500 bg-rose-50/50 rounded-xl hover:bg-rose-100 hover:shadow-md transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table></div>`;
+
+                // Mobile
+                html += `<div class="md:hidden grid grid-cols-1 divide-y divide-gray-100">`;
+                data.forEach(perm => {
+                    html += `
+                        <div class="p-5 bg-white hover:bg-gray-50 transition-colors relative">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-slate-50 text-slate-700 px-3 py-1 rounded-lg border border-slate-100 font-bold text-sm shadow-sm">${escapeHtml(perm.keyword)}</span>
+                                ${perm.vip ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">VIP</span>' : ''}
+                            </div>
+                            <div class="flex items-center gap-2 font-mono text-xs text-slate-500 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 w-full mb-3 cursor-pointer" onclick="copyToClipboard('${perm.userId}')">
+                                <span class="truncate flex-1">${escapeHtml(perm.userId)}</span>
+                                <i data-lucide="copy" class="w-3 h-3"></i>
+                            </div>
+                             <div class="flex justify-end pt-2 border-t border-gray-50">
+                                <button onclick="deletePermission(${perm.id})" class="text-xs font-bold text-rose-600 flex items-center gap-1 px-3 py-2 bg-rose-50 rounded-lg hover:bg-rose-100"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ลบสิทธิ์</button>
+                             </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+            html += `
+            <div class="px-8 py-5 border-t border-gray-100/50 bg-slate-50/30 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                    Showing ${data.length > 0 ? from + 1 : 0} - ${Math.min(to + 1, count)} of ${count}
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="changePage(-1)" ${!hasPrev ? 'disabled' : ''} class="px-4 py-2 border border-0 bg-white shadow-sm rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        <i data-lucide="chevron-left" class="w-4 h-4 inline mr-1"></i> Prev
+                    </button>
+                    <span class="px-4 py-1.5 text-sm font-medium bg-white border border-gray-300 rounded-md flex items-center">หน้า ${currentPage} / ${totalPages || 1}</span>
+                    <button onclick="changePage(1)" ${!hasNext ? 'disabled' : ''} class="px-4 py-2 border border-0 bg-white shadow-sm rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                        Next <i data-lucide="chevron-right" class="w-4 h-4 inline ml-1"></i>
+                    </button>
+                </div>
+            </div>
+            </div></div>`;
+            document.getElementById('content-area').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        async function deletePermission(id) {
+            if (!confirm('ต้องการลบสิทธิ์นี้ใช่หรือไม่? User จะไม่สามารถใช้ Keyword VIP นี้ได้อีก')) return;
+            showToast('กำลังลบสิทธิ์...', 'loading');
+            const { error } = await supabaseClient.from('keyword_permissions').delete().eq('id', id);
+            if (error) showToast(error.message, 'error');
+            else { showToast('ลบสิทธิ์เรียบร้อย'); renderPermissionsTable(); }
+        }
+
+
+
+        function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            const container = document.getElementById('modal-container');
+
+            overlay.classList.add('opacity-0');
+            container.classList.add('scale-95');
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+        function openModal() {
+            const overlay = document.getElementById('modal-overlay');
+            const container = document.getElementById('modal-container');
+
+            overlay.classList.remove('hidden');
+
+            void overlay.offsetWidth;
+
+            overlay.classList.remove('opacity-0');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }
+
+
+        function openKeywordModal(id = null) {
+            editingKeywordId = null;
+            let data = { keyword: '', reply_postback: '', replyType: 'text', content: '', startdatetime: '', enddatetime: '', require_vip: false, reply_richmenu: '' };
+            let title = 'เพิ่ม Keyword ใหม่';
+
+            if (id) {
+                const item = currentKeywords.find(k => k.id === id);
+                if (item) {
+                    editingKeywordId = item.id;
+                    title = 'แก้ไข Keyword / Trigger';
+                    data = { ...item };
+
+                    if (item.reply_image) data.replyType = 'image';
+                    else if (item.reply_flex) data.replyType = 'flex';
+                    else if (item.reply_template) data.replyType = 'template';
+                    else if (item.reply_prompt) data.replyType = 'prompt';
+                    else data.replyType = 'text';
+
+                    data.content = item[`reply_${data.replyType}`] || '';
+                }
+            }
+
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-content').innerHTML = `
+                <form id="keywordForm" class="space-y-6">
+                    <div class="p-6 bg-white/60 rounded-2xl border border-white shadow-sm ring-1 ring-slate-100">
+                        <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest flex items-center gap-2">
+                             <span class="bg-indigo-100 text-indigo-500 p-1 rounded-md"><i data-lucide="zap" class="w-3 h-3"></i></span> 1. เงื่อนไขการทำงาน (Trigger)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Keyword (ข้อความ)</label>
+                                <input type="text" name="keyword" value="${escapeHtml(data.keyword || '')}" class="w-full rounded-xl border-slate-200 border p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm bg-white" placeholder="เช่น โปรโมชั่น" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Postback Data (ปุ่มกด)</label>
+                                <input type="text" name="reply_postback" value="${escapeHtml(data.reply_postback || '')}" class="w-full rounded-xl border-slate-200 border p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm px-3 shadow-sm bg-white" placeholder="action=buy&id=1" />
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-2.5 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> ใส่เพียงอย่างใดอย่างหนึ่ง หรือทั้งคู่ก็ได้</p>
+                    </div>
+                    
+                    <div class="p-6 bg-white/60 rounded-2xl border border-white shadow-sm ring-1 ring-slate-100">
+                         <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest flex items-center gap-2">
+                             <span class="bg-emerald-100 text-emerald-500 p-1 rounded-md"><i data-lucide="message-square" class="w-3 h-3"></i></span> 2. รูปแบบการตอบกลับ (Response)
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-slate-700 mb-1.5">ประเภท</label>
+                                <div class="relative">
+                                    <select id="replyType" name="replyType" onchange="updateContentPlaceholder(this.value)" class="w-full appearance-none rounded-xl border-slate-200 border p-3 focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm text-slate-700 font-medium">
+                                        <option value="text" ${data.replyType === 'text' ? 'selected' : ''}>ข้อความ (Text)</option>
+                                        <option value="image" ${data.replyType === 'image' ? 'selected' : ''}>รูปภาพ (Image URL)</option>
+                                        <option value="flex" ${data.replyType === 'flex' ? 'selected' : ''}>Flex Message (JSON)</option>
+                                        <option value="template" ${data.replyType === 'template' ? 'selected' : ''}>Template (JSON)</option>
+                                        <option value="prompt" ${data.replyType === 'prompt' ? 'selected' : ''}>AI Prompt (Gemini)</option>
+                                    </select>
+                                    <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-end">
+                                <label class="flex items-center space-x-3 cursor-pointer select-none bg-amber-50/50 px-4 py-3 rounded-xl border border-amber-100 w-full hover:bg-amber-50 transition shadow-sm h-[46px]">
+                                    <input type="checkbox" name="require_vip" ${data.require_vip ? 'checked' : ''} class="rounded text-amber-500 focus:ring-amber-500 h-5 w-5 border-amber-300" />
+                                    <span class="text-sm font-bold text-amber-700 flex items-center gap-1.5"><i data-lucide="lock" class="w-3.5 h-3.5"></i> เฉพาะ VIP</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label id="contentLabel" class="block text-sm font-semibold text-slate-700">เนื้อหา</label>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="insertPlaceholder('{name}')" class="text-[10px] px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-md border border-indigo-100 font-bold transition-colors" title="แทรกชื่อผู้ใช้">
+                                        + {name}
+                                    </button>
+                                    <button type="button" onclick="insertPlaceholder('{picture}')" class="text-[10px] px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-md border border-indigo-100 font-bold transition-colors" title="แทรกรูปโปรไฟล์">
+                                        + {picture}
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="contentTextarea" name="content" rows="6" class="w-full rounded-xl border-slate-200 border p-4 focus:ring-2 focus:ring-indigo-500 font-mono text-sm hidden shadow-sm bg-white" style="min-height: 120px;">${escapeHtml(data.content)}</textarea>
+                            <input id="contentInput" type="text" name="content_input" value="${escapeHtml(data.content)}" class="w-full rounded-xl border-slate-200 border p-3 focus:ring-2 focus:ring-indigo-500 hidden shadow-sm bg-white" placeholder="https://..." />
+                            <p class="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                                <i data-lucide="info" class="w-3 h-3"></i> กดปุ่มด้านบนเพื่อแทรกตัวแปร (ชื่อ หรือ รูปโปรไฟล์) ลงในข้อความ
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 p-6 bg-white/60 rounded-2xl border border-white shadow-sm ring-1 ring-slate-100">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">วันเริ่ม (Start Date)</label>
+                            <input type="text" name="startdatetime" value="${escapeHtml(data.startdatetime || '')}" class="w-full rounded-xl border-slate-200 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm bg-white text-sm" placeholder="DD/MM/YYYY HH:mm" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">วันสิ้นสุด (End Date)</label>
+                            <input type="text" name="enddatetime" value="${escapeHtml(data.enddatetime || '')}" class="w-full rounded-xl border-slate-200 border p-3 focus:ring-2 focus:ring-indigo-500 shadow-sm bg-white text-sm" placeholder="DD/MM/YYYY HH:mm" />
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 bg-white/60 rounded-2xl border border-white shadow-sm ring-1 ring-slate-100">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Rich Menu ID (Optional)</label>
+                        <input type="text" name="reply_richmenu" value="${escapeHtml(data.reply_richmenu || '')}" class="w-full rounded-xl border-slate-200 border p-3 text-sm font-mono text-slate-600 bg-white shadow-sm focus:ring-2 focus:ring-indigo-500" placeholder="richmenu-xxx..." />
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-100/50">
+                        <button type="button" onclick="closeModal()" class="px-6 py-3 bg-white text-slate-600 rounded-xl hover:bg-slate-50 transition font-bold border border-slate-200 shadow-sm">ยกเลิก</button>
+                        <button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl hover:shadow-lg transition flex items-center gap-2 font-bold tracking-wide">
+                            <i data-lucide="save" class="w-4 h-4"></i> บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            `;
+            updateContentPlaceholder(data.replyType);
+            document.getElementById('keywordForm').onsubmit = handleKeywordSubmit;
+            openModal();
+            lucide.createIcons();
+        }
+
+
+        function openUserModal(userStr) {
+            const user = JSON.parse(decodeURIComponent(userStr));
+            editingUserId = user.userId;
+
+            document.getElementById('modal-title').innerText = 'แก้ไขผู้ใช้งาน';
+            document.getElementById('modal-content').innerHTML = `
+                <form id="userForm" class="space-y-6">
+                    <div class="flex items-center gap-5 p-5 bg-gradient-to-r from-slate-50 to-white rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                        <div class="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]"></div>
+                        <img src="${user.pictureUrl || 'https://cdn-icons-png.flaticon.com/128/1144/1144760.png'}" class="w-16 h-16 rounded-full border-4 border-white shadow-md relative z-10" />
+                        <div class="flex-1 min-w-0 relative z-10">
+                            <h3 class="font-bold text-slate-800 text-lg truncate font-display">${escapeHtml(user.displayName)}</h3>
+                            <div class="flex items-center gap-2 text-sm text-gray-500 font-mono mt-1.5 bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-slate-200 w-fit cursor-pointer hover:border-indigo-300 transition-colors" onclick="copyToClipboard('${user.userId}')">
+                                <span class="truncate max-w-[200px]">${user.userId}</span>
+                                <i data-lucide="copy" class="w-3 h-3 text-indigo-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">บทบาท (Role)</label>
+                            <div class="relative">
+                                <select name="role" class="w-full appearance-none rounded-xl border border-slate-200 p-3.5 pr-8 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm font-medium text-slate-700">
+                                    <option value="user" ${!user.role || user.role === 'user' ? 'selected' : ''}>User (ผู้ใช้ทั่วไป)</option>
+                                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin (ผู้ดูแลระบบ)</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2 ml-1 flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3"></i> Admin จะสามารถเข้าถึงหน้าจัดการนี้ได้</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">สถานะ (Status)</label>
+                            <div class="relative">
+                                <select name="status" class="w-full appearance-none rounded-xl border border-slate-200 p-3.5 pr-8 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm font-medium text-slate-700">
+                                    <option value="follow" ${user.status === 'follow' ? 'selected' : ''}>Active (ปกติ)</option>
+                                    <option value="block" ${user.status === 'block' ? 'selected' : ''}>Block (ระงับการใช้งาน)</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-6 border-t border-gray-100/50">
+                        <button type="button" onclick="closeModal()" class="px-6 py-3 bg-white text-slate-600 rounded-xl hover:bg-slate-50 transition font-bold border border-slate-200 shadow-sm">ยกเลิก</button>
+                        <button type="submit" class="px-6 py-3 btn-primary text-white rounded-xl hover:shadow-lg transition flex items-center gap-2 font-bold tracking-wide">
+                            <i data-lucide="save" class="w-4 h-4"></i> อัปเดตสถานะ
+                        </button>
+                    </div>
+                </form>
+            `;
+            document.getElementById('userForm').onsubmit = handleUserSubmit;
+            openModal();
+            lucide.createIcons();
+        }
+
+
+        function openPermissionModal() {
+            document.getElementById('modal-title').innerText = 'เพิ่มสิทธิ์การใช้ Keyword (VIP)';
+            document.getElementById('modal-content').innerHTML = `
+                <form id="permForm" class="space-y-6">
+                    <div class="p-4 bg-amber-50/50 border border-amber-100 rounded-2xl text-sm text-amber-800 flex gap-3 shadow-sm">
+                        <div class="bg-amber-100 text-amber-600 p-2 rounded-lg h-fit"><i data-lucide="info" class="w-5 h-5"></i></div>
+                        <div class="py-1">
+                            <p class="font-bold mb-1">คำแนะนำ</p>
+                             ระบบนี้ใช้สำหรับจับคู่ <b>User ID</b> กับ <b>Keyword</b> ที่ตั้งค่าเป็น "เฉพาะ VIP" ไว้ เพื่อให้ User คนนั้นสามารถใช้งาน Keyword นั้นได้
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5">User ID ของผู้ใช้</label>
+                            <input type="text" name="userId" required class="w-full rounded-xl border-slate-200 border p-3.5 focus:ring-2 focus:ring-amber-500 font-mono text-sm bg-white shadow-sm" placeholder="Uxxxxxxxx..." />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5">Keyword ที่อนุญาตให้ใช้</label>
+                            <input type="text" name="keyword" required class="w-full rounded-xl border-slate-200 border p-3.5 focus:ring-2 focus:ring-amber-500 bg-white shadow-sm" placeholder="เช่น โปรลับVIP" />
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-100/50">
+                        <button type="button" onclick="closeModal()" class="px-6 py-3 bg-white text-slate-600 rounded-xl hover:bg-slate-50 transition font-bold border border-slate-200 shadow-sm">ยกเลิก</button>
+                        <button type="submit" class="px-6 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition shadow-lg shadow-amber-200 flex items-center gap-2 font-bold tracking-wide">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> ให้สิทธิ์
+                        </button>
+                    </div>
+                </form>
+            `;
+            document.getElementById('permForm').onsubmit = handlePermissionSubmit;
+            openModal();
+            lucide.createIcons();
+        }
+
+
+
+        function updateContentPlaceholder(type) {
+            const label = document.getElementById('contentLabel');
+            const textarea = document.getElementById('contentTextarea');
+            const input = document.getElementById('contentInput');
+
+            textarea.classList.add('hidden'); input.classList.add('hidden');
+            textarea.removeAttribute('required'); input.removeAttribute('required');
+
+            if (type === 'text' || type === 'prompt') {
+                label.innerText = type === 'text' ? 'ข้อความตอบกลับ' : 'คำสั่ง Prompt (System Instruction)';
+                textarea.classList.remove('hidden'); textarea.setAttribute('required', 'true');
+            } else if (type === 'flex' || type === 'template') {
+                label.innerText = `JSON Code ของ ${type}`;
+                textarea.classList.remove('hidden'); textarea.setAttribute('required', 'true');
+                textarea.classList.add('json-editor');
+            } else {
+                label.innerText = 'URL ของรูปภาพ (https://...)';
+                input.classList.remove('hidden'); input.setAttribute('required', 'true');
+            }
+        }
+
+        function insertPlaceholder(placeholder) {
+            const textarea = document.getElementById('contentTextarea');
+            const input = document.getElementById('contentInput');
+            const target = !textarea.classList.contains('hidden') ? textarea : input;
+
+            if (target) {
+                const start = target.selectionStart;
+                const end = target.selectionEnd;
+                const text = target.value;
+                const before = text.substring(0, start);
+                const after = text.substring(end, text.length);
+                target.value = before + placeholder + after;
+                target.selectionStart = target.selectionEnd = start + placeholder.length;
+                target.focus();
+            }
+        }
+
+        function setBtnLoading(btn, isLoading) {
+            if (isLoading) {
+                btn.dataset.originalContent = btn.innerHTML;
+                btn.disabled = true;
+                btn.classList.add('cursor-not-allowed', 'opacity-70');
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> กำลังบันทึก...`;
+                lucide.createIcons();
+            } else {
+                btn.innerHTML = btn.dataset.originalContent || 'บันทึก';
+                btn.disabled = false;
+                btn.classList.remove('cursor-not-allowed', 'opacity-70');
+                lucide.createIcons();
+            }
+        }
+
+        async function handleKeywordSubmit(e) {
+            e.preventDefault();
+            const f = e.target;
+            const submitBtn = f.querySelector('button[type="submit"]');
+
+            const replyType = f.replyType.value;
+            let content = (replyType === 'image') ? f.content_input.value : f.content.value;
+
+            if (['flex', 'template'].includes(replyType)) {
+                try { JSON.parse(content); } catch (err) { showToast('JSON ไม่ถูกต้อง', 'error'); return; }
+            }
+
+            if (!f.keyword.value.trim() && !f.reply_postback.value.trim()) {
+                showToast('ต้องระบุ Keyword หรือ Postback อย่างน้อย 1 อย่าง', 'error'); return;
+            }
+
+            setBtnLoading(submitBtn, true);
+
+            const payload = {
+                keyword: f.keyword.value.trim() || null,
+                reply_postback: f.reply_postback.value.trim() || null,
+                startdatetime: f.startdatetime.value || null,
+                enddatetime: f.enddatetime.value || null,
+                require_vip: f.require_vip.checked,
+                reply_richmenu: f.reply_richmenu.value || null,
+                reply_text: null, reply_image: null, reply_flex: null, reply_prompt: null, reply_template: null
+            };
+            payload[`reply_${replyType}`] = content;
+
+            let error;
+            if (editingKeywordId) {
+                const { error: err } = await supabaseClient.from('keywords').update(payload).eq('id', editingKeywordId);
+                error = err;
+            } else {
+                const { error: err } = await supabaseClient.from('keywords').insert([payload]);
+                error = err;
+            }
+
+            if (error) {
+                showToast(error.message, 'error');
+                setBtnLoading(submitBtn, false);
+            }
+            else {
+                showToast('บันทึกสำเร็จ');
+                closeModal();
+                renderKeywordsTable();
+
+            }
+        }
+
+        async function handleUserSubmit(e) {
+            e.preventDefault();
+            if (!editingUserId) return;
+            const f = e.target;
+            const submitBtn = f.querySelector('button[type="submit"]');
+
+            setBtnLoading(submitBtn, true);
+
+            const { error } = await supabaseClient.from('user_profiles').update({ role: f.role.value, status: f.status.value }).eq('userId', editingUserId);
+
+            if (error) {
+                showToast(error.message, 'error');
+                setBtnLoading(submitBtn, false);
+            }
+            else {
+                showToast('อัปเดตผู้ใช้สำเร็จ');
+                closeModal();
+                renderUsersTable();
+            }
+        }
+
+        async function handlePermissionSubmit(e) {
+            e.preventDefault();
+            const f = e.target;
+            const submitBtn = f.querySelector('button[type="submit"]');
+
+            setBtnLoading(submitBtn, true);
+
+            const { error } = await supabaseClient.from('keyword_permissions').insert([{
+                userId: f.userId.value.trim(),
+                keyword: f.keyword.value.trim(),
+                vip: true
+            }]);
+
+            if (error) {
+                showToast(error.message, 'error');
+                setBtnLoading(submitBtn, false);
+            }
+            else {
+                showToast('เพิ่มสิทธิ์ VIP สำเร็จ');
+                closeModal();
+                renderPermissionsTable();
+            }
+        }
+
+
+
+
+        function formatThaiDateTime(isoString) {
+            if (!isoString) return '-';
+            if (!isoString.endsWith('Z') && !isoString.includes('+')) isoString += 'Z'; // Fallback to UTC assumption
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) { return isoString; }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let bgClass, icon, iconBg;
+            let iconClass = "w-5 h-5";
+
+            if (type === 'error') {
+                bgClass = 'bg-white border-l-4 border-rose-500 text-rose-600';
+                iconBg = 'bg-rose-100';
+                icon = 'alert-circle';
+            } else if (type === 'loading') {
+                bgClass = 'bg-white border-l-4 border-indigo-500 text-indigo-600';
+                iconBg = 'bg-indigo-100';
+                icon = 'loader-2';
+                iconClass += " animate-spin";
+            } else {
+                bgClass = 'bg-white border-l-4 border-emerald-500 text-emerald-600';
+                iconBg = 'bg-emerald-100';
+                icon = 'check-circle2';
+            }
+
+            toast.className = `${bgClass} shadow-2xl rounded-xl px-5 py-4 flex items-center gap-3 toast-enter min-w-[300px] border border-gray-100/50 backdrop-blur-3xl`;
+            toast.innerHTML = `
+                <div class="${iconBg} p-2 rounded-full">
+                    <i data-lucide="${icon}" class="${iconClass}"></i>
+                </div> 
+                <span class="font-semibold text-sm text-slate-700">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => { toast.classList.add('toast-enter-active'); toast.classList.remove('toast-enter'); });
+
+
+
+            setTimeout(() => {
+                toast.classList.add('toast-exit-active');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showToast('คัดลอกเรียบร้อย');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+
+</html>
