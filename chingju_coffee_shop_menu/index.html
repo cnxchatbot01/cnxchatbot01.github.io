@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chingju Coffee Shop</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-png.flaticon.com/128/9620/9620771.png">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cpvpeelnvmlogiwtvunp.supabase.co/storage/v1/object/public/user-images/U69f69a6d9b1bbb632a0ff7db6e67eeac/1769594697576.jpeg">
+    <meta name="description" content="Chingju Coffee Shop for MINI App" />
+    <meta name="author" content="iton5" />
+    <meta property="og:title" content="Chingju Coffee Shop" />
+    <meta property="og:description" content="Chingju Coffee Shop" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://cpvpeelnvmlogiwtvunp.supabase.co/storage/v1/object/public/user-images/U69f69a6d9b1bbb632a0ff7db6e67eeac/1769594697576.jpeg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@100;200;300;400;500;600;700;800;900&family=Roboto:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#f28482',   
+                        secondary: '#84a59d', 
+                        accent: '#f6bd60',    
+                        cream: '#f7ede2',     
+                        rose: '#f5cac3',      
+                        dark: '#333333'
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f7ede2;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-pop { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        #loading-overlay { background: rgba(247, 237, 226, 0.95); backdrop-filter: blur(5px); }
+
+        .sheet-enter { transform: translateY(100%); }
+        .sheet-active { transform: translateY(0); }
+        .rotate-180 { transform: rotate(180deg); }
+        .option-radio:checked + label { background-color: #f28482; color: white; border-color: #f28482; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden text-dark flex flex-col">
+
+    <script>
+      
+        const CONFIG = {
+            LIFF_ID: "2008759540-U4o2qdDX",
+            SUPABASE_URL: "https://cpvpeelnvmlogiwtvunp.supabase.co",
+            SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwdnBlZWxudm1sb2dpd3R2dW5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0OTY2MTAsImV4cCI6MjA4NTA3MjYxMH0.OFuQisHn3c1561xgex_sbdelVQhj1RvRoDg79NSPr74",
+            STORAGE_KEY: "cafe_mini_app_cart_v1", 
+            PROMPTPAY_ID: "0639242143" 
+        };
+
+        const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+        const State = {
+            user: { 
+                id: 'guest_' + Math.floor(Math.random() * 10000), 
+                displayName: 'Guest', 
+                pictureUrl: 'https://cdn-icons-png.flaticon.com/512/149/149071.png', 
+                platform: 'web' 
+            },
+            tableId: null, 
+            isAdmin: false,
+            categories: [], 
+            products: [], 
+            cart: [],
+            userOrders: [], 
+            adminOrders: [],
+            activeCategory: null, 
+            view: 'shop', 
+            searchQuery: '',
+            currentProductModal: null
+        };
+
+       
+        const formatPrice = (price) => `${price.toLocaleString()} บ.`;
+        
+        const formatDate = (isoString) => {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+        };
+        
+        const formatOptions = (options) => {
+            if (!options || Object.keys(options).length === 0) return '';
+            let text = '';
+            if (options.sweetness) text += `หวาน ${options.sweetness} `;
+            if (options.note) text += `(${options.note})`;
+            return text.trim();
+        };
+
+        const getStatusBadge = (status) => {
+            switch(status) {
+                case 'pending': return '<span class="px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">รอตรวจสอบ</span>';
+                case 'preparing': return '<span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">กำลังดำเนินการ</span>';
+                case 'completed': return '<span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">เสร็จสิ้น</span>';
+                case 'cancelled': return '<span class="px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">ยกเลิก</span>';
+                default: return '<span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-bold">' + status + '</span>';
+            }
+        };
+
+       
+        function copyToClipboard(text) {
+            const input = document.createElement('input');
+            input.setAttribute('value', text);
+            document.body.appendChild(input);
+            input.select();
+            try {
+                document.execCommand('copy');
+                Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 }).fire({ icon: 'success', title: 'คัดลอกเลขแล้ว' });
+            } catch (err) { Swal.fire('Error', 'คัดลอกไม่สำเร็จ', 'error'); }
+            document.body.removeChild(input);
+        }
+
+        async function showLoading(show = true, text = 'กำลังโหลด...') {
+            const el = document.getElementById('loading-overlay');
+            const txt = document.getElementById('loading-text');
+            if (show) { txt.innerText = text; el.classList.remove('hidden'); el.classList.add('flex'); } 
+            else { el.classList.add('hidden'); el.classList.remove('flex'); }
+        }
+
+        
+        function loadCartFromStorage() { 
+            try { const s = localStorage.getItem(CONFIG.STORAGE_KEY); if (s) State.cart = JSON.parse(s); } catch(e) { console.error(e); } 
+        }
+        
+        function saveCartToStorage() { 
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(State.cart)); updateCartUI(); 
+        }
+        
+        function clearCartStorage() { 
+            localStorage.removeItem(CONFIG.STORAGE_KEY); State.cart = []; updateCartUI(); 
+        }
+
+        async function initApp() {
+            showLoading(true, 'กำลังเข้าสู่ระบบ...');
+            loadCartFromStorage();
+            
+           
+            const urlParams = new URLSearchParams(window.location.search);
+            State.tableId = urlParams.get('table'); 
+
+            
+            try {
+                await liff.init({ liffId: CONFIG.LIFF_ID, withLoginOnExternalBrowser: true });
+                await liff.ready;
+                if (liff.isLoggedIn()) {
+                    const p = await liff.getProfile();
+                    State.user = { id: p.userId, displayName: p.displayName, pictureUrl: p.pictureUrl, platform: 'line' };
+                    document.getElementById('user-name').innerText = State.tableId ? `โต๊ะ ${State.tableId} | ${p.displayName}` : `สวัสดี, ${p.displayName}`;
+                    document.getElementById('user-avatar').src = p.pictureUrl;
+                } else if (liff.isInClient()) { 
+                    liff.login({ redirectUri: window.location.href }); 
+                } else if (State.tableId) {
+                    document.getElementById('user-name').innerText = `โต๊ะ ${State.tableId}`; // Guest on Table
+                }
+            } catch(e) { console.warn('LIFF Error:', e); }
+
+            
+            await Promise.all([fetchData(), checkAdminStatus()]);
+            renderCategories(); 
+            renderProducts(); 
+            updateCartUI();
+            
+            if (State.isAdmin) document.getElementById('admin-btn-container').classList.remove('hidden');
+            showLoading(false);
+        }
+
+        async function checkAdminStatus() {
+            try {
+                const { data, error } = await supabaseClient.from('admin_users').select('id').eq('user_id', State.user.id).single();
+                if (data && !error) State.isAdmin = true;
+            } catch(e){}
+        }
+
+        async function fetchData() {
+            try {
+                const { data: cats } = await supabaseClient.from('product_categories').select('*').order('sort_order', {ascending: true});
+                const { data: prods } = await supabaseClient.from('products').select('*').eq('is_available', true);
+                State.categories = cats || []; State.products = prods || [];
+                if (State.categories.length > 0) State.activeCategory = State.categories[0].id;
+            } catch(e) { console.error(e); }
+        }
+
+        async function fetchUserOrders() {
+            try {
+                let query = supabaseClient.from('orders').select('*, order_items(*)').order('created_at', {ascending: false});
+                
+                if (State.tableId) {
+                    query = query.eq('table_id', State.tableId);
+                } else {
+                    query = query.eq('user_id', State.user.id);
+                }
+
+                const { data, error } = await query;
+                if(!error) { 
+                   
+                    State.userOrders = (data || []).filter(o => o.payment_status !== 'receipt_sent');
+                    renderOrdersModal(); 
+                }
+            } catch(e) { console.error(e); }
+        }
+
+     
+        function renderCategories() {
+            document.getElementById('category-list').innerHTML = State.categories.map(cat => {
+                const isUrl = cat.icon && (cat.icon.startsWith('http') || cat.icon.startsWith('/'));
+                const iconHtml = isUrl ? `<img src="${cat.icon}" class="w-8 h-8 object-contain mb-1 rounded-full">` : `<div class="text-2xl mb-1">${cat.icon || '📦'}</div>`;
+                return `<div onclick="selectCategory(${cat.id})" class="cursor-pointer py-4 px-2 flex flex-col items-center justify-center transition-all duration-300 ${State.activeCategory === cat.id ? 'bg-white rounded-l-2xl shadow-sm text-primary border-l-4 border-primary' : 'text-gray-400 hover:text-secondary'}">${iconHtml}<div class="text-xs font-medium text-center break-words w-full leading-tight">${cat.name}</div></div>`;
+            }).join('');
+        }
+
+        function renderProducts() {
+            let filtered = State.searchQuery ? State.products.filter(p => p.name.toLowerCase().includes(State.searchQuery.toLowerCase())) : State.products.filter(p => p.category_id === State.activeCategory);
+            document.getElementById('section-title').innerText = State.searchQuery ? `ค้นหา "${State.searchQuery}"` : (State.categories.find(c=>c.id===State.activeCategory)?.name || 'สินค้า');
+            const list = document.getElementById('product-list');
+            if(filtered.length === 0) { list.innerHTML = `<div class="col-span-2 text-center text-gray-400 py-10">ไม่พบสินค้า</div>`; return; }
+            list.innerHTML = filtered.map(p => `
+                <div class="bg-white rounded-2xl p-3 shadow-sm flex flex-col h-full animate-pop">
+                    <div class="relative w-full pt-[100%] rounded-xl overflow-hidden mb-3 bg-gray-100">
+                        <img src="${p.image_url}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300?text=No+Image'">
+                        <button onclick="openProductModal(${p.id})" class="absolute bottom-2 right-2 bg-white text-primary w-8 h-8 rounded-full shadow-md flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <h3 class="font-medium text-dark text-sm truncate">${p.name}</h3>
+                    <p class="text-xs text-gray-400 truncate mb-2">${p.description || ''}</p>
+                    <div class="mt-auto flex justify-between items-center"><span class="font-bold text-primary">${formatPrice(p.price)}</span></div>
+                </div>`).join('');
+        }
+
+        function selectCategory(id) { State.activeCategory = id; State.searchQuery = ''; toggleSearch(false); renderCategories(); renderProducts(); }
+        function toggleSearch(show) { 
+            const el = document.getElementById('search-container'); 
+            if(show===undefined) show = el.classList.contains('hidden');
+            if(show) { el.classList.remove('hidden'); document.getElementById('search-input').focus(); } 
+            else { el.classList.add('hidden'); State.searchQuery = ''; document.getElementById('search-input').value = ''; renderProducts(); }
+        }
+        function handleSearch(e) { State.searchQuery = e.target.value; renderProducts(); }
+
+       
+        function openProductModal(id) {
+            const p = State.products.find(x => x.id === id); if(!p) return;
+            State.currentProductModal = p;
+            document.getElementById('modal-product-img').src = p.image_url || 'https://placehold.co/300';
+            document.getElementById('modal-product-name').innerText = p.name;
+            document.getElementById('modal-product-price').innerText = formatPrice(p.price);
+            document.getElementById('modal-note').value = '';
+            document.querySelectorAll('input[name="sweetness"]').forEach(r => r.checked = false);
+            document.getElementById('sweet-100').checked = true;
+            document.getElementById('product-option-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('product-option-sheet').classList.remove('translate-y-full'), 10);
+        }
+        function closeProductModal() {
+            document.getElementById('product-option-sheet').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('product-option-modal').classList.add('hidden'), 300);
+        }
+        function confirmAddToCart() {
+            if(!State.currentProductModal) return;
+            const opt = { sweetness: document.querySelector('input[name="sweetness"]:checked')?.value || '100%', note: document.getElementById('modal-note').value.trim() };
+            const existing = State.cart.find(i => i.id === State.currentProductModal.id && JSON.stringify(i.options) === JSON.stringify(opt));
+            if(existing) existing.qty++; else State.cart.push({ ...State.currentProductModal, qty: 1, options: opt });
+            saveCartToStorage(); closeProductModal();
+            Swal.fire({ icon: 'success', title: 'เพิ่มลงตะกร้า', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+        }
+
+        
+        function updateCartUI() {
+            const qty = State.cart.reduce((s,i)=>s+i.qty,0);
+            const total = State.cart.reduce((s,i)=>s+(i.price*i.qty),0);
+            const bar = document.getElementById('cart-bar');
+            if(qty>0) { bar.classList.remove('translate-y-[150%]'); document.getElementById('cart-qty').innerText=`${qty} รายการ`; document.getElementById('cart-total').innerText=formatPrice(total); } 
+            else { bar.classList.add('translate-y-[150%]'); toggleCartModal(false); }
+        }
+        function toggleCartModal(show) {
+            const modal = document.getElementById('cart-modal'); const sheet = document.getElementById('cart-sheet');
+            if(show) { renderCartModalItems(); modal.classList.remove('hidden'); setTimeout(()=>sheet.classList.remove('translate-y-full'),10); } 
+            else { sheet.classList.add('translate-y-full'); setTimeout(()=>modal.classList.add('hidden'),300); }
+        }
+        function renderCartModalItems() {
+            const list = document.getElementById('cart-modal-list');
+            if(State.cart.length===0) { list.innerHTML='<div class="text-center text-gray-400 py-10">ว่างเปล่า</div>'; return; }
+            list.innerHTML = State.cart.map((item, idx) => `
+                <div class="flex items-center justify-between bg-white p-2 border-b border-gray-100">
+                    <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                        <img src="${item.image_url}" class="w-12 h-12 rounded-lg object-cover bg-gray-100">
+                        <div class="flex-1 min-w-0"><div class="font-medium text-sm truncate">${item.name}</div><div class="text-xs text-gray-400">${formatOptions(item.options)}</div><div class="text-primary font-bold text-sm">${formatPrice(item.price)}</div></div>
+                    </div>
+                    <div class="flex items-center gap-3 pl-2">
+                        <button onclick="adjustCartItem(${idx},-1)" class="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center"><i class="fas ${item.qty===1?'fa-trash-alt text-red-400':'fa-minus'}"></i></button>
+                        <span class="w-6 text-center font-bold text-dark">${item.qty}</span>
+                        <button onclick="adjustCartItem(${idx},1)" class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>`).join('');
+            document.getElementById('cart-modal-total').innerText = formatPrice(State.cart.reduce((s,i)=>s+(i.price*i.qty),0));
+        }
+        function adjustCartItem(idx, delta) {
+            State.cart[idx].qty += delta; if(State.cart[idx].qty<=0) State.cart.splice(idx,1);
+            saveCartToStorage(); renderCartModalItems();
+        }
+
+        async function checkout() {
+            if(State.cart.length===0) return;
+            toggleCartModal(false);
+            const cf = await Swal.fire({ title: 'ยืนยันการสั่งซื้อ?', text: `ยอดรวม ${document.getElementById('cart-total').innerText}`, icon: 'question', showCancelButton: true, confirmButtonColor: '#f28482', confirmButtonText: 'สั่งเลย' });
+            if(!cf.isConfirmed) { toggleCartModal(true); return; }
+            
+            showLoading(true, 'กำลังบันทึก...');
+            try {
+                const total = State.cart.reduce((s,i)=>s+(i.price*i.qty),0);
+                const {data:order, error:err} = await supabaseClient.from('orders').insert([{
+                    user_id: State.user.id, 
+                    user_name: State.user.displayName, 
+                    platform: State.user.platform, 
+                    total_price: total, 
+                    status: 'pending', 
+                    payment_status: 'unpaid',
+                    table_id: State.tableId
+                }]).select().single();
+                if(err) throw err;
+
+                const items = State.cart.map(i => ({ order_id: order.id, product_id: i.id, product_name: i.name, quantity: i.qty, price_per_unit: i.price, options: i.options }));
+                await supabaseClient.from('order_items').insert(items);
+                
+                const tableText = State.tableId ? `[โต๊ะ ${State.tableId}] ` : '';
+                const txtItems = State.cart.map(i => `${i.name} (${formatOptions(i.options)}) x${i.qty}`).join('\n');
+                const notify = { order_id: `ORD-${order.id}`, customer: tableText + State.user.displayName, items: txtItems, total: total, time: new Date().toLocaleString('th-TH') };
+                
+                await sendTelegramNotification(notify);
+                if (State.user.platform === 'line' && liff.isInClient()) await sendLineFlexMessage(notify);
+
+                showLoading(false);
+                clearCartStorage();
+                Swal.fire({ title: 'สั่งซื้อสำเร็จ!', icon: 'success', confirmButtonColor: '#84a59d', confirmButtonText: 'ติดตามสถานะ' }).then(() => toggleOrdersModal(true));
+            } catch(e) { console.error(e); showLoading(false); Swal.fire('Error', e.message, 'error'); }
+        }
+
+        async function sendTelegramNotification(data) {
+            try { await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/notify-order`, { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`}, body: JSON.stringify(data) }); } catch (e) { console.error("Telegram Error:", e); }
+        }
+        
+        async function sendLineFlexMessage(data) {
+             const flexMsg = { type: "flex", altText: "ใบเสร็จรับเงินของคุณ", contents: { type: "bubble", hero: { type: "image", url: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=700", size: "full", aspectRatio: "20:13", aspectMode: "cover" }, body: { type: "box", layout: "vertical", contents: [ { type: "text", text: "CAFE MINI APP", weight: "bold", size: "xl", color: "#f28482" }, { type: "text", text: `${data.order_id}`, size: "xs", color: "#aaaaaa", margin: "sm" }, { type: "separator", margin: "md" }, { type: "text", text: data.items, wrap: true, margin: "md", size: "sm" }, { type: "separator", margin: "md" }, { type: "box", layout: "horizontal", margin: "md", contents: [ { type: "text", text: "Total", size: "sm", color: "#555555" }, { type: "text", text: formatPrice(data.total), size: "lg", color: "#111111", align: "end", weight: "bold" } ] } ] } } };
+            try { await liff.sendMessages([flexMsg]); } catch (err) { console.error("LINE Flex Error:", err); }
+        }
+
+       
+        async function toggleOrdersModal(show) {
+            const modal = document.getElementById('orders-modal'); const sheet = document.getElementById('orders-sheet');
+            if(show) { showLoading(true); await fetchUserOrders(); showLoading(false); modal.classList.remove('hidden'); setTimeout(()=>sheet.classList.remove('translate-y-full'),10); } 
+            else { sheet.classList.add('translate-y-full'); setTimeout(()=>modal.classList.add('hidden'),300); }
+        }
+
+        function renderOrdersModal() {
+            const list = document.getElementById('orders-list');
+            
+            
+            let tableTotal = 0;
+            let tableTotalUnpaid = 0;
+            let tableTotalWaiting = 0;
+            let hasUnpaid = false;
+            let hasWaiting = false;
+            let isRequested = false;
+            let summaryItems = {};
+
+            
+            const activeTableOrders = State.userOrders.filter(o => o.status !== 'cancelled' && o.payment_status !== 'paid' && o.payment_status !== 'receipt_sent');
+
+            activeTableOrders.forEach(o => {
+                tableTotal += o.total_price;
+                if (o.payment_status === 'unpaid') {
+                    tableTotalUnpaid += o.total_price;
+                    hasUnpaid = true;
+                }
+                if (o.payment_status === 'waiting_payment') {
+                    tableTotalWaiting += o.total_price;
+                    hasWaiting = true;
+                }
+                if (o.payment_status === 'requested') {
+                    isRequested = true;
+                }
+
+               
+                if(o.order_items) {
+                    o.order_items.forEach(item => {
+                        const key = `${item.product_name}-${JSON.stringify(item.options)}`;
+                        if(!summaryItems[key]) summaryItems[key] = { ...item, quantity: 0 };
+                        summaryItems[key].quantity += item.quantity;
+                    });
+                }
+            });
+
+            
+            let summaryListHTML = '';
+            if (Object.keys(summaryItems).length > 0 && State.tableId) {
+                summaryListHTML = `
+                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-3 text-sm animate-fade-in">
+                    <div class="font-bold text-gray-700 mb-2 border-b border-gray-200 pb-1 flex justify-between">
+                        <span>รายการรวมโต๊ะ ${State.tableId}</span>
+                       
+                    </div>
+                    <div class="space-y-1 max-h-40 overflow-y-auto">
+                        ${Object.values(summaryItems).map(i => `
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-dark">${i.product_name}</span> x${i.quantity} 
+                                    <div class="text-[10px] text-gray-400">${formatOptions(i.options)}</div>
+                                </div>
+                                <span class="text-gray-600">${formatPrice(i.price_per_unit * i.quantity)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+
+            const qrUrl = `https://promptpay.io/${CONFIG.PROMPTPAY_ID}/${tableTotalWaiting}`;
+
+            let actionSection = '';
+           
+            if (State.tableId && activeTableOrders.length > 0) {
+                 if (hasWaiting) {
+                   
+                    actionSection = `
+                    <div class="bg-white p-4 rounded-xl border-2 border-primary/20 mb-4 flex flex-col items-center shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
+                        <div class="text-primary font-bold mb-1 text-lg">ยอดรวมโต๊ะ ${State.tableId}</div>
+                        <div class="text-3xl font-bold text-dark mb-4">${formatPrice(tableTotalWaiting)}</div>
+                        
+                        ${summaryListHTML}
+
+                        <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-100 mb-3">
+                            <img src="${qrUrl}" class="w-48 h-48 object-contain rounded-lg border border-gray-100 mb-3 bg-white p-2" alt="PromptPay QR">
+                        </div>
+                        
+                        <div class="flex items-center gap-2 w-full">
+                            <input type="text" value="${CONFIG.PROMPTPAY_ID}" readonly class="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-center text-sm text-gray-600 outline-none">
+                            <button onclick="copyToClipboard('${CONFIG.PROMPTPAY_ID}')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm"><i class="fas fa-copy"></i></button>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-2 text-center">แจ้งสลิปพนักงานเพื่อยืนยัน</div>
+                    </div>`;
+                } else if (isRequested) {
+                   
+                    actionSection = `
+                    <div class="bg-white p-4 rounded-xl border border-yellow-400 mb-4 shadow-sm text-center">
+                        <div class="animate-pulse text-yellow-600 font-bold mb-2 text-lg"><i class="fas fa-clock mr-2"></i> กำลังเรียกเช็คบิล...</div>
+                         ${summaryListHTML}
+                        <div class="text-xs text-gray-400">กรุณารอสักครู่ พนักงานกำลังตรวจสอบยอด</div>
+                    </div>`;
+                } else if (hasUnpaid) {
+                   
+                     actionSection = `
+                    <div class="bg-white p-4 rounded-xl border-2 border-accent mb-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-dark">ยอดรวมโต๊ะ ${State.tableId} (ยังไม่จ่าย)</span>
+                            <span class="font-bold text-xl text-primary">${formatPrice(tableTotalUnpaid)}</span>
+                        </div>
+                        ${summaryListHTML}
+                        <button onclick="requestTableBill()" class="w-full bg-accent text-white py-3 rounded-xl font-bold shadow-lg hover:bg-yellow-500 transition-colors animate-pulse">
+                            <i class="fas fa-bell mr-2"></i> เรียกเช็คบิล (รวมโต๊ะ)
+                        </button>
+                    </div>`;
+                }
+            }
+
+            const active = State.userOrders.filter(o => o.status !== 'cancelled' && o.payment_status !== 'paid' && o.payment_status !== 'receipt_sent');
+            const history = State.userOrders.filter(o => o.status === 'cancelled' || o.payment_status === 'paid' || o.payment_status === 'receipt_sent');
+
+            const genHTML = (orders, title) => {
+                if(orders.length===0) return '';
+                return `<div class="mb-4"><h4 class="font-bold text-dark text-sm mb-3">${title}</h4>` + orders.map(o => {
+                    const payStatus = o.payment_status || 'unpaid';
+                    let itemActions = '';
+                    let itemStatusLabel = '';
+
+                    if (payStatus === 'receipt_sent') {
+                        itemStatusLabel = `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">รับใบเสร็จแล้ว</span>`;
+                    }
+                    
+                 
+                    if (!State.tableId) {
+                        if (payStatus === 'unpaid' && o.status !== 'cancelled') {
+                            itemActions = `<button onclick="requestBill(${o.id})" class="mt-2 w-full bg-accent text-white py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-yellow-500 transition-colors"><i class="fas fa-receipt mr-1"></i> เรียกเก็บเงิน</button>`;
+                        } else if (payStatus === 'requested') {
+                            itemActions = `<div class="mt-2 w-full bg-gray-100 text-gray-500 py-2 rounded-lg text-sm text-center border border-gray-200"><i class="fas fa-clock mr-1"></i> รอใบเสร็จ/QR...</div>`;
+                        } else if (payStatus === 'waiting_payment') {
+                            const itemQrUrl = `https://promptpay.io/${CONFIG.PROMPTPAY_ID}/${o.total_price}`;
+                            itemActions = `
+                            <div class="mt-3 bg-white p-4 rounded-xl border-2 border-primary/20 flex flex-col items-center">
+                                <div class="text-primary font-bold mb-2">สแกนจ่าย ${formatPrice(o.total_price)}</div>
+                                <img src="${itemQrUrl}" class="w-40 h-40 object-contain rounded-lg border border-gray-100 mb-3 bg-white p-2">
+                                <div class="flex items-center gap-2 w-full">
+                                    <input type="text" value="${CONFIG.PROMPTPAY_ID}" readonly class="flex-1 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-center text-sm text-gray-600 outline-none">
+                                    <button onclick="copyToClipboard('${CONFIG.PROMPTPAY_ID}')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm"><i class="fas fa-copy"></i></button>
+                                </div>
+                            </div>`;
+                        }
+                    } else if (payStatus === 'receipt_sent') {
+                         itemActions = `<div class="mt-2 w-full bg-blue-50 text-blue-600 py-2 rounded-lg text-sm text-center font-bold border border-blue-100"><i class="fas fa-file-invoice mr-1"></i> ได้รับใบเสร็จทาง LINE แล้ว</div>`;
+                    }
+
+                    return `
+                    <div class="bg-white border border-gray-100 rounded-xl p-3 mb-2 shadow-sm">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><div class="font-bold text-sm">#${o.id} <span class="text-gray-400 font-normal">(${o.user_name})</span></div><div class="text-xs text-gray-500">${formatDate(o.created_at)}</div></div>
+                            <div class="text-right flex flex-col items-end">${getStatusBadge(o.status)} ${itemStatusLabel}</div>
+                        </div>
+                        <div class="text-sm text-gray-600 space-y-1 mb-2 border-l-2 border-gray-100 pl-2">
+                            ${o.order_items.map(i=>`<div>${i.product_name} x${i.quantity}</div>`).join('')}
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-2">
+                            <span class="text-xs text-${o.payment_status==='paid' || o.payment_status==='receipt_sent' ?'green-500':'gray-400'}">${(o.payment_status==='paid' || o.payment_status==='receipt_sent')?'จ่ายแล้ว':(o.payment_status==='waiting_payment'?'รอโอน':'รอชำระ')}</span>
+                            <span class="font-bold text-primary">${formatPrice(o.total_price)}</span>
+                        </div>
+                        ${itemActions}
+                    </div>`
+                }).join('') + '</div>';
+            };
+
+            list.innerHTML = actionSection + (genHTML(active, 'รายการปัจจุบัน') + genHTML(history, 'ประวัติรายการ')) || '<div class="text-center py-10 text-gray-400">ว่างเปล่า</div>';
+        }
+
+        async function requestTableBill() {
+            const cf = await Swal.fire({ title: `เช็คบิลโต๊ะ ${State.tableId}`, icon: 'info', showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#f6bd60' });
+            if(!cf.isConfirmed) return;
+            
+            showLoading(true, 'กำลังส่งคำขอรวมโต๊ะ...');
+            try {
+                const unpaidOrders = State.userOrders.filter(o => o.status !== 'cancelled' && o.payment_status === 'unpaid');
+                const total = unpaidOrders.reduce((sum, o) => sum + o.total_price, 0);
+                const orderIds = unpaidOrders.map(o => o.id);
+                if (orderIds.length > 0) {
+                    await supabaseClient.from('orders').update({ payment_status: 'requested' }).in('id', orderIds);
+                    const notifyData = {
+                        order_id: `TABLE-${State.tableId}`,
+                        customer: `โต๊ะ ${State.tableId} (รวมบิล)`,
+                        items: `🔔 ลูกค้าเรียกเช็คบิลรวมโต๊ะ ${orderIds.length} ออเดอร์`,
+                        total: total,
+                        time: new Date().toLocaleString('th-TH')
+                    };
+                    await sendTelegramNotification(notifyData);
+                }
+                await fetchUserOrders(); showLoading(false); Swal.fire('ส่งคำขอแล้ว', 'กรุณารอสักครู่', 'success');
+            } catch (err) { console.error(err); showLoading(false); Swal.fire('Error', 'เกิดข้อผิดพลาด', 'error'); }
+        }
+
+        async function requestBill(orderId) {
+            const cf = await Swal.fire({ title: 'ยืนยันเรียกเก็บเงิน?', icon: 'info', showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#f6bd60' });
+            if(!cf.isConfirmed) return;
+            
+            showLoading(true, 'ส่งคำขอ...');
+            try {
+                await supabaseClient.from('orders').update({ payment_status: 'requested' }).eq('id', orderId);
+                const { data: order } = await supabaseClient.from('orders').select('*').eq('id', orderId).single();
+                
+                if (order) {
+                    const notifyData = {
+                        order_id: `BILL-${order.id}`,
+                        customer: order.user_name || "ลูกค้า (Customer)",
+                        items: "🔔 ลูกค้ากดเรียกเช็คบิล / Request Bill",
+                        total: order.total_price,
+                        time: new Date().toLocaleString('th-TH')
+                    };
+                    await sendTelegramNotification(notifyData);
+                }
+
+                await fetchUserOrders(); 
+                showLoading(false);
+                Swal.fire('สำเร็จ', 'ส่งคำขอเช็คบิลแล้ว กรุณารอสักครู่', 'success');
+            } catch (err) {
+                console.error("Request Bill Error:", err);
+                showLoading(false);
+                Swal.fire('Error', 'เกิดข้อผิดพลาดในการส่งคำขอ', 'error');
+            }
+        }
+
+     
+        async function toggleAdmin() {
+            if(!State.isAdmin) return Swal.fire('Error', 'No Access', 'error');
+            const shop = document.getElementById('shop-view'); const admin = document.getElementById('admin-view');
+            if(State.view==='shop') { State.view='admin'; shop.classList.add('hidden'); admin.classList.remove('hidden'); showLoading(true); await fetchAdminData(); showLoading(false); }
+            else { State.view='shop'; shop.classList.remove('hidden'); admin.classList.add('hidden'); }
+        }
+
+        async function fetchAdminData() {
+            try {
+                const { data } = await supabaseClient.from('orders').select('*, order_items(*)').order('created_at', {ascending: false});
+                State.adminOrders = data || []; 
+                renderAdminDashboard();
+            } catch(e) { console.error(e); }
+        }
+
+        function renderAdminDashboard() {
+            const list = document.getElementById('admin-order-list');
+            const today = new Date().toDateString();
+            const todayOrders = State.adminOrders.filter(o => new Date(o.created_at).toDateString() === today);
+            
+            
+            const total = todayOrders
+                .filter(o => o.payment_status === 'paid' || o.payment_status === 'receipt_sent')
+                .reduce((s,o) => s + o.total_price, 0);
+            
+            document.getElementById('admin-total-sales').innerText = formatPrice(total);
+            document.getElementById('admin-total-orders').innerText = `${todayOrders.length} ออเดอร์`;
+
+            list.innerHTML = State.adminOrders.map(o => {
+                const payStatus = o.payment_status || 'unpaid';
+                let payAction = '';
+                const tableInfo = o.table_id ? `<span class="bg-dark text-white px-2 py-0.5 rounded text-[10px] mr-2">โต๊ะ ${o.table_id}</span>` : '';
+
+                if (payStatus === 'requested') {
+                    
+                    payAction = `
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                        <button onclick="adminSendTableBill('${o.table_id}', ${o.id}, false)" class="bg-gray-200 text-dark py-1 rounded text-xs font-bold border border-gray-300">
+                            ส่ง QR (ในแอป)
+                        </button>
+                        <button onclick="adminSendTableBill('${o.table_id}', ${o.id}, true)" class="bg-accent text-white py-1 rounded text-xs font-bold animate-pulse shadow-sm">
+                            <i class="fab fa-line mr-1"></i> ส่ง QR + LINE
+                        </button>
+                    </div>`;
+                } else if (payStatus === 'waiting_payment') {
+                    payAction = `<button onclick="adminConfirmTablePaid('${o.table_id}', ${o.id})" class="w-full mt-2 bg-primary text-white py-1 rounded text-xs font-bold border border-white shadow-sm">💰 โต๊ะ ${o.table_id} รอจ่าย -> ยืนยันรับเงิน</button>`;
+                } else if (payStatus === 'paid') {
+                    payAction = `
+                    <div class="w-full mt-2 bg-green-100 text-green-700 py-1 rounded text-xs text-center font-bold mb-2">✅ จ่ายแล้ว</div>
+                    <button onclick="adminSendReceipt('${o.table_id}', ${o.id})" class="w-full bg-white border border-green-500 text-green-600 py-1 rounded text-xs font-bold hover:bg-green-50 transition-colors">
+                        <i class="fas fa-file-invoice mr-1"></i> ส่งใบเสร็จ (LINE)
+                    </button>`;
+                } else if (payStatus === 'receipt_sent') {
+                    payAction = `<div class="w-full mt-2 bg-gray-100 text-gray-400 py-1 rounded text-xs text-center font-bold">🏁 ปิดโต๊ะแล้ว (Receipt Sent)</div>`;
+                }
+
+                return `
+                <div class="bg-white p-3 rounded-lg shadow-sm mb-3 border-l-4 ${getStatusColor(o.status)}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-bold text-sm mb-1">${tableInfo} #${o.id}</div>
+                            <div class="text-xs text-gray-500">${o.user_name}</div>
+                        </div>
+                        <div class="flex flex-col items-end"><span class="font-bold text-primary">${formatPrice(o.total_price)}</span>${getStatusBadge(o.status)}</div>
+                    </div>
+                    <div class="text-xs text-gray-600 mb-2 bg-gray-50 p-2 rounded">${o.order_items.map(i=>`<div>${i.product_name} x${i.quantity}</div>`).join('')}</div>
+                    ${payAction}
+                    <div class="flex gap-2 justify-end mt-2 pt-2 border-t border-gray-100">
+                        ${o.status === 'pending' ? `<button onclick="updateOrderStatus(${o.id},'preparing')" class="px-2 py-1 bg-blue-500 text-white text-xs rounded">รับออเดอร์</button>` : ''}
+                        ${o.status === 'preparing' ? `<button onclick="updateOrderStatus(${o.id},'completed')" class="px-2 py-1 bg-green-500 text-white text-xs rounded">เสร็จสิ้น</button>` : ''}
+                        ${o.status !== 'cancelled' ? `<button onclick="updateOrderStatus(${o.id},'cancelled')" class="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">ยกเลิก</button>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function updateOrderStatus(id, status) {
+            showLoading(true); await supabaseClient.from('orders').update({status}).eq('id',id); await fetchAdminData(); showLoading(false);
+        }
+        
+        async function adminSendTableBill(tableId, fallbackId, pushLine) {
+            showLoading(true);
+            let targetOrder = null;
+            let targetUserId = null;
+            let total = 0;
+
+            try {
+               
+                const { data: clickedOrder } = await supabaseClient.from('orders').select('*').eq('id', fallbackId).single();
+                if (!clickedOrder) throw new Error("Order not found");
+                
+                
+                targetUserId = clickedOrder.user_id;
+
+               
+                if (tableId && tableId !== 'null') {
+                    
+                    await supabaseClient.from('orders')
+                        .update({ payment_status: 'waiting_payment' })
+                        .eq('table_id', tableId)
+                        .eq('payment_status', 'requested');
+                    
+                  
+                    const { data: tableOrders } = await supabaseClient.from('orders')
+                        .select('total_price')
+                        .eq('table_id', tableId)
+                        .eq('payment_status', 'waiting_payment');
+                    
+                    if (tableOrders) {
+                        total = tableOrders.reduce((sum, o) => sum + o.total_price, 0);
+                    }
+                    targetOrder = clickedOrder; 
+                } else {
+                  
+                    await supabaseClient.from('orders').update({ payment_status: 'waiting_payment' }).eq('id', fallbackId);
+                    total = clickedOrder.total_price;
+                    targetOrder = clickedOrder;
+                }
+
+               
+                if (pushLine) {
+                    if (!targetUserId || targetUserId.startsWith('guest_')) {
+                        showLoading(false);
+                        await fetchAdminData();
+                        return Swal.fire('ส่งไม่ได้', 'ลูกค้าเป็น Guest User ไม่สามารถส่ง LINE ได้', 'warning');
+                    }
+
+                    const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/notify-order`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`
+                        },
+                        body: JSON.stringify({
+                            type: 'push_bill',
+                            userId: targetUserId, // Send to specific user
+                            orderId: targetOrder.id,
+                            total: total, // Aggregated total
+                            tableId: tableId,
+                            promptPayId: CONFIG.PROMPTPAY_ID
+                        })
+                    });
+                    
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.error || 'Push Failed');
+                    }
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ส่ง LINE แล้ว' });
+                } else {
+                    Swal.fire('ส่ง QR (ในแอป) แล้ว', 'ลูกค้าเปิดดูในหน้าติดตามได้เลย', 'success');
+                }
+
+            } catch (e) {
+                console.error("Error", e);
+                Swal.fire('Error', e.message, 'error');
+            }
+            await fetchAdminData(); 
+            showLoading(false);
+        }
+
+        async function adminSendReceipt(tableId, fallbackId) {
+            showLoading(true);
+            let targetUserId = null;
+            let finalTotal = 0;
+
+            try {
+                
+                const { data: clickedOrder } = await supabaseClient.from('orders').select('*').eq('id', fallbackId).single();
+                
+                if (clickedOrder) {
+                    targetUserId = clickedOrder.user_id;
+                    finalTotal = clickedOrder.total_price;
+                } else {
+                    throw new Error('Order not found');
+                }
+
+                
+
+                if (!targetUserId || targetUserId.startsWith('guest_')) {
+                    showLoading(false);
+                    return Swal.fire('ไม่สามารถส่ง LINE ได้', 'ลูกค้าเป็น Guest User', 'warning');
+                }
+
+                const res = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/notify-order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        type: 'push_receipt', 
+                        userId: targetUserId, // Force send to this specific user
+                        orderId: clickedOrder.id,
+                        total: finalTotal, // Edge function might recalculate this based on table logic
+                        tableId: tableId
+                    })
+                });
+
+                if (!res.ok) throw new Error('API Error');
+                
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'ส่งใบเสร็จแล้ว' });
+
+            } catch(e) {
+                console.error(e);
+                Swal.fire('Error', 'ส่งใบเสร็จไม่สำเร็จ', 'error');
+            }
+            
+            await fetchAdminData();
+            showLoading(false);
+        }
+
+        async function adminConfirmTablePaid(tableId, fallbackId) {
+            const cf = await Swal.fire({ title: 'ยืนยันยอดเข้า?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ได้รับแล้ว', confirmButtonColor: '#10B981' });
+            if(!cf.isConfirmed) return;
+
+            showLoading(true);
+            if(tableId && tableId !== 'null') {
+                await supabaseClient.from('orders').update({ payment_status: 'paid' }).eq('table_id', tableId).eq('payment_status', 'waiting_payment');
+            } else {
+                await supabaseClient.from('orders').update({ payment_status: 'paid' }).eq('id', fallbackId);
+            }
+            await fetchAdminData(); showLoading(false);
+            Swal.fire('เรียบร้อย', 'บันทึกการชำระเงินแล้ว', 'success');
+        }
+
+        function getStatusColor(status) {
+            if(status === 'pending') return 'border-yellow-400';
+            if(status === 'preparing') return 'border-blue-400';
+            if(status === 'completed') return 'border-green-400';
+            if(status === 'cancelled') return 'border-red-400';
+            return 'border-gray-400';
+        }
+
+        window.onload = initApp;
+    </script>
+
+    
+    <div id="loading-overlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center hidden">
+        <img src="https://developers.line.biz/media/line-mini-app/LINE_spinner_light.svg" class="w-12 h-12 mb-4 animate-spin">
+        <span id="loading-text" class="text-secondary font-medium animate-pulse">กำลังโหลด...</span>
+    </div>
+
+    
+    <div id="product-option-modal" class="fixed inset-0 z-40 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="closeProductModal()"></div>
+        <div id="product-option-sheet" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transform transition-transform duration-300 translate-y-full flex flex-col max-h-[90vh]">
+            <div class="relative w-full h-48">
+                <img id="modal-product-img" src="" class="w-full h-full object-cover rounded-t-3xl">
+                <button onclick="closeProductModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center text-gray-600 shadow-sm"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto">
+                <div class="flex justify-between items-start mb-4"><h3 id="modal-product-name" class="font-bold text-xl text-dark">Name</h3><span id="modal-product-price" class="font-bold text-xl text-primary">0 บ.</span></div>
+                <div class="mb-6"><label class="block text-sm font-medium text-gray-500 mb-3">ระดับความหวาน</label><div class="grid grid-cols-4 gap-2">
+                    <div><input type="radio" name="sweetness" id="sweet-100" value="100%" class="hidden option-radio" checked><label for="sweet-100" class="block text-center py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-500 cursor-pointer transition-all">100%</label></div>
+                    <div><input type="radio" name="sweetness" id="sweet-50" value="50%" class="hidden option-radio"><label for="sweet-50" class="block text-center py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-500 cursor-pointer transition-all">50%</label></div>
+                    <div><input type="radio" name="sweetness" id="sweet-25" value="25%" class="hidden option-radio"><label for="sweet-25" class="block text-center py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-500 cursor-pointer transition-all">25%</label></div>
+                    <div><input type="radio" name="sweetness" id="sweet-0" value="0%" class="hidden option-radio"><label for="sweet-0" class="block text-center py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-500 cursor-pointer transition-all">0%</label></div>
+                </div></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-500 mb-2">หมายเหตุเพิ่มเติม</label><textarea id="modal-note" rows="2" class="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-primary" placeholder="เช่น แยกน้ำแข็ง, ไม่รับหลอด..."></textarea></div>
+            </div>
+            <div class="p-4 border-t border-gray-100 bg-white"><button onclick="confirmAddToCart()" class="w-full bg-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg shadow-red-500/30 active:scale-95 transition-transform">เพิ่มลงตะกร้า</button></div>
+        </div>
+    </div>
+
+   
+    <div id="shop-view" class="flex flex-col h-full relative">
+        <header class="flex-none p-4 bg-white/50 backdrop-blur-sm sticky top-0 z-10 flex flex-col gap-2 shadow-sm">
+            <div class="flex justify-between items-center w-full">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent p-0.5"><img id="user-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-full h-full rounded-full object-cover border-2 border-white"></div>
+                    <div><h1 class="font-bold text-lg text-dark leading-none">Mini Café</h1><p id="user-name" class="text-xs text-gray-500">ยินดีต้อนรับ</p></div>
+                </div>
+                <div class="flex gap-2">
+                     <button onclick="toggleOrdersModal(true)" class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-primary transition-colors relative"><i class="fas fa-history"></i></button>
+                    <button onclick="toggleSearch()" class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-primary transition-colors"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+            <div id="search-container" class="hidden w-full animate-fade-in"><input type="text" id="search-input" oninput="handleSearch(event)" placeholder="ค้นหาสินค้า..." class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-primary text-sm bg-white/80"></div>
+        </header>
+        <main class="flex-1 flex overflow-hidden">
+            <aside class="w-[80px] bg-[#fdfaf6] flex-none overflow-y-auto no-scrollbar py-2 border-r border-gray-100/50" id="category-list"></aside>
+            <section class="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-[#f7ede2] to-white">
+                <div class="flex justify-between items-end mb-4"><h2 id="section-title" class="text-xl font-bold text-dark">สินค้า</h2></div>
+                <div id="product-list" class="grid grid-cols-2 gap-3 pb-24"></div>
+            </section>
+        </main>
+        <div id="cart-bar" onclick="toggleCartModal(true)" class="absolute bottom-4 left-4 right-4 bg-dark text-white rounded-2xl p-3 shadow-2xl flex justify-between items-center transform translate-y-[150%] transition-transform duration-300 z-20 cursor-pointer active:scale-95">
+            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-accent relative"><i class="fas fa-shopping-basket"></i><div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-dark"></div></div><div><div id="cart-qty" class="text-xs text-gray-400">0 รายการ</div><div id="cart-total" class="font-bold text-lg leading-none">0 บ.</div></div></div>
+            <div class="flex items-center gap-2 pr-2"><span class="text-sm font-medium text-gray-300">ดูตะกร้า</span><i class="fas fa-chevron-up text-xs"></i></div>
+        </div>
+        <div id="cart-modal" class="fixed inset-0 z-30 hidden">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="toggleCartModal(false)"></div>
+            <div id="cart-sheet" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transform transition-transform duration-300 translate-y-full flex flex-col max-h-[80vh]">
+                <div class="p-4 flex items-center justify-between border-b border-gray-100"><h3 class="font-bold text-lg text-dark">ตะกร้าสินค้า</h3><button onclick="toggleCartModal(false)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-times"></i></button></div>
+                <div id="cart-modal-list" class="p-4 overflow-y-auto flex-1 space-y-2"></div>
+                <div class="p-4 border-t border-gray-100 bg-gray-50 rounded-t-2xl"><div class="flex justify-between items-center mb-3"><span class="text-gray-500">ยอดรวมทั้งหมด</span><span id="cart-modal-total" class="font-bold text-2xl text-primary">0 บ.</span></div><button onclick="checkout()" class="w-full bg-primary text-white py-3 rounded-xl font-bold text-lg shadow-lg shadow-red-500/30 active:scale-95 transition-transform">ยืนยันการสั่งซื้อ</button></div>
+            </div>
+        </div>
+       
+        <div id="orders-modal" class="fixed inset-0 z-30 hidden">
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="toggleOrdersModal(false)"></div>
+            <div id="orders-sheet" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transform transition-transform duration-300 translate-y-full flex flex-col max-h-[85vh]">
+                <div class="p-4 flex items-center justify-between border-b border-gray-100 bg-white z-10 rounded-t-3xl"><div><h3 class="font-bold text-lg text-dark">ติดตามสถานะ</h3><p class="text-xs text-gray-400">รายการสั่งซื้อของคุณ</p></div><button onclick="toggleOrdersModal(false)" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i class="fas fa-times"></i></button></div>
+                <div id="orders-list" class="p-4 overflow-y-auto flex-1 bg-white"></div>
+            </div>
+        </div>
+        <div id="admin-btn-container" class="absolute bottom-20 left-4 z-20 hidden">
+             <button onclick="toggleAdmin()" class="w-12 h-12 rounded-full bg-white text-dark shadow-xl flex items-center justify-center border-2 border-primary active:scale-95 transition-transform animate-pop"><i class="fas fa-user-shield text-xl"></i></button>
+        </div>
+    </div>
+
+   
+    <div id="admin-view" class="hidden flex flex-col h-full bg-gray-50">
+        <header class="bg-dark text-white p-4 flex justify-between items-center shadow-lg sticky top-0 z-10"><h1 class="font-bold">ADMIN PANEL</h1><button onclick="toggleAdmin()" class="text-xs bg-gray-700 px-3 py-1 rounded">กลับหน้าร้าน</button></header>
+        <div class="p-4 overflow-y-auto flex-1">
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-secondary"><div class="text-gray-400 text-xs uppercase mb-1">ยอดขายวันนี้</div><div id="admin-total-sales" class="text-2xl font-bold text-dark">0 บ.</div></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-b-4 border-accent"><div class="text-gray-400 text-xs uppercase mb-1">ออเดอร์วันนี้</div><div id="admin-total-orders" class="text-2xl font-bold text-dark">0</div></div>
+            </div>
+            <h2 class="font-bold text-dark mb-3">รายการออเดอร์ล่าสุด</h2>
+            <div id="admin-order-list" class="space-y-3 pb-10"><div class="text-gray-400 text-sm text-center py-4">กำลังโหลดข้อมูล...</div></div>
+        </div>
+    </div>
+
+</body>
+</html>
