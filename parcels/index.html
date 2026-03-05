@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Smart Parcel System</title>
+  <link id="favicon" rel="icon" href="https://cdn-icons-gif.flaticon.com/15309/15309770.gif">
+  <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-gif.flaticon.com/15309/15309770.gif">
+  <meta name="description" content="Smart Parcel System" />
+  <meta name="author" content="T42" />
+  <meta property="og:title" content="Smart Parcel System" />
+  <meta property="og:description" content="Smart Parcel System-T42 Thailand" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://google.com" />
+  <meta property="og:image" content="https://cdn-icons-gif.flaticon.com/15309/15309770.gif" />
+
+  <link rel="icon" href="https://cdn-icons-gif.flaticon.com/15309/15309770.gif">
+  <meta name="description" content="Smart Parcel System" />
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/LINESeedSansTH/LINESeedSansTH.css"
+    rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#FF6B6B",
+            secondary: "#4ECDC4",
+            accent: "#FFE66D",
+            "background-light": "#F7F9FC",
+            "background-dark": "#1A1B26",
+            "card-light": "#FFFFFF",
+            "card-dark": "#24283B",
+            "text-light": "#2D3748",
+            "text-dark": "#E2E8F0",
+          },
+          fontFamily: {
+            display: ['LINE Seed Sans TH', 'Fredoka', 'sans-serif'],
+            body: ['LINE Seed Sans TH', 'Nunito', 'sans-serif'],
+          },
+          borderRadius: {
+            DEFAULT: "1rem",
+            'xl': '1.5rem',
+            '2xl': '2rem',
+            '3xl': '2.5rem',
+          },
+          boxShadow: {
+            'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+            'glow': '0 0 20px rgba(255, 107, 107, 0.4)',
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            }
+          }
+        },
+      },
+    };
+
+
+    const ThemedSwal = Swal.mixin({
+      customClass: {
+        container: 'swal2-container-transparent',
+        popup: 'rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-card-dark',
+        title: 'font-display text-2xl font-bold text-gray-800 dark:text-white',
+        htmlContainer: 'text-gray-600 dark:text-gray-300 font-body',
+        confirmButton: 'bg-primary hover:bg-red-500 text-white font-bold py-3 px-8 rounded-xl shadow-md transform transition active:scale-95 ml-2',
+        cancelButton: 'bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-xl shadow-inner transform transition active:scale-95 mr-2',
+        loader: 'text-primary'
+      },
+      buttonsStyling: false
+    });
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+
+    .blob-shape {
+      border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+    }
+
+    .gradient-card {
+      background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%);
+    }
+
+    .dark .gradient-card {
+      background: linear-gradient(135deg, #FF6B6B 0%, #845EC2 100%);
+    }
+
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+
+<body
+  class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-body min-h-screen transition-colors duration-300 antialiased overflow-x-hidden">
+
+
+  <div id="global_loading"
+    class="fixed inset-0 z-[999] bg-background-light dark:bg-background-dark flex flex-col items-center justify-center transition-opacity duration-300">
+    <div class="relative flex flex-col items-center">
+      <div class="absolute inset-0 bg-primary/20 dark:bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+      <div
+        class="w-28 h-28 bg-white dark:bg-card-dark rounded-[2rem] shadow-2xl flex items-center justify-center p-3 relative z-10 mb-6 border border-gray-100 dark:border-gray-800 animate-float">
+        <img src="https://cdn-icons-gif.flaticon.com/15309/15309770.gif"
+          class="w-full h-full object-cover rounded-[1.5rem]" alt="Loading Logo">
+      </div>
+      <h2 class="font-display font-bold text-3xl text-primary animate-pulse tracking-wider">Smart Parcel</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium">กำลังเตรียมระบบ...</p>
+
+      <div class="mt-8 flex gap-2">
+        <div class="w-3 h-3 bg-primary rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+        <div class="w-3 h-3 bg-secondary rounded-full animate-bounce" style="animation-delay: 0.15s;"></div>
+        <div class="w-3 h-3 bg-accent rounded-full animate-bounce" style="animation-delay: 0.3s;"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="registration_modal"
+    class="fixed inset-0 z-[200] bg-background-light dark:bg-background-dark flex flex-col hidden overflow-y-auto">
+    <div class="p-6 pt-12 flex-1 flex flex-col max-w-md mx-auto w-full">
+      <h2 class="font-display font-bold text-3xl mb-2 text-primary">ลงทะเบียนลูกบ้าน</h2>
+      <p class="text-sm text-gray-500 mb-8">กรุณากรอกข้อมูลและยอมรับเงื่อนไขเพื่อใช้งานระบบรับพัสดุ</p>
+
+      <label class="block mb-4">
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">เลขห้อง</span>
+        <input type="text" id="reg_room"
+          class="mt-1 w-full rounded-xl bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 py-3 shadow-sm focus:ring-primary px-4 outline-none"
+          placeholder="เช่น A101">
+      </label>
+
+      <label class="block mb-6">
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">เบอร์โทรศัพท์ติดต่อ</span>
+        <input type="tel" id="reg_phone"
+          class="mt-1 w-full rounded-xl bg-white dark:bg-card-dark border border-gray-200 dark:border-gray-700 py-3 shadow-sm focus:ring-primary px-4 outline-none"
+          placeholder="เช่น 0812345678" maxlength="10"
+          oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+      </label>
+
+      <div
+        class="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-4 rounded-xl mb-6 max-h-40 overflow-y-auto text-xs text-gray-600 dark:text-gray-400">
+        <p class="font-bold mb-2">นโยบายความเป็นส่วนตัว (PDPA)</p>
+        <p>เราจำเป็นต้องเก็บข้อมูลส่วนบุคคลของท่าน ได้แก่ ข้อมูลบัญชี LINE, เลขห้อง และเบอร์โทรศัพท์
+          เพื่อวัตถุประสงค์ในการตรวจสอบการรับพัสดุและแจ้งเตือน
+          ข้อมูลของท่านจะถูกเก็บรักษาอย่างปลอดภัยและไม่นำไปเปิดเผยเพื่อการอื่นจนกว่าท่านจะขอยกเลิกบัญชี</p>
+      </div>
+
+      <label class="flex items-start gap-3 mb-8 cursor-pointer">
+        <input type="checkbox" id="reg_pdpa"
+          class="mt-1 rounded border border-gray-300 text-primary w-5 h-5 shrink-0 outline-none focus:ring-primary">
+        <span
+          class="text-sm text-gray-700 dark:text-gray-300">ข้าพเจ้ายินยอมให้ประมวลผลข้อมูลส่วนบุคคลตามเงื่อนไขเพื่อใช้ประกอบการบริหารนิติบุคคล</span>
+      </label>
+
+      <div class="mt-auto pb-8">
+        <button onclick="submitRegistration()"
+          class="w-full bg-primary text-white font-bold rounded-xl py-4 shadow-lg transform hover:bg-red-500 active:scale-95 transition">ตกลงและลงทะเบียน</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="profile_modal" class="fixed inset-0 z-[150] bg-black/60 hidden flex-col justify-end">
+    <div
+      class="bg-white dark:bg-card-dark w-full max-w-md mx-auto rounded-t-3xl pt-6 pb-12 px-6 shadow-2xl transform transition-transform"
+      id="profile_sheet">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="font-display font-bold text-2xl text-gray-800 dark:text-white">จัดการโปรไฟล์</h2>
+        <button onclick="closeProfileModal()"
+          class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-red-100 hover:text-red-500 transition"><span
+            class="material-icons-round text-gray-500">close</span></button>
+      </div>
+
+      <label class="block mb-4">
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">เลขห้อง</span>
+        <input type="text" id="edit_room"
+          class="mt-1 w-full rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 shadow-inner px-4 text-gray-500 select-none outline-none"
+          readonly>
+        <p class="text-xs text-gray-500 mt-1 pl-1">ติดต่อ Admin หากต้องการเปลี่ยนเลขห้อง</p>
+      </label>
+
+      <label class="block mb-4">
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">ชื่อที่แสดง</span>
+        <input type="text" id="edit_name"
+          class="mt-1 w-full rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 shadow-sm focus:ring-primary px-4 outline-none"
+          placeholder="ชื่อของคุณ">
+      </label>
+
+      <label class="block mb-8">
+        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">เบอร์โทรศัพท์ติดต่อ</span>
+        <input type="tel" id="edit_phone"
+          class="mt-1 w-full rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 shadow-sm focus:ring-primary px-4 outline-none"
+          maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
+      </label>
+
+      <button onclick="saveProfile()"
+        class="w-full bg-primary text-white font-bold rounded-xl py-3 shadow-md transform active:scale-95 transition hover:bg-red-500 mb-3">บันทึกข้อมูล</button>
+
+      <button onclick="handleLiffLogout()"
+        class="w-full bg-gray-100 text-gray-500 font-bold rounded-xl py-3 shadow-sm transform active:scale-95 transition hover:bg-gray-200">ออกจากระบบ
+        (Logout)</button>
+    </div>
+  </div>
+
+
+  <div id="welcome_modal"
+    class="fixed inset-0 z-[250] bg-background-light dark:bg-background-dark flex-col items-center justify-center hidden">
+    <div class="text-center w-full max-w-sm px-6">
+      <div
+        class="w-24 h-24 bg-primary text-white rounded-[2rem] mx-auto mb-6 flex items-center justify-center rotate-3 shadow-lg">
+        <span class="material-icons-round text-5xl">inventory</span>
+      </div>
+      <h1 class="font-display font-bold text-3xl mb-2 text-gray-800 dark:text-white">Smart Parcel</h1>
+      <p class="text-gray-500 dark:text-gray-400 mb-8">กรุณาเข้าสู่ระบบด้วย LINE
+        เพื่อใช้งานระบบจัดการพัสดุและแจ้งข่าวสาร</p>
+
+      <button onclick="handleLiffLogin()"
+        class="w-full bg-[#00B900] text-white font-bold rounded-2xl py-4 shadow-lg shadow-green-500/30 transform hover:bg-[#009900] active:scale-95 transition flex justify-center items-center gap-2">
+        <span class="font-display text-lg tracking-wide whitespace-nowrap">เข้าสู่ระบบด้วย LINE</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="max-w-md mx-auto relative min-h-screen pb-24 hidden" id="main_app">
+    <div
+      class="fixed top-0 left-0 w-full h-64 bg-gradient-to-b from-purple-100 to-transparent dark:from-purple-900/20 pointer-events-none -z-10">
+    </div>
+    <div
+      class="fixed -top-20 -right-20 w-64 h-64 bg-pink-300/30 dark:bg-pink-600/10 rounded-full blur-3xl pointer-events-none -z-10">
+    </div>
+    <div
+      class="fixed top-40 -left-20 w-48 h-48 bg-blue-300/30 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10">
+    </div>
+
+
+    <header class="flex justify-between items-center px-6 pt-8 pb-4">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-full bg-yellow-200 overflow-hidden border-2 border-white dark:border-gray-700 shadow-sm relative">
+          <img id="profile_img" alt="User Profile" class="w-full h-full object-cover"
+            src="https://cdn-icons-gif.flaticon.com/8121/8121295.gif" />
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider" id="room_display">ห้อง:
+            ...</p>
+          <h1 id="profile_name" class="font-display font-bold text-lg leading-tight">Smart Parcel</h1>
+        </div>
+      </div>
+      <button id="toggle_role_btn"
+        class="hidden px-3 py-1 text-xs font-bold rounded-full bg-white dark:bg-card-dark shadow-sm border border-gray-100 dark:border-gray-700 text-primary hover:shadow-md transition">
+        Role: User
+      </button>
+    </header>
+
+
+    <section id="admin_section" class="px-6 mb-4 hidden">
+      <div
+        class="relative w-full rounded-3xl gradient-card shadow-glow overflow-hidden p-6 text-white flex flex-col justify-between group">
+        <div
+          class="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none">
+        </div>
+        <div class="absolute top-4 right-4 w-28 h-28 animate-float drop-shadow-lg pointer-events-none opacity-50">
+          <span class="material-icons-round text-yellow-300 text-6xl">inventory</span>
+        </div>
+        <div class="relative z-10 w-full">
+          <div class="flex items-center justify-between mb-3">
+            <p class="font-bold text-white/90 text-lg">📦 รับพัสดุ (Admin)</p>
+            <span class="bg-white/20 text-xs px-2 py-1 rounded-lg font-medium">แอดมิน</span>
+          </div>
+          <input type="text" id="admin_room" placeholder="ระบุเลขห้อง (เช่น A101)"
+            class="w-full text-gray-800 rounded-xl px-4 py-3 border-0 bg-white/90 focus:ring-2 focus:ring-primary outline-none mb-3 shadow-inner font-bold">
+          <label
+            class="relative flex flex-col items-center justify-center w-full min-h-[6rem] bg-white/20 hover:bg-white/30 transition rounded-xl cursor-pointer border-2 border-dashed border-white/50 mb-3 overflow-hidden backdrop-blur-sm">
+            <div id="photo_placeholder"
+              class="flex flex-col items-center justify-center py-4 transition-all duration-300 relative z-10 w-full h-full">
+              <span id="photo_icon"
+                class="material-icons-round text-2xl mb-1 drop-shadow-md text-white">add_a_photo</span>
+              <span id="file_name_label" class="text-sm font-medium drop-shadow-md text-white">ถ่ายรูป /
+                อัปโหลดพัสดุ</span>
+            </div>
+            <img id="admin_photo_preview"
+              class="hidden absolute inset-0 w-full h-full object-cover z-0 brightness-75 transition-opacity duration-300" />
+            <input type="file" id="admin_photo" accept="image/*" class="hidden">
+          </label>
+          <button id="admin_submit"
+            class="w-full bg-white text-primary font-bold rounded-xl py-3 shadow-sm hover:shadow-lg transform active:scale-95 transition">บันทึกเข้าระบบ</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="user_section" class="px-6 mb-4 hidden">
+      <div
+        class="relative w-full rounded-3xl bg-gradient-to-br from-blue-400 to-indigo-500 shadow-glow overflow-hidden p-6 text-white flex flex-col justify-between group items-center">
+        <div
+          class="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none">
+        </div>
+        <div class="relative z-10 w-full flex flex-col items-center">
+          <div class="flex w-full justify-between items-center mb-2">
+            <p class="font-bold text-white/90 text-lg">🏠 รับของ (User)</p>
+            <span class="bg-white/20 text-xs px-2 py-1 rounded-lg font-medium">ลูกบ้าน</span>
+          </div>
+          <div class="bg-white p-3 rounded-2xl shadow-soft mb-3">
+            <canvas id="user_qr" class="w-40 h-40"></canvas>
+          </div>
+          <h2 class="font-display font-bold text-2xl drop-shadow-sm mb-1 text-center">สแกนโค้ดส่วนตัว</h2>
+          <p class="text-sm text-white/90 text-center bg-black/20 px-3 py-1 rounded-full">แสดง QR Code
+            นี้ให้แอดมินสแกนรับพัสดุ</p>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="household_section" class="px-6 mb-4 hidden">
+      <h3 class="font-display font-bold text-lg text-gray-800 dark:text-white mb-3">👨‍👩‍👧‍👦 สมาชิกในห้อง</h3>
+      <div id="household_container" class="flex overflow-x-auto gap-4 pb-2 hide-scrollbar">
+
+      </div>
+    </section>
+
+
+    <section class="px-6 mb-8 mt-2" id="admin_controls_row" style="display:none;">
+      <div class="grid grid-cols-3 gap-3">
+        <button
+          class="flex flex-col items-center justify-center gap-1 group p-3 bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:-translate-y-1 transition text-center"
+          onclick="document.getElementById('admin_room').focus()">
+          <span class="material-icons-round text-primary text-2xl bg-primary/10 p-2 rounded-xl">move_to_inbox</span>
+          <span class="text-[10px] font-semibold text-gray-700 dark:text-gray-300 leading-tight">รับพัสดุ</span>
+        </button>
+        <button
+          class="flex flex-col items-center justify-center gap-1 group p-3 bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:-translate-y-1 transition text-center"
+          onclick="openNewsAdminModal()">
+          <span class="material-icons-round text-secondary text-2xl bg-secondary/10 p-2 rounded-xl">campaign</span>
+          <span class="text-[10px] font-semibold text-gray-700 dark:text-gray-300 leading-tight">ข่าวสาร</span>
+        </button>
+        <button
+          class="flex flex-col items-center justify-center gap-1 group p-3 bg-white dark:bg-card-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:-translate-y-1 transition text-center"
+          onclick="openUserAdminModal()">
+          <span
+            class="material-icons-round text-blue-500 text-2xl bg-blue-50 dark:bg-blue-900/30 p-2 rounded-xl">manage_accounts</span>
+          <span class="text-[10px] font-semibold text-gray-700 dark:text-gray-300 leading-tight">ลูกบ้าน</span>
+        </button>
+      </div>
+    </section>
+
+
+    <section class="px-6 rounded-t-3xl bg-white dark:bg-card-dark shadow-soft pt-8 pb-10 min-h-[500px] mt-4">
+      <div class="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="font-display font-bold text-xl dark:text-white" id="list_title">รายการพัสดุของคุณ</h3>
+        <button onclick="loadParcels()"
+          class="p-2 -mr-2 bg-gray-50 dark:bg-gray-800 rounded-full text-gray-500 hover:text-primary transition">
+          <span class="material-icons-round text-sm">refresh</span>
+        </button>
+      </div>
+      <div id="parcels_container" class="flex flex-col gap-4">
+
+      </div>
+    </section>
+
+
+    <nav
+      class="fixed bottom-6 left-6 right-6 h-16 bg-white/90 dark:bg-card-dark/90 backdrop-blur-md rounded-2xl shadow-lg flex justify-around items-center z-50 border border-white/50 dark:border-gray-700 px-2">
+      <a class="p-2 text-primary hover:scale-110 transition" href="javascript:void(0)" onclick="loadParcels()">
+        <span class="material-icons-round text-3xl">home</span>
+      </a>
+      <a class="p-2 text-gray-400 hover:text-primary transition relative group" href="javascript:void(0)"
+        onclick="openNewsModal()">
+        <span class="material-icons-round text-3xl">newspaper</span>
+        <span id="news_badge"
+          class="hidden absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] items-center justify-center font-bold flex group-hover:animate-bounce">0</span>
+      </a>
+
+      <div class="relative -top-6">
+        <button id="scan_btn_nav" onclick="openScanner()"
+          class="w-14 h-14 bg-black dark:bg-primary text-white rounded-full shadow-lg shadow-black/30 dark:shadow-primary/40 flex items-center justify-center transform hover:scale-110 transition-transform">
+          <span class="material-icons-round text-3xl">qr_code_scanner</span>
+        </button>
+      </div>
+
+      <a class="p-2 text-gray-400 hover:text-primary transition relative group" href="javascript:void(0)"
+        onclick="focusNotifications()">
+        <span class="material-icons-round text-3xl">notifications</span>
+        <span id="notification_badge"
+          class="hidden absolute top-1 right-2 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] items-center justify-center font-bold flex group-hover:animate-bounce">0</span>
+      </a>
+
+      <a class="p-2 text-gray-400 hover:text-primary transition" href="javascript:void(0)" onclick="openProfileModal()">
+        <span class="material-icons-round text-3xl">person</span>
+      </a>
+    </nav>
+
+
+    <div id="scanner_modal" class="hidden fixed inset-0 z-[100] bg-black/90 flex flex-col items-center pt-20">
+      <div class="w-full max-w-sm px-4">
+        <h2 class="text-white font-bold text-2xl mb-4 text-center">สแกน QR Code ลูกบ้าน</h2>
+        <div id="reader" class="rounded-2xl overflow-hidden bg-white w-full shadow-2xl"></div>
+        <button onclick="closeScanner()"
+          class="mt-8 w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-lg outline-none active:scale-95 transform transition">ยกเลิกปิดกล้อง</button>
+      </div>
+    </div>
+
+
+    <div id="news_modal" class="fixed inset-0 z-[100] bg-black/60 hidden flex-col justify-end">
+      <div
+        class="bg-white dark:bg-card-dark w-full max-w-md mx-auto rounded-t-3xl h-[80vh] flex flex-col shadow-2xl transform transition-transform"
+        id="news_sheet">
+        <div class="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800">
+          <h2 class="font-display font-bold text-2xl text-gray-800 dark:text-white flex items-center gap-2"><span
+              class="material-icons-round text-secondary">campaign</span> ข่าวสารนิติบุคคล</h2>
+          <button onclick="closeNewsModal()"
+            class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-red-100 hover:text-red-500 transition"><span
+              class="material-icons-round text-gray-500">close</span></button>
+        </div>
+        <div id="news_list" class="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
+
+        </div>
+      </div>
+    </div>
+
+
+    <div id="news_admin_modal"
+      class="fixed inset-0 z-[120] bg-black/80 hidden flex-col items-center justify-center p-4">
+      <div class="bg-white dark:bg-card-dark w-full max-w-md rounded-3xl p-6 shadow-2xl">
+        <h2 class="font-display font-bold text-2xl text-gray-800 dark:text-white mb-4">ประกาศข่าวสาร</h2>
+
+        <label class="block mb-3">
+          <span class="text-xs font-bold text-gray-500 mb-1 block">ระบุห้องเป้าหมาย
+            (เว้นว่างไว้หากต้องการประกาศให้ทุกคนทราบ)</span>
+          <input type="text" id="admin_news_target"
+            class="w-full rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 shadow-inner px-4 outline-none font-bold"
+            placeholder="เช่น A101 (ปล่อยว่าง = ทุกคน)">
+        </label>
+
+        <input type="text" id="admin_news_title"
+          class="w-full mb-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 shadow-inner px-4 outline-none font-bold"
+          placeholder="หัวข้อข่าว">
+
+        <textarea id="admin_news_content" rows="4"
+          class="w-full mb-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 shadow-inner px-4 outline-none resize-none"
+          placeholder="รายละเอียดข่าวสาร..."></textarea>
+
+        <label
+          class="relative flex flex-col items-center justify-center w-full min-h-[5rem] bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition rounded-xl cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-600 mb-3 overflow-hidden">
+          <div id="news_photo_placeholder"
+            class="flex flex-col items-center justify-center py-3 relative z-10 w-full h-full">
+            <span id="news_photo_icon"
+              class="material-icons-round text-xl mb-1 text-gray-500">add_photo_alternate</span>
+            <span id="news_photo_label"
+              class="text-xs font-medium text-gray-600 dark:text-gray-400">อัปโหลดรูปภาพประกอบข่าว (ตัวเลือก)</span>
+          </div>
+          <img id="admin_news_photo_preview"
+            class="hidden absolute inset-0 w-full h-full object-cover z-0 brightness-75 transition-opacity duration-300" />
+          <input type="file" id="admin_news_photo" accept="image/*" class="hidden" onchange="
+              const file = this.files[0];
+              const preview = document.getElementById('admin_news_photo_preview');
+              const label = document.getElementById('news_photo_label');
+              const icon = document.getElementById('news_photo_icon');
+              if (file) {
+                label.innerHTML = `<span class='bg-black/50 text-white px-3 py-1.5 rounded-xl font-medium shadow-sm flex items-center gap-1 backdrop-blur-sm'><span class='material-icons-round text-sm'>filter</span> ${file.name.substring(0, 20)}</span>`;
+                icon.classList.add('hidden');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                  preview.src = e.target.result;
+                  preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+              } else {
+                label.innerText = 'อัปโหลดรูปภาพประกอบข่าว (ตัวเลือก)';
+                icon.classList.remove('hidden');
+                preview.src = '';
+                preview.classList.add('hidden');
+              }
+            ">
+        </label>
+
+        <input type="url" id="admin_news_url"
+          class="w-full mb-5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 shadow-inner px-4 outline-none text-blue-500"
+          placeholder="ลิงก์ URL แนบ (ตัวเลือก)">
+
+        <div class="flex gap-3">
+          <button onclick="closeNewsAdminModal()"
+            class="flex-1 bg-gray-200 text-gray-700 font-bold rounded-xl py-3 hover:bg-gray-300 outline-none transform transition active:scale-95">ยกเลิก</button>
+          <button onclick="submitNews()"
+            class="flex-1 bg-secondary text-white font-bold rounded-xl py-3 hover:bg-green-500 shadow-md outline-none transform transition active:scale-95">ประกาศข่าว</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="user_admin_modal"
+      class="fixed inset-0 z-[120] bg-black/80 hidden flex-col items-center justify-center p-4">
+      <div class="bg-white dark:bg-card-dark w-full max-w-md rounded-3xl p-6 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-display font-bold text-2xl text-gray-800 dark:text-white">จัดการลูกบ้าน</h2>
+          <button onclick="closeUserAdminModal()"
+            class="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-red-100 hover:text-red-500 transition"><span
+              class="material-icons-round text-gray-500">close</span></button>
+        </div>
+        <label class="block mb-4">
+          <span class="text-xs font-bold text-gray-500 mb-1 block">ค้นหาด้วยเลขห้อง</span>
+          <div class="flex gap-2">
+            <input type="text" id="admin_user_search_room"
+              class="flex-1 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 py-3 px-4 outline-none font-bold"
+              placeholder="เช่น A101">
+            <button onclick="searchAdminUsers()"
+              class="px-4 bg-primary text-white rounded-xl font-bold hover:bg-red-500 transition shadow-sm">ค้นหา</button>
+          </div>
+        </label>
+        <div id="admin_user_list" class="flex flex-col gap-3 max-h-60 overflow-y-auto">
+
+          <p class="text-center text-sm text-gray-400 mt-4">กรุณาระบุเลขห้องเพื่อค้นหา</p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="fixed bottom-20 right-0 w-32 h-32 bg-yellow-200/40 dark:bg-yellow-600/10 rounded-full blur-3xl pointer-events-none -z-10">
+    </div>
+  </div>
+
+  <script>
+    // Config
+    const LIFF_ID = "2009330692-mhC3NuoK";
+    const SUPABASE_URL = "https://fziwylotheafcuccddfd.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6aXd5bG90aGVhZmN1Y2NkZGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODc4ODksImV4cCI6MjA4ODI2Mzg4OX0._QKZZtWoow1FqmflNs4LzoGNEBxmPt2PBCGhXm4BkGE";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let profile = null;
+    let currentUser = null;
+    let isAdminView = false;
+    let html5QrcodeScanner = null;
+
+    function hideLoading() {
+      const loader = document.getElementById('global_loading');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.classList.add('hidden'), 300);
+      }
+    }
+
+    async function init() {
+      document.getElementById('main_app').style.display = 'none';
+      document.getElementById('welcome_modal').classList.add('hidden');
+
+      try {
+        await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+        await liff.ready;
+        if (liff.isLoggedIn()) {
+          profile = await liff.getProfile();
+          await checkUserRegistration();
+        } else {
+
+          if (liff.isInClient()) {
+            liff.login();
+          } else {
+
+            document.getElementById('welcome_modal').classList.remove('hidden');
+            document.getElementById('welcome_modal').classList.add('flex');
+            hideLoading();
+          }
+        }
+      } catch (err) {
+        console.error("LIFF init err", err);
+        ThemedSwal.fire("ข้อผิดพลาดระบบ", "ไม่สามารถเชื่อมต่อ LINE LIFF ได้", "error");
+        hideLoading();
+      }
+    }
+
+    function handleLiffLogin() {
+      if (!liff.isLoggedIn()) {
+        liff.login();
+      }
+    }
+
+    function handleLiffLogout() {
+      if (liff.isLoggedIn()) {
+        liff.logout();
+        window.location.reload();
+      }
+    }
+
+    async function checkUserRegistration() {
+      const lineId = profile && profile.userId ? profile.userId : "UnknownUser";
+
+      const { data, error } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('line_user_id', lineId)
+        .single();
+
+      if (data) {
+
+        currentUser = data;
+        isAdminView = currentUser.is_admin === true;
+        setupUI();
+      } else {
+
+        document.getElementById('registration_modal').classList.remove('hidden');
+        hideLoading();
+      }
+    }
+
+    async function submitRegistration() {
+      const room = document.getElementById('reg_room').value.trim();
+      const phone = document.getElementById('reg_phone').value.trim();
+      const pdpa = document.getElementById('reg_pdpa').checked;
+
+      if (!room || !phone) {
+        ThemedSwal.fire("แจ้งเตือน", "กรุณากรอกเลขห้องและเบอร์โทรศัพท์", "warning");
+        return;
+      }
+      if (!pdpa) {
+        ThemedSwal.fire("แจ้งเตือน", "กรุณายอมรับนโยบาย PDPA", "warning");
+        return;
+      }
+
+      ThemedSwal.fire({ title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false });
+      ThemedSwal.showLoading();
+
+      const lineId = profile && profile.userId ? profile.userId : `dummy_${Date.now()}`;
+      const dName = profile && profile.displayName ? profile.displayName : "ผู้ใช้ใหม่";
+      const pUrl = profile && profile.pictureUrl ? profile.pictureUrl : null;
+
+      const { data, error } = await supabaseClient.from('users').insert([{
+        line_user_id: lineId,
+        name: dName,
+        picture_url: pUrl,
+        room_number: room,
+        phone_number: phone,
+        is_admin: false,
+      }]).select().single();
+
+      if (error) {
+        ThemedSwal.fire("บันทึกไม่สำเร็จ", error.message, "error");
+      } else {
+        currentUser = data;
+        isAdminView = false;
+        ThemedSwal.fire({
+          title: "ลงทะเบียนสำเร็จ!",
+          text: `ยินดีต้อนรับห้อง ${room}`,
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          document.getElementById('registration_modal').classList.add('hidden');
+          setupUI();
+        });
+      }
+    }
+
+    function setupUI() {
+      document.getElementById('main_app').style.display = 'block';
+      hideLoading();
+
+
+      document.getElementById('profile_name').innerText = profile ? profile.displayName : currentUser.name;
+      document.getElementById('room_display').innerText = `ห้อง: ${currentUser.room_number}`;
+      if (profile && profile.pictureUrl) {
+        document.getElementById('profile_img').src = profile.pictureUrl;
+      }
+
+      const toggleBtn = document.getElementById('toggle_role_btn');
+      if (currentUser.is_admin) {
+        toggleBtn.classList.remove('hidden');
+      } else {
+        toggleBtn.classList.add('hidden');
+      }
+
+      renderViewMode();
+      generateQR();
+    }
+
+    function renderViewMode() {
+
+      if (!currentUser.is_admin) {
+        isAdminView = false;
+        document.getElementById('toggle_role_btn').classList.add('hidden');
+      }
+
+      const toggleBtn = document.getElementById('toggle_role_btn');
+      toggleBtn.innerText = isAdminView ? 'พนักงาน' : 'ลูกบ้าน';
+      toggleBtn.className = isAdminView
+        ? "px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-600 shadow-sm border border-red-200 hover:shadow-md transition"
+        : "px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-600 shadow-sm border border-blue-200 hover:shadow-md transition";
+
+      document.getElementById('admin_section').classList.toggle('hidden', !isAdminView);
+      document.getElementById('admin_controls_row').style.display = isAdminView ? 'block' : 'none';
+
+      document.getElementById('user_section').classList.toggle('hidden', isAdminView);
+      document.getElementById('scan_btn_nav').style.display = isAdminView ? 'flex' : 'none';
+
+
+      document.getElementById('household_section').classList.toggle('hidden', isAdminView);
+
+      document.getElementById('list_title').innerText = isAdminView ? 'ภาพรวมคลังพัสดุ' : '📦 พัสดุของคุณ';
+
+      loadParcels();
+      if (!isAdminView) {
+        loadHouseholdMembers();
+      }
+    }
+
+    async function loadHouseholdMembers() {
+      const container = document.getElementById('household_container');
+      container.innerHTML = '<p class="text-sm text-gray-400 animate-pulse">กำลังโหลด...</p>';
+
+      const { data, error } = await supabaseClient
+        .from('users')
+        .select('name, picture_url, is_admin')
+        .eq('room_number', currentUser.room_number)
+        .neq('line_user_id', currentUser.line_user_id);
+
+      if (error || !data || data.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-400">ยังไม่มีสมาชิกอื่นในห้องนี้</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      data.forEach(member => {
+        const pic = member.picture_url || 'https://cdn-icons-gif.flaticon.com/8121/8121295.gif';
+        const bgClass = member.is_admin ? "border-2 border-yellow-400" : "border border-gray-100 dark:border-gray-700";
+        const badge = member.is_admin ? '<div class="absolute -bottom-1 -right-1 bg-yellow-400 text-white rounded-full p-0.5 shadow border border-white dark:border-card-dark"><span class="material-icons-round text-[10px]">star</span></div>' : '';
+
+        container.innerHTML += `
+              <div class="flex flex-col items-center flex-shrink-0 w-[4.5rem] cursor-pointer group">
+                 <div class="w-16 h-16 rounded-full bg-gray-100 overflow-hidden shadow-sm relative mb-2 ${bgClass} group-hover:scale-105 transition transform">
+                    <img src="${pic}" class="w-full h-full object-cover">
+                    ${badge}
+                 </div>
+                 <p class="text-[11px] font-bold text-gray-700 dark:text-gray-300 w-full text-center truncate group-hover:text-primary transition">${member.name}</p>
+              </div>
+           `;
+      });
+    }
+
+    document.getElementById('toggle_role_btn').addEventListener('click', () => {
+      if (currentUser.is_admin) {
+        isAdminView = !isAdminView;
+        renderViewMode();
+      } else {
+        ThemedSwal.fire("ไม่อนุญาต", "ฟีเจอร์นี้สำหรับพนักงานเท่านั้น", "error");
+      }
+    });
+
+
+    document.getElementById('admin_photo').addEventListener('change', (e) => {
+      const preview = document.getElementById('admin_photo_preview');
+      const label = document.getElementById('file_name_label');
+      const icon = document.getElementById('photo_icon');
+
+      if (e.target.files.length > 0) {
+        let file = e.target.files[0];
+        let name = file.name;
+        if (name.length > 15) name = name.substring(0, 15) + "...";
+        label.innerHTML = `<span class="bg-black/50 text-white px-3 py-1.5 rounded-xl font-medium shadow-sm flex items-center gap-1 backdrop-blur-sm"><span class="material-icons-round text-sm">filter</span> ${name}</span>`;
+        icon.classList.add('hidden');
+
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          preview.src = evt.target.result;
+          preview.classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+      } else {
+        label.innerText = "ถ่ายรูป / อัปโหลดพัสดุ";
+        icon.classList.remove('hidden');
+        preview.classList.add('hidden');
+        preview.src = "";
+      }
+    });
+
+
+    function generateQR() {
+      const userId = currentUser ? currentUser.line_user_id : "UnknownUser";
+      QRCode.toCanvas(document.getElementById('user_qr'), userId, { width: 160, margin: 1, color: { dark: '#000000', light: '#ffffff' } }, function (error) {
+        if (error) console.error(error);
+      });
+    }
+
+
+    function openProfileModal() {
+      document.getElementById('edit_room').value = currentUser.room_number;
+      document.getElementById('edit_name').value = currentUser.name || '';
+      document.getElementById('edit_phone').value = currentUser.phone_number;
+      document.getElementById('profile_modal').classList.remove('hidden');
+      document.getElementById('profile_modal').classList.add('flex');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile_modal').classList.add('hidden');
+      document.getElementById('profile_modal').classList.remove('flex');
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById('edit_name').value.trim();
+      const phone = document.getElementById('edit_phone').value.trim();
+
+      if (!name) {
+        ThemedSwal.fire("ข้อผิดพลาด", "ชื่อที่แสดงห้ามว่างเปล่า", "warning");
+        return;
+      }
+      if (!phone) {
+        ThemedSwal.fire("ข้อผิดพลาด", "หมายเลขโทรศัพท์ห้ามว่างเปล่า", "warning");
+        return;
+      }
+
+      ThemedSwal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false });
+      ThemedSwal.showLoading();
+
+      const { data, error } = await supabaseClient
+        .from('users')
+        .update({ name: name, phone_number: phone })
+        .eq('line_user_id', currentUser.line_user_id);
+
+      if (error) {
+        ThemedSwal.fire("ผิดพลาด", error.message, "error");
+      } else {
+        currentUser.name = name;
+        currentUser.phone_number = phone;
+
+        if (profile) {
+          profile.displayName = name;
+        }
+        document.getElementById('profile_name').innerText = name;
+
+        ThemedSwal.fire("สำเร็จ", "อัปเดตข้อมูลโปรไฟล์เรียบร้อยแล้ว", "success");
+        closeProfileModal();
+      }
+    }
+
+
+    document.getElementById('admin_submit').addEventListener('click', async () => {
+      const roomInput = document.getElementById('admin_room').value;
+      const photoInput = document.getElementById('admin_photo').files[0];
+
+      if (!roomInput) {
+        ThemedSwal.fire("แจ้งเตือน", "กรุณาระบุเลขห้อง", "warning");
+        return;
+      }
+
+      ThemedSwal.fire({ title: 'กำลังอัปโหลดและบันทึก...', allowOutsideClick: false });
+      ThemedSwal.showLoading();
+
+      let photoUrl = null;
+      if (photoInput) {
+        const fileExt = photoInput.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from('parcel-photos')
+          .upload(fileName, photoInput);
+
+        if (uploadError) {
+          ThemedSwal.fire("Upload Error", uploadError.message, "error");
+          return;
+        }
+        photoUrl = supabaseClient.storage.from('parcel-photos').getPublicUrl(fileName).data.publicUrl;
+      }
+
+      const { data, error } = await supabaseClient.from('parcels').insert([{
+        room_number: roomInput,
+        photo_url: photoUrl,
+        status: 'arrived',
+        received_by_admin: currentUser.name || "Admin"
+      }]).select();
+
+      if (error) {
+        ThemedSwal.fire("บันทึกไม่สำเร็จ", error.message, "error");
+      } else {
+
+        supabaseClient.functions.invoke('telegram-notify', {
+          body: { record: data[0] }
+        }).catch(err => console.error("Telegram error:", err));
+
+        ThemedSwal.fire("สำเร็จ!", "เพิ่มพัสดุเตรียมส่งมอบเรียบร้อย และเตือนผ่าน Telegram ให้แล้ว", "success");
+        document.getElementById('admin_room').value = '';
+        document.getElementById('admin_photo').value = '';
+        document.getElementById('file_name_label').innerText = 'ถ่ายรูป / อัปโหลดพัสดุ';
+        document.getElementById('photo_icon').classList.remove('hidden');
+        document.getElementById('admin_photo_preview').classList.add('hidden');
+        document.getElementById('admin_photo_preview').src = "";
+        loadParcels();
+      }
+    });
+
+
+    async function updateNotificationBadge() {
+      if (!currentUser) return;
+      const { count, error } = await supabaseClient
+        .from('parcels')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_number', currentUser.room_number)
+        .eq('status', 'arrived');
+
+      const badge = document.getElementById('notification_badge');
+      if (count && count > 0) {
+        badge.innerText = count > 99 ? '99+' : count;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function focusNotifications() {
+
+      if (isAdminView) {
+        isAdminView = false;
+        renderViewMode();
+      }
+      document.getElementById('parcels_container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+
+    async function loadParcels() {
+      const container = document.getElementById('parcels_container');
+      container.innerHTML = '<p class="text-center text-gray-400 text-sm mt-4 animate-pulse">กำลังซิงก์ข้อมูลพัสดุ...</p>';
+
+      updateNotificationBadge();
+
+      let query = supabaseClient.from('parcels').select('*').order('created_at', { ascending: false }).limit(20);
+
+
+      if (!isAdminView) {
+        query = query.eq('room_number', currentUser.room_number);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Load Parcels error", error);
+        container.innerHTML = '<p class="text-center text-red-500 text-sm mt-4">เกิดข้อผิดพลาดในการดึงข้อมูล</p>';
+        return;
+      }
+
+
+      let userPhones = {};
+      if (isAdminView && data.length > 0) {
+        const rooms = [...new Set(data.map(p => p.room_number))];
+        const { data: usersData, error: uErr } = await supabaseClient.from('users').select('room_number, phone_number').in('room_number', rooms);
+        if (usersData) {
+          usersData.forEach(u => { userPhones[u.room_number] = u.phone_number; });
+        }
+      }
+
+      container.innerHTML = '';
+      if (data.length === 0) {
+        container.innerHTML = '<div class="text-center p-6 text-gray-400"><span class="material-icons-round text-5xl opacity-40 mb-2">inbox</span><p>ไม่มีพัสดุตกค้าง</p></div>';
+      }
+
+      data.forEach(p => {
+        const isArrived = p.status === 'arrived';
+        const statusColor = isArrived ? 'text-orange-500 bg-orange-100 dark:bg-orange-900/30' : 'text-green-500 bg-green-100 dark:bg-green-900/30';
+        const statusIcon = isArrived ? 'inventory_2' : 'check_circle';
+        const statusText = isArrived ? 'รอรับ' : 'รับแล้ว';
+
+
+        const dateObj = new Date(p.created_at);
+        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        let dateStr = dateObj.toLocaleDateString('th-TH', options);
+        dateStr = dateStr.replace(',', ' เวลา'); // Some browsers add comma between date and time
+
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-700 hover:shadow-md transition bg-white/50 dark:bg-gray-800/50';
+
+        const photoHtml = p.photo_url
+          ? `<a href="${p.photo_url}" target="_blank" class="ml-2 inline-flex align-middle hover:scale-110 transition"><span class="material-icons-round text-lg text-blue-500 bg-blue-100 rounded-lg p-1">image</span></a>`
+          : '';
+
+        const phone = userPhones[p.room_number];
+        const phoneHtml = (isAdminView && phone) ? `<a href="tel:${phone}" class="ml-2 inline-flex items-center text-xs text-white bg-green-500 hover:bg-green-600 rounded-lg px-2 py-1 align-middle transition"><span class="material-icons-round text-[12px] mr-1">call</span>โทร</a>` : '';
+
+        const adminControls = isAdminView ? `
+          <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 w-full">
+            <button onclick="editParcel('${p.id}', '${p.room_number}')" class="w-full text-xs font-bold bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-200 py-2 rounded-xl transition flex items-center justify-center gap-1"><span class="material-icons-round text-[14px]">edit</span> แก้ไขเลขห้อง</button>
+            <button onclick="deleteParcel('${p.id}')" class="w-full text-xs font-bold bg-red-50 text-red-600 hover:bg-red-500 hover:text-white border border-red-200 py-2 rounded-xl transition flex items-center justify-center gap-1"><span class="material-icons-round text-[14px]">delete</span> ลบทิ้ง</button>
+          </div>
+        ` : '';
+
+        item.innerHTML = `
+                <div class="flex flex-col w-full">
+                  <div class="flex items-center justify-between w-full">
+                    <div class="flex items-center gap-4">
+                      <div class="w-12 h-12 rounded-2xl ${statusColor} flex items-center justify-center shrink-0 shadow-sm border ${isArrived ? 'border-orange-200' : 'border-green-200'}">
+                        <span class="material-icons-round">${statusIcon}</span>
+                      </div>
+                      <div>
+                        <h4 class="font-bold text-gray-800 dark:text-white flex items-center">ห้อง ${p.room_number} ${photoHtml} ${phoneHtml}</h4>
+                        <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">${dateStr}</p>
+                      </div>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="font-bold ${isArrived ? 'text-orange-600 bg-orange-50 dark:bg-orange-900/20 px-3' : 'text-green-600 bg-green-50 dark:bg-green-900/20 px-3'} py-1.5 rounded-xl text-[10px] shadow-sm border ${isArrived ? 'border-orange-100' : 'border-green-100'}">${statusText}</span>
+                    </div>
+                  </div>
+                  ${adminControls}
+                </div>
+            `;
+        container.appendChild(item);
+      });
+    }
+
+
+    async function editParcel(id, currentRoom) {
+      if (!isAdminView) return;
+      const { value: newRoom } = await ThemedSwal.fire({
+        title: 'แก้ไขเลขห้อง',
+        input: 'text',
+        inputValue: currentRoom,
+        showCancelButton: true,
+        confirmButtonText: 'บันทึก',
+        cancelButtonText: 'ยกเลิก',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'กรุณาระบุเลขห้อง'
+          }
+        }
+      });
+
+      if (newRoom && newRoom !== currentRoom) {
+        ThemedSwal.fire({ title: 'กำลังแก้ไข...', allowOutsideClick: false });
+        ThemedSwal.showLoading();
+        const { error } = await supabaseClient.from('parcels').update({ room_number: newRoom }).eq('id', id);
+
+        if (error) {
+          ThemedSwal.fire('ข้อผิดพลาด', error.message, 'error');
+        } else {
+          ThemedSwal.fire('สำเร็จ', 'แก้ไขเลขห้องเรียบร้อย', 'success');
+          loadParcels();
+        }
+      }
+    }
+
+    async function deleteParcel(id) {
+      if (!isAdminView) return;
+
+      const { isConfirmed } = await ThemedSwal.fire({
+        title: 'ลบพัสดุชิ้นนี้?',
+        text: "คุณต้องลบข้อมูลพัสดุออกจากระบบ ถาวร?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ลบทิ้ง',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#ff4d4f'
+      });
+
+      if (isConfirmed) {
+        ThemedSwal.fire({ title: 'กำลังลบ...', allowOutsideClick: false });
+        ThemedSwal.showLoading();
+        const { error } = await supabaseClient.from('parcels').delete().eq('id', id);
+
+        if (error) {
+          ThemedSwal.fire('ข้อผิดพลาด', error.message, 'error');
+        } else {
+          ThemedSwal.fire('สำเร็จ', 'ลบพัสดุเรียบร้อย', 'success');
+          loadParcels();
+        }
+      }
+    }
+
+
+    function openScanner() {
+      if (!isAdminView) return;
+
+      document.getElementById('scanner_modal').classList.remove('hidden');
+      html5QrcodeScanner = new Html5Qrcode("reader");
+      html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+        onScanSuccess,
+        onScanFailure
+      ).catch(err => {
+        console.error(err);
+        ThemedSwal.fire("ข้อผิดพลาดกล้อง", "ไม่สามารถเปิดกล้องได้ เบราว์เซอร์อาจไม่รองรับหรือยังไม่ได้อนุญาต", "error");
+        closeScanner();
+      });
+    }
+
+    function closeScanner() {
+      document.getElementById('scanner_modal').classList.add('hidden');
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().catch(err => console.error(err));
+        html5QrcodeScanner = null;
+      }
+    }
+
+    async function onScanSuccess(decodedText) {
+      closeScanner();
+
+
+      ThemedSwal.fire({ title: 'กำลังตรวจสอบคิว...', allowOutsideClick: false });
+      ThemedSwal.showLoading();
+
+      const { data: userData, error: uErr } = await supabaseClient.from('users').select('*').eq('line_user_id', decodedText).single();
+
+      if (!userData || uErr) {
+        ThemedSwal.fire("ไม่พบลูกบ้าน", "รหัส QR โค้ดนี้ไม่ถูกต้องหรือไม่ได้ลงทะเบียนในระบบ", "error");
+        return;
+      }
+
+
+      const { data: parcelsData, error: pErr } = await supabaseClient
+        .from('parcels')
+        .select('*')
+        .eq('room_number', userData.room_number)
+        .eq('status', 'arrived');
+
+      if (parcelsData.length === 0) {
+        ThemedSwal.fire("การส่งมอบ", `ไม่พบพัสดุรอรับสำหรับห้อง <b>${userData.room_number}</b>`, "info");
+        return;
+      }
+
+      const result = await ThemedSwal.fire({
+        title: `คุณ: ${userData.name}`,
+        html: `ต้องการส่งมอบรวดยอด <b>${parcelsData.length}</b> ชิ้น<br>ให้ห้องหมายเลข <b>${userData.room_number}</b> ใช่หรือไม่?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ยืนยันการรับของทั้งหมด!',
+        confirmButtonColor: '#22c55e',
+        cancelButtonText: 'ยกเลิก',
+        reverseButtons: true
+      });
+
+      if (result.isConfirmed) {
+        ThemedSwal.fire({ title: 'กำลังอัปเดตข้อมูล...', allowOutsideClick: false });
+        ThemedSwal.showLoading();
+
+        const { data: updateData, error: updateError } = await supabaseClient
+          .from('parcels')
+          .update({
+            status: 'delivered',
+            delivered_at: new Date().toISOString(),
+            delivered_to_user: userData.name
+          })
+          .eq('room_number', userData.room_number)
+          .eq('status', 'arrived')
+          .select();
+
+        if (updateError) {
+          ThemedSwal.fire("การส่งมอบคุณล้มเหลว", updateError.message, "error");
+        } else {
+          ThemedSwal.fire("สำเร็จ!", `มอบพัสดุห้อง ${userData.room_number} จำนวณ ${updateData.length} ชิ้นเรียบร้อย`, "success");
+          loadParcels();
+        }
+      }
+    }
+
+    function onScanFailure(error) {
+      // Ignored
+    }
+
+
+    async function loadNewsBadge() {
+      if (!currentUser) return;
+      const lastReadDt = new Date(currentUser.last_read_news_at || '1970-01-01T00:00:00Z').toISOString();
+
+      let query = supabaseClient.from('news').select('*', { count: 'exact', head: true }).gt('created_at', lastReadDt);
+
+
+      if (!currentUser.is_admin) {
+        query = query.or(`target_room.is.null,target_room.eq.,target_room.eq.${currentUser.room_number}`);
+      }
+
+      const { count, error } = await query;
+
+      const nBadge = document.getElementById('news_badge');
+      if (count && count > 0) {
+        nBadge.innerText = count > 99 ? '99+' : count;
+        nBadge.classList.remove('hidden');
+      } else {
+        nBadge.classList.add('hidden');
+      }
+    }
+
+    async function openNewsModal() {
+      document.getElementById('news_modal').classList.remove('hidden');
+      document.getElementById('news_modal').classList.add('flex');
+      const newsList = document.getElementById('news_list');
+      newsList.innerHTML = '<p class="text-center text-gray-400 mt-4 animate-pulse">กำลังโหลดข่าวสาร...</p>';
+
+
+      let queryUrl = supabaseClient.from('news').select('*').order('created_at', { ascending: false }).limit(20);
+
+      const { data, error } = await queryUrl;
+
+      if (error) {
+        newsList.innerHTML = '<p class="text-center text-red-500">เกิดข้อผิดพลาดในการโหลดข่าวสาร</p>';
+        return;
+      }
+
+      const filteredData = data.filter(n => {
+        if (!n.target_room || n.target_room.trim() === '') return true;
+        return n.target_room === currentUser.room_number || currentUser.is_admin;
+      });
+
+      newsList.innerHTML = '';
+      if (filteredData.length === 0) {
+        newsList.innerHTML = '<div class="text-center p-6 text-gray-400"><span class="material-icons-round text-5xl opacity-40 mb-2">campaign</span><p>ไม่มีประกาศข่าวสาร</p></div>';
+      } else {
+        filteredData.forEach(n => {
+          const d = new Date(n.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+          const nCard = document.createElement('div');
+          nCard.className = "bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative";
+
+          const adminEditBtn = currentUser.is_admin ? `
+             <div class="absolute top-4 right-14 flex items-center gap-1 z-10">
+               <button onclick="editNews('${n.id}', '${n.title.replace(/'/g, "\\'")}', '${n.content.replace(/'/g, "\\'")}', '${n.url_link ? n.url_link.replace(/'/g, "\\'") : ''}', '${n.target_room ? n.target_room.replace(/'/g, "\\'") : ''}')" class="text-gray-400 hover:text-blue-500 bg-white dark:bg-card-dark p-1 rounded-full shadow-sm"><span class="material-icons-round text-sm">edit</span></button>
+               <button onclick="deleteNews('${n.id}')" class="text-gray-400 hover:text-red-500 bg-white dark:bg-card-dark p-1 rounded-full shadow-sm"><span class="material-icons-round text-sm">delete</span></button>
+             </div>
+           ` : '';
+
+          const shareBtn = `<button onclick="shareNewsToLiff('${n.title.replace(/'/g, "\\'")}', '${n.content.replace(/'/g, "\\'").replace(/\n/g, " ")}', '${n.photo_url || ''}', '${n.url_link || ''}')" class="absolute top-4 right-4 text-green-500 hover:text-green-600 bg-green-50 dark:bg-green-900/30 p-1 rounded-full shadow-sm z-10"><span class="material-icons-round text-sm">share</span></button>`;
+
+          const targetBadge = n.target_room ? `<span class="inline-block bg-orange-100 text-orange-600 border border-orange-200 text-[10px] px-2 py-0.5 rounded-full mb-2">เฉพาะห้อง ${n.target_room}</span>` : `<span class="inline-block bg-blue-100 text-blue-600 border border-blue-200 text-[10px] px-2 py-0.5 rounded-full mb-2">ประกาศทั่วไป</span>`;
+
+          const photoEl = n.photo_url ? `<a href="${n.photo_url}" target="_blank" class="block mb-3 hover:opacity-90 transition"><img src="${n.photo_url}" class="w-full h-40 object-cover rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"></a>` : '';
+
+          const urlBtn = n.url_link ? `<a href="${n.url_link}" target="_blank" class="mt-3 block text-center w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl text-sm border border-blue-100 hover:bg-blue-100 transition">คลิกดูรายละเอียดเพิ่มเติม</a>` : '';
+
+          nCard.innerHTML = `
+              ${targetBadge}
+              <h3 class="font-bold text-gray-800 dark:text-white mb-1 pr-24">${n.title}</h3>
+              <p class="text-[10px] text-gray-400 mb-3">${d}</p>
+              ${photoEl}
+              <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">${n.content}</p>
+              ${urlBtn}
+              ${adminEditBtn}
+              ${shareBtn}
+           `;
+          newsList.appendChild(nCard);
+        });
+      }
+
+
+      if (currentUser) {
+        const now = new Date().toISOString();
+        const { error: uErr } = await supabaseClient.from('users').update({ last_read_news_at: now }).eq('line_user_id', currentUser.line_user_id);
+        if (!uErr) {
+          currentUser.last_read_news_at = now;
+          document.getElementById('news_badge').classList.add('hidden');
+        }
+      }
+    }
+
+    function closeNewsModal() {
+      document.getElementById('news_modal').classList.add('hidden');
+      document.getElementById('news_modal').classList.remove('flex');
+    }
+
+    let _editingNewsId = null;
+    function openNewsAdminModal() {
+      if (!currentUser.is_admin) return;
+      _editingNewsId = null;
+      document.getElementById('admin_news_title').value = '';
+      document.getElementById('admin_news_content').value = '';
+      document.getElementById('admin_news_url').value = '';
+      document.getElementById('admin_news_target').value = '';
+      document.getElementById('admin_news_photo').value = '';
+      document.getElementById('news_photo_label').innerText = 'อัปโหลดรูปภาพประกอบข่าว (ตัวเลือก)';
+      document.getElementById('news_photo_icon').classList.remove('hidden');
+      document.getElementById('admin_news_photo_preview').classList.add('hidden');
+      document.getElementById('admin_news_photo_preview').src = '';
+      document.getElementById('news_admin_modal').classList.remove('hidden');
+      document.getElementById('news_admin_modal').classList.add('flex');
+    }
+
+    function editNews(id, title, content, linkUrl, targetRoom) {
+      if (!currentUser.is_admin) return;
+      closeNewsModal(); // close list first
+      _editingNewsId = id;
+      document.getElementById('admin_news_title').value = title;
+      document.getElementById('admin_news_content').value = content;
+      document.getElementById('admin_news_url').value = linkUrl || '';
+      document.getElementById('admin_news_target').value = targetRoom || '';
+      document.getElementById('admin_news_photo').value = '';
+      document.getElementById('news_photo_label').innerText = 'เปลี่ยนรูปภาพใหม่ (ถ้ามี)';
+      document.getElementById('news_photo_icon').classList.remove('hidden');
+      document.getElementById('admin_news_photo_preview').classList.add('hidden');
+      document.getElementById('admin_news_photo_preview').src = '';
+      document.getElementById('news_admin_modal').classList.remove('hidden');
+      document.getElementById('news_admin_modal').classList.add('flex');
+    }
+
+    async function deleteNews(id) {
+      if (!currentUser.is_admin) return;
+      const { isConfirmed } = await ThemedSwal.fire({
+        title: 'ลบประกาศข่าวสาร?',
+        text: "คุณยืนยันที่จะลบประกาศนี้หรือไม่?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ลบทิ้ง',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#ff4d4f'
+      });
+
+      if (isConfirmed) {
+        ThemedSwal.fire({ title: 'กำลังลบ...', allowOutsideClick: false });
+        ThemedSwal.showLoading();
+        const { error } = await supabaseClient.from('news').delete().eq('id', id);
+        if (error) {
+          ThemedSwal.fire("ข้อผิดพลาด", error.message, "error");
+        } else {
+          ThemedSwal.fire("สำเร็จ", "ลบประกาศเรียบร้อย", "success");
+          openNewsModal(); // reload
+        }
+      }
+    }
+
+    function closeNewsAdminModal() {
+      document.getElementById('news_admin_modal').classList.add('hidden');
+      document.getElementById('news_admin_modal').classList.remove('flex');
+    }
+
+    async function submitNews() {
+      const title = document.getElementById('admin_news_title').value.trim();
+      const content = document.getElementById('admin_news_content').value.trim();
+      let url_link = document.getElementById('admin_news_url').value.trim();
+      let target_room = document.getElementById('admin_news_target').value.trim();
+      const photoInput = document.getElementById('admin_news_photo').files[0];
+
+      if (!title || !content) {
+        ThemedSwal.fire("ข้อผิดพลาด", "เนื้อหาและหัวข้อห้ามว่าง", "warning");
+        return;
+      }
+      if (url_link === '') url_link = null;
+      if (target_room === '') target_room = null;
+
+      ThemedSwal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false });
+      ThemedSwal.showLoading();
+
+      let photoUrl = null;
+      if (photoInput) {
+        const fileExt = photoInput.name.split('.').pop();
+        const fileName = `news_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const { error: uploadError } = await supabaseClient.storage.from('parcel-photos').upload(fileName, photoInput);
+        if (uploadError) {
+          ThemedSwal.fire("Upload Error", uploadError.message, "error");
+          return;
+        }
+        photoUrl = supabaseClient.storage.from('parcel-photos').getPublicUrl(fileName).data.publicUrl;
+      }
+
+      let error = null;
+      if (_editingNewsId) {
+        const updateData = { title, content, url_link, target_room, updated_at: new Date().toISOString() };
+        if (photoUrl) updateData.photo_url = photoUrl;
+        const res = await supabaseClient.from('news').update(updateData).eq('id', _editingNewsId);
+        error = res.error;
+      } else {
+        const res = await supabaseClient.from('news').insert([{ title, content, url_link, target_room, photo_url: photoUrl }]);
+        error = res.error;
+      }
+
+      if (error) {
+        ThemedSwal.fire("ผิดพลาด", error.message, "error");
+      } else {
+        ThemedSwal.fire("สำเร็จ", "บันทึกเรียบร้อย", "success");
+        closeNewsAdminModal();
+
+        openNewsModal();
+      }
+    }
+
+
+    function shareNewsToLiff(title, description, imageUrl, linkUrl) {
+      if (!liff.isApiAvailable('shareTargetPicker')) {
+        ThemedSwal.fire("แจ้งเตือน", "แอปของคุณยังไม่รองรับการแชร์ลงห้องแชท หรือไม่ได้เปิด Share Target Picker ไว้ใน LIFF Developer Console", "info");
+        return;
+      }
+
+      const flexMessage = {
+        "type": "flex",
+        "altText": `ประกาศจากนิติ: ${title}`,
+        "contents": {
+          "type": "bubble",
+          "size": "mega",
+          "header": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": "📢 ประกาศใหม่",
+                "color": "#ffffff",
+                "weight": "bold",
+                "size": "sm"
+              }
+            ],
+            "backgroundColor": "#FF6B6B"
+          },
+          "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "text",
+                "text": title,
+                "weight": "bold",
+                "size": "xl",
+                "wrap": true
+              },
+              {
+                "type": "text",
+                "text": description,
+                "wrap": true,
+                "color": "#888888",
+                "size": "sm",
+                "margin": "md"
+              }
+            ]
+          }
+        }
+      };
+
+      if (imageUrl && imageUrl !== '') {
+        flexMessage.contents.hero = {
+          "type": "image",
+          "url": imageUrl,
+          "size": "full",
+          "aspectRatio": "20:13",
+          "aspectMode": "cover"
+        };
+      }
+
+      const actionUrl = linkUrl && linkUrl !== '' ? linkUrl : `https://line.me/R/app/${LIFF_ID}`;
+
+      flexMessage.contents.footer = {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "button",
+            "action": { "type": "uri", "label": "ดูรายละเอียดเพิ่มเติม", "uri": actionUrl },
+            "style": "primary",
+            "color": "#3b82f6"
+          }
+        ]
+      };
+
+      liff.shareTargetPicker([flexMessage])
+        .then((res) => {
+          if (res) {
+            console.log("Shared successfully", res);
+            ThemedSwal.fire({
+              title: "แชร์ข่าวสารสำเร็จ!",
+              text: "ส่งประกาศข่าวสารลงแชทเรียบร้อยแล้ว",
+              icon: "success",
+              timer: 2000,
+              showConfirmButton: false
+            });
+          } else {
+            console.log("Share Target Picker was closed without sharing");
+            ThemedSwal.fire({
+              title: "ยกเลิกการแชร์ข่าวสาร",
+              text: "คุณได้ปิดหน้าต่างแชร์ไปโดยไม่ได้ส่งข้อความ",
+              icon: "info",
+              timer: 2000,
+              showConfirmButton: false
+            });
+          }
+        })
+        .catch(function (error) {
+          console.error("something wrong happen", error);
+          ThemedSwal.fire("แชร์ล้มเหลว", error.message, "error");
+        });
+    }
+
+
+    function openUserAdminModal() {
+      document.getElementById('user_admin_modal').classList.remove('hidden');
+      document.getElementById('user_admin_modal').classList.add('flex');
+      document.getElementById('admin_user_search_room').value = '';
+      document.getElementById('admin_user_list').innerHTML = '<p class="text-center text-sm text-gray-400 mt-4">กรุณาระบุเลขห้องเพื่อค้นหา</p>';
+    }
+
+    function closeUserAdminModal() {
+      document.getElementById('user_admin_modal').classList.add('hidden');
+      document.getElementById('user_admin_modal').classList.remove('flex');
+    }
+
+    async function searchAdminUsers() {
+      const room = document.getElementById('admin_user_search_room').value.trim();
+      if (!room) return;
+
+      const container = document.getElementById('admin_user_list');
+      container.innerHTML = '<p class="text-sm text-center text-gray-400 mt-4 animate-pulse">กำลังสแกนหาลูกบ้าน...</p>';
+
+      const { data, error } = await supabaseClient.from('users').select('*').eq('room_number', room);
+      if (error) {
+        container.innerHTML = '<p class="text-red-500 text-center mt-4">เกิดข้อผิดพลาด</p>';
+        return;
+      }
+
+      if (data.length === 0) {
+        container.innerHTML = '<p class="text-sm text-center text-gray-400 mt-4">ไม่พบลูกบ้านในห้องนี้</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      data.forEach(user => {
+        const pic = user.picture_url || 'https://cdn-icons-gif.flaticon.com/8121/8121295.gif';
+        container.innerHTML += `
+              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                 <div class="flex items-center gap-3">
+                    <img src="${pic}" class="w-10 h-10 rounded-full object-cover">
+                    <div class="flex flex-col">
+                       <span class="font-bold text-sm text-gray-800 dark:text-gray-200 truncate w-32">${user.name}</span>
+                       <span class="text-[10px] text-gray-500">โทร: ${user.phone_number}</span>
+                    </div>
+                 </div>
+                 <button onclick="deleteAdminUser('${user.line_user_id}', '${user.name.replace(/'/g, "\\'")}', '${user.room_number}')" class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white p-2 rounded-lg transition">
+                    <span class="material-icons-round text-sm">person_remove</span>
+                 </button>
+              </div>
+           `;
+      });
+    }
+
+    async function deleteAdminUser(lineId, name, room) {
+      const { isConfirmed } = await ThemedSwal.fire({
+        title: `ลบ ${name}?`,
+        text: `คุณต้องการลบลูกบ้าน ออกจากห้อง ${room} หรือไม่?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'ลบทิ้ง',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#ff4d4f'
+      });
+
+      if (isConfirmed) {
+        ThemedSwal.fire({ title: 'กำลังลบ...', allowOutsideClick: false });
+        ThemedSwal.showLoading();
+        const { error } = await supabaseClient.from('users').delete().eq('line_user_id', lineId);
+        if (error) {
+          ThemedSwal.fire("ข้อผิดพลาด", error.message, "error");
+        } else {
+          ThemedSwal.fire("สำเร็จ", "ลบลูกบ้านเรียบร้อย", "success");
+          searchAdminUsers(); // refresh data
+        }
+      }
+    }
+
+
+    const originalSetupUI = setupUI;
+    setupUI = function () {
+      originalSetupUI();
+      loadNewsBadge();
+    };
+
+
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+
+    window.onload = init;
+  </script>
+
+</body>
+
+</html>
