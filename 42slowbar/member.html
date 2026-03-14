@@ -456,7 +456,7 @@
                     if (!error) { showAlert("สำเร็จ", "บันทึกข้อมูลเรียบร้อย"); this.memberData.phone = this.memberEditForm.phone; this.memberData.email = this.memberEditForm.email; this.memberEditing = false; } else { showAlert("ข้อผิดพลาด", error.message, "error"); }
                 },
                 openNewsDetail(news) { this.selectedNews = news; },
-                openChatWindow() { window.location.href = "https://line.me/R/oaMessage/@xxxxxxxxxxxx/?ติดต่อเรา"; },
+                openChatWindow() { window.location.href = "https://line.me/R/oaMessage/@652lwnrg/?ติดต่อเรา"; },
                 async shareMyTier() {
                     if (!liff.isApiAvailable('shareTargetPicker')) return showAlert("แจ้งเตือน", "อุปกรณ์ไม่รองรับการแชร์", "warning");
                     const tierName = this.currentTierObj.name; const points = (this.memberData?.points || 0).toLocaleString(); const tierColor = this.getTierHexColor(this.currentTierObj.color_theme);
