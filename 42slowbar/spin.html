@@ -1,1 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spin the Wheel * 42 slow bar</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-gif.flaticon.com/19036/19036955.gif">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-gif.flaticon.com/19036/19036955.gif">
+    <meta name="description" content="Spin the Wheel" />
+    <meta name="author" content="42 slow bar coffee roasters" />
+    <meta property="og:title" content="Spin the Wheel" />
+    <meta property="og:description" content="Spin the Wheel" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://cdn-icons-gif.flaticon.com/19036/19036955.gif" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/LINESeedSansTH/LINESeedSansTH.css"
+        rel="stylesheet" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'LINE Seed Sans TH', 'Inter', sans-serif;
+            background-color: #121214;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            min-height: 100vh;
+            background-color: #1a1b20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 1.5rem;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .text-gradient {
+            background: linear-gradient(90deg, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 2rem 0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+
+        .wheel-container::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            bottom: -5px;
+            left: -5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #3b82f6, #ec4899);
+            z-index: 0;
+            animation: pulse-glow 4s infinite alternate;
+        }
+
+        .wheel {
+            width: 310px;
+            height: 310px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            background-color: #1e1e24;
+            z-index: 1;
+            transition: transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .segment-line {
+            position: absolute;
+            top: 0;
+            left: 154px;
+            width: 2px;
+            height: 155px;
+            background: linear-gradient(to bottom, rgba(139, 92, 246, 0.8), rgba(59, 130, 246, 0.2));
+            transform-origin: bottom center;
+        }
+
+        .item {
+            position: absolute;
+            top: 15px;
+            left: 135px;
+            width: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: 20px 140px;
+        }
+
+        .item img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+        }
+
+        .item-text {
+            background: white;
+            color: black;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 10px;
+            margin-top: 4px;
+            white-space: nowrap;
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px;
+            height: 110px;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e5e7eb);
+            border-radius: 50%;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 -5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .center-circle::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            bottom: -8px;
+            left: -8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            z-index: -1;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background-color: #4b5563;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch.active {
+            background-color: #ffffff;
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active .toggle-knob {
+            transform: translateX(20px);
+            background-color: #1a1b20;
+        }
+
+        .glow-button {
+            position: relative;
+            width: 100%;
+            padding: 1.2rem;
+            border-radius: 9999px;
+            background: #1a1b20;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2rem;
+            transition: transform 0.1s;
+            z-index: 1;
+        }
+
+        .glow-button::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            bottom: -2px;
+            left: -2px;
+            z-index: -1;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #8b5cf6, #3b82f6, #ec4899);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .glow-button:active {
+            transform: scale(0.98);
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                opacity: 0.6;
+                filter: blur(8px);
+            }
+
+            100% {
+                opacity: 1;
+                filter: blur(12px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <div class="absolute top-6 left-6 right-6 flex justify-between items-center z-50 pt-2">
+            <div id="authContainer" class="flex items-center gap-2 relative">
+                <button id="loginBtn" onclick="showPdpaModal()"
+                    class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 transition hidden">
+                    เข้าสู่ระบบ
+                </button>
+
+
+                <div id="userProfileBadge"
+                    class="hidden items-center gap-2 bg-[#1e1e24] shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-full pl-1.5 pr-3 py-1.5 border border-white/10 relative group">
+                    <img id="navUserImage" src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+                        class="w-8 h-8 rounded-full border border-purple-500/50 object-cover" alt="Profile">
+                    <span id="navUserName" class="text-xs font-semibold text-white max-w-[80px] truncate">...</span>
+                </div>
+
+
+                <button id="logoutBtn" onclick="handleLogout()" title="Logout"
+                    class="bg-[#1e1e24] hover:bg-red-500/80 border border-white/10 text-white p-2 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center transition hidden">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+
+            <div class="bg-[#1e1e24] shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-full px-4 py-2 flex items-center gap-2 border border-white/10 transition-all duration-300"
+                id="coinContainer">
+                <img src="https://cdn-icons-png.flaticon.com/512/2586/2586171.png" alt="Coin" class="w-5 h-5">
+                <span id="userCoins" class="font-bold text-lg">...</span>
+            </div>
+        </div>
+
+        <div class="text-center mb-2 mt-24 relative z-40">
+            <p class="text-gradient font-semibold text-sm mb-2">หมุนวงล้อ ลุ้นโชคทุกวัน 💜</p>
+            <h1 class="text-2xl font-bold leading-tight">ขอให้โชคดี<br>กับการหมุนวงล้อของคุณ</h1>
+        </div>
+
+        <div class="wheel-container">
+
+            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-50 transition-transform duration-100"
+                id="wheelPointer"
+                style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)) drop-shadow(0 0 10px rgba(244,114,182,0.6));">
+                <svg width="36" height="42" viewBox="0 0 36 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 42L2.5 17.5C-2.5 9.5 3.5 0 13 0H23C32.5 0 38.5 9.5 33.5 17.5L18 42Z"
+                        fill="url(#pointer-gradient)" />
+                    <defs>
+                        <linearGradient id="pointer-gradient" x1="18" y1="0" x2="18" y2="42"
+                            gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fbcfe8" />
+                            <stop offset="1" stop-color="#ec4899" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+
+            <div class="wheel" id="wheel">
+
+            </div>
+
+            <div class="center-circle">
+                <span class="text-gray-400 text-xs font-semibold mb-1" id="timerLabel">เวลาที่เหลือ</span>
+                <span class="text-black text-xl font-bold tracking-tight" id="timer">...</span>
+            </div>
+        </div>
+
+
+        <div class="relative w-full flex justify-center mt-[-10px] z-20">
+            <button class="glow-button" onclick="spinWheel()">
+                <span id="spinButtonText">หมุนวงล้อ (25 Coins)</span>
+                <img src="https://cdn-icons-png.flaticon.com/512/2586/2586171.png" alt="Coin" class="w-5 h-5">
+            </button>
+        </div>
+
+
+        <div class="flex justify-center mt-3 z-20 relative">
+            <button
+                class="bg-[#24242e] hover:bg-[#2d2d3a] border border-white/10 text-white px-5 py-2 rounded-full text-sm font-semibold shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center gap-2 transition"
+                onclick="shareInvite()">
+                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z">
+                    </path>
+                </svg>
+                แชร์ชวนเพื่อนเล่น
+            </button>
+        </div>
+
+        <p class="text-gray-500 text-xs text-center mt-6 px-4 leading-relaxed">
+            ลุ้นรับรางวัลมากมายจากการหมุนวงล้อ<br>ยิ่งหมุนมาก ยิ่งมีสิทธิ์มาก
+        </p>
+
+
+        <div
+            class="mt-8 mb-6 bg-[#1e1e24] border border-white/10 rounded-2xl shadow-xl overflow-hidden z-20 relative w-full px-4 pt-4 pb-2">
+            <div class="flex items-center gap-2 mb-4 px-2">
+                <span class="text-xl">🏆</span>
+                <h2 class="text-white text-lg font-bold">อันดับผู้เล่นสูงสุด</h2>
+            </div>
+            <div id="leaderboardList" class="flex flex-col gap-0 max-h-[450px] overflow-y-auto pr-2 pb-2">
+
+                <div class="text-center text-sm text-gray-400 py-4">กำลังโหลดข้อมูล...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function startTimer() {
+            setInterval(() => {
+                if (!gameSettings) return;
+
+                const now = new Date();
+                const customUserConf = (currentUserProfile && userCustomSettings[currentUserProfile.userId]) || {};
+                const effectiveEndTime = customUserConf.endTime || gameSettings.endTime;
+
+                const timeLabel = document.getElementById('timerLabel');
+                const timeValue = document.getElementById('timer');
+
+                if (!effectiveEndTime) {
+                    timeLabel.innerText = 'สถานะ';
+                    timeValue.innerText = 'เล่นได้ตลอด';
+
+                    return;
+                }
+
+                const end = new Date(effectiveEndTime);
+                const diff = end - now;
+
+                if (diff <= 0) {
+                    timeLabel.innerText = 'สถานะ';
+                    timeValue.innerText = 'หมดเวลา';
+                    timeValue.classList.add('text-red-500');
+                    return;
+                }
+
+
+                timeLabel.innerText = 'เวลาที่เหลือ';
+                timeValue.classList.remove('text-red-500');
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((diff / 1000 / 60) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+
+                if (days > 0) {
+                    timeValue.innerText = `${days}d ${hours}h`;
+                } else {
+                    const h = hours.toString().padStart(2, '0');
+                    const m = minutes.toString().padStart(2, '0');
+                    const s = seconds.toString().padStart(2, '0');
+                    timeValue.innerText = `${h}:${m}:${s}`;
+                }
+            }, 1000);
+        }
+
+
+        function showPdpaModal() {
+            const modal = document.getElementById('pdpaModal');
+            const box = document.getElementById('pdpaModalBox');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closePdpaModal() {
+            const modal = document.getElementById('pdpaModal');
+            const box = document.getElementById('pdpaModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.style.display = '';
+            }, 300);
+        }
+
+        function acceptPdpaAndLogin() {
+            localStorage.setItem('spin_pdpa_accepted', 'true');
+            if (!liff.isLoggedIn()) {
+                liff.login({ redirectUri: window.location.href });
+            } else {
+                closePdpaModal();
+            }
+        }
+
+        function declinePdpa() {
+            if (liff.isLoggedIn()) {
+                liff.logout();
+                window.location.reload();
+            } else {
+                closePdpaModal();
+            }
+        }
+
+        function handleLogout() {
+            liff.logout();
+            window.location.reload();
+        }
+
+
+        let userCoins = 0;
+        let currentUserProfile = null;
+        let gameSettings = null;
+        let userCustomSettings = JSON.parse(localStorage.getItem('spin_user_custom_settings')) || {};
+
+        const LIFF_ID = "2009451841-VHlcw6tX";
+        const SUPABASE_URL = "https://cvekhhdlklnvoreozist.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2ZWtoaGRsa2xudm9yZW96aXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NDEyNzksImV4cCI6MjA4NDQxNzI3OX0.A2tZb4Dh4QqZPI9pcjKWzJEAwEfrzIu6i_jyPo2NUsM";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function initApp() {
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                await liff.ready;
+
+                const hasAcceptedPdpa = localStorage.getItem('spin_pdpa_accepted') === 'true';
+
+                if (!liff.isLoggedIn()) {
+                    document.getElementById('loginBtn').classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('logoutBtn').classList.remove('hidden');
+
+                if (!hasAcceptedPdpa) {
+                    showPdpaModal();
+                }
+
+                const profile = await liff.getProfile();
+
+
+                const { data, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('userId', profile.userId)
+                    .single();
+
+                if (error && error.code === 'PGRST116') {
+
+                    const { data: newUser, error: insertError } = await supabaseClient
+                        .from('user_profiles')
+                        .insert([{
+                            userId: profile.userId,
+                            displayName: profile.displayName,
+                            pictureUrl: profile.pictureUrl,
+                            points: 30,
+                            updated_at: new Date().toISOString()
+                        }])
+                        .select()
+                        .single();
+                    if (insertError) throw insertError;
+                    currentUserProfile = newUser;
+                } else if (error) {
+                    throw error;
+                } else {
+                    currentUserProfile = data;
+
+                    await supabaseClient.from('user_profiles').update({
+                        displayName: profile.displayName,
+                        pictureUrl: profile.pictureUrl,
+                        updated_at: new Date().toISOString()
+                    }).eq('userId', profile.userId);
+                }
+
+                userCoins = currentUserProfile.points || 0;
+                document.getElementById('userCoins').innerText = userCoins.toLocaleString();
+
+
+                if (currentUserProfile.pictureUrl) {
+                    document.getElementById('navUserImage').src = currentUserProfile.pictureUrl;
+                }
+                if (currentUserProfile.displayName) {
+                    document.getElementById('navUserName').innerText = currentUserProfile.displayName;
+                }
+                const profileBadge = document.getElementById('userProfileBadge');
+                profileBadge.classList.remove('hidden');
+                profileBadge.classList.add('flex');
+
+
+                if (currentUserProfile.role === 'admin') {
+                    const adminBtn = document.createElement('a');
+                    adminBtn.href = 'admin.html';
+                    adminBtn.className = 'absolute top-20 right-6 bg-purple-600/80 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg z-50 backdrop-blur-sm transition';
+                    adminBtn.innerHTML = '⚙️ Admin';
+                    document.body.appendChild(adminBtn);
+                }
+
+
+                await fetchGlobalSettings();
+                await fetchGamePrizes();
+
+
+                startTimer();
+
+
+                loadLeaderboard();
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Login Error', 'Failed to connect to system', 'error');
+            }
+        }
+        initApp();
+
+        async function fetchGlobalSettings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('game_settings')
+                    .select('*')
+                    .eq('id', 1)
+                    .single();
+
+                if (!error && data) {
+                    gameSettings = {
+                        cost: data.cost || 25,
+                        startTime: data.start_time || '',
+                        endTime: data.end_time || ''
+                    };
+                    document.getElementById('spinButtonText').innerText = `หมุนวงล้อ (${gameSettings.cost} Coins)`;
+                } else {
+
+                    gameSettings = { cost: 25, startTime: '', endTime: '' };
+                }
+            } catch (err) {
+                console.warn("Could not fetch global settings, using defaults.", err);
+                gameSettings = { cost: 25, startTime: '', endTime: '' };
+            }
+        }
+
+        async function fetchGamePrizes() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('game_prizes')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (error || !data || data.length === 0) {
+                    console.warn("No prizes in DB, using default.");
+                    prizes = defaultPrizes;
+                } else {
+                    prizes = data;
+                }
+                renderWheel();
+            } catch (err) {
+                console.error("Failed to load prizes from DB:", err);
+                prizes = defaultPrizes;
+                renderWheel();
+            }
+        }
+
+        async function loadLeaderboard() {
+            const listEl = document.getElementById('leaderboardList');
+            try {
+                const { data, error } = await supabaseClient
+                    .from('user_profiles')
+                    .select('displayName, pictureUrl, points')
+                    .order('points', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    listEl.innerHTML = '<div class="text-center text-sm text-gray-500 py-4">ยังไม่มีข้อมูลผู้นำ</div>';
+                    return;
+                }
+
+                listEl.innerHTML = '';
+
+
+                const maskName = (name) => {
+                    if (!name) return 'ไม่ทราบชื่อ';
+                    const len = name.length;
+                    if (len > 3) return name.substring(0, 2) + '***' + name.substring(len - 1);
+                    if (len > 1) return name.substring(0, 1) + '***' + name.substring(len - 1);
+                    return name + '***';
+                };
+
+                const top3 = data.slice(0, 3);
+                const rest = data.slice(3, 10);
+
+
+                let podiumHtml = '<div class="flex items-end justify-center mt-6 gap-0 px-2">';
+
+
+                if (top3[1]) {
+                    podiumHtml += `
+                    <div class="flex flex-col items-center w-1/3 relative z-10 mr-[-5px]">
+                        <div class="relative mb-3">
+                            <img src="${top3[1].pictureUrl || 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="w-16 h-16 rounded-full border-4 border-[#b0b8c6] object-cover bg-gray-800 shadow-[0_0_15px_rgba(176,184,198,0.4)] relative z-10">
+                            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-[#b0b8c6] text-[#2c3140] text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-md z-20 min-w-[20px] text-center border-2 border-[#1e1e24] shadow-[0_4px_4px_rgba(0,0,0,0.5)]">2</div>
+                        </div>
+                        <span class="text-[13px] font-bold text-gray-100 truncate w-full text-center mt-1 px-1">${maskName(top3[1].displayName)}</span>
+                        <div class="flex items-center justify-center gap-1 mt-0.5 text-[#fbbf24] text-xs font-bold w-full"><img src="https://cdn-icons-png.flaticon.com/512/2586/2586171.png" class="w-3.5 h-3.5">${top3[1].points.toLocaleString()}</div>
+                        <div class="w-full bg-gradient-to-b from-[#3a3d4d] to-[#262835] h-[90px] rounded-tl-xl mt-3 relative overflow-hidden shadow-[2px_0_10px_rgba(0,0,0,0.4)] border-t border-l border-[#b0b8c6]/20">
+                            <div class="text-[4rem] font-bold text-black/20 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 selection:bg-transparent tracking-tighter mix-blend-overlay">2</div>
+                        </div>
+                    </div>`;
+                }
+
+
+                if (top3[0]) {
+                    podiumHtml += `
+                    <div class="flex flex-col items-center w-[40%] relative z-20">
+                        <div class="relative mb-3">
+                            <img src="${top3[0].pictureUrl || 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="w-20 h-20 rounded-full border-[5px] border-[#facc15] object-cover bg-gray-800 shadow-[0_0_20px_rgba(250,204,21,0.5)] relative z-10">
+                            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-[#facc15] text-[#713f12] text-xs font-black px-2 py-0.5 rounded-full shadow-md z-20 min-w-[24px] text-center border-2 border-[#1e1e24] shadow-[0_4px_4px_rgba(0,0,0,0.6)]">1</div>
+                        </div>
+                        <span class="text-[14px] font-bold text-white truncate w-full text-center mt-1 px-1">${maskName(top3[0].displayName)}</span>
+                        <div class="flex items-center justify-center gap-1 mt-0.5 text-[#fbbf24] text-sm font-black w-full drop-shadow"><img src="https://cdn-icons-png.flaticon.com/512/2586/2586171.png" class="w-4 h-4">${top3[0].points.toLocaleString()}</div>
+                        <div class="w-full bg-gradient-to-b from-[#424458] to-[#262835] h-[120px] rounded-t-xl mt-3 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] border-t border-[#facc15]/30">
+                            <div class="text-[5rem] font-bold text-black/20 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 selection:bg-transparent tracking-tighter mix-blend-overlay">1</div>
+                        </div>
+                    </div>`;
+                }
+
+
+                if (top3[2]) {
+                    podiumHtml += `
+                    <div class="flex flex-col items-center w-1/3 relative z-10 ml-[-5px]">
+                        <div class="relative mb-3">
+                            <img src="${top3[2].pictureUrl || 'https://cdn-icons-png.flaticon.com/512/847/847969.png'}" class="w-16 h-16 rounded-full border-4 border-[#d97706] object-cover bg-gray-800 shadow-[0_0_15px_rgba(217,119,6,0.5)] relative z-10">
+                            <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-[#d97706] text-orange-100 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-md z-20 min-w-[20px] text-center border-2 border-[#1e1e24] shadow-[0_4px_4px_rgba(0,0,0,0.5)]">3</div>
+                        </div>
+                         <span class="text-[13px] font-bold text-gray-100 truncate w-full text-center mt-1 px-1">${maskName(top3[2].displayName)}</span>
+                        <div class="flex items-center justify-center gap-1 mt-0.5 text-[#fbbf24] text-xs font-bold w-full"><img src="https://cdn-icons-png.flaticon.com/512/2586/2586171.png" class="w-3.5 h-3.5">${top3[2].points.toLocaleString()}</div>
+                        <div class="w-full bg-gradient-to-b from-[#333543] to-[#262835] h-[70px] rounded-tr-xl mt-3 relative overflow-hidden shadow-[-2px_0_10px_rgba(0,0,0,0.4)] border-t border-r border-[#d97706]/30">
+                            <div class="text-[3.5rem] font-bold text-black/20 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 selection:bg-transparent tracking-tighter mix-blend-overlay">3</div>
+                        </div>
+                    </div>`;
+                }
+
+                podiumHtml += '</div>';
+                listEl.innerHTML += podiumHtml;
+
+
+                if (rest.length > 0) {
+                    let listHtml = '<div class="flex flex-col gap-0 mt-2 bg-[#2a2c38] rounded-2xl overflow-hidden p-2">';
+                    rest.forEach((user, idx) => {
+                        const actualRank = idx + 4;
+                        const picUrl = user.pictureUrl || 'https://cdn-icons-png.flaticon.com/512/847/847969.png';
+                        listHtml += `
+                           <div class="flex items-center justify-between py-2 px-1 border-b border-white/5 last:border-b-0">
+                                <div class="flex items-center gap-4">
+                                    <span class="text-gray-400 font-bold w-4 text-center text-sm">${actualRank}</span>
+                                    <div class="relative">
+                                        <img src="${picUrl}" class="w-[42px] h-[42px] rounded-full border-2 border-[#2a2c38] shadow-sm object-cover bg-gray-800">
+                                        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-gray-900 shadow-[0_0_5px_rgba(34,197,94,0.6)]"></div>
+                                    </div>
+                                    <span class="text-[14px] font-semibold text-gray-100">${maskName(user.displayName)}</span>
+                                </div>
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/2586/2586171.png" class="w-4 h-4 drop-shadow-sm">
+                                    <span class="text-[14px] font-bold text-[#fbbf24]">${user.points.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    listHtml += '</div>';
+                    listEl.innerHTML += listHtml;
+                }
+
+            } catch (err) {
+                console.error("Leaderboard loading failed:", err);
+                listEl.innerHTML = '<div class="text-center text-sm text-red-400 py-4">ไม่สามารถโหลดอันดับได้</div>';
+            }
+        }
+
+
+
+        function animateCoinDeduction(amount) {
+            const coinEl = document.getElementById('userCoins');
+            const container = document.getElementById('coinContainer');
+            let startCoins = userCoins;
+            userCoins -= amount;
+
+
+            const duration = 800;
+            let startTime = null;
+
+            container.classList.add('border-red-500', 'shadow-[0_0_15px_rgba(239,68,68,0.5)]', 'scale-105');
+            coinEl.classList.add('text-red-400');
+
+            function updateCounter(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+
+                const currentVal = Math.floor(startCoins - (amount * progress));
+                coinEl.innerText = currentVal.toLocaleString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    coinEl.innerText = userCoins.toLocaleString();
+                    setTimeout(() => {
+                        container.classList.remove('border-red-500', 'shadow-[0_0_15px_rgba(239,68,68,0.5)]', 'scale-105');
+                        coinEl.classList.remove('text-red-400');
+                    }, 200);
+                }
+            }
+            requestAnimationFrame(updateCounter);
+        }
+
+        function animateCoinAddition(amount) {
+            const coinEl = document.getElementById('userCoins');
+            const container = document.getElementById('coinContainer');
+            let startCoins = userCoins;
+            userCoins += amount;
+
+
+            const duration = 1000;
+            let startTime = null;
+
+            container.classList.add('border-green-500', 'shadow-[0_0_15px_rgba(34,197,94,0.5)]', 'scale-105');
+            coinEl.classList.add('text-green-400');
+
+            function updateCounter(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+
+                const currentVal = Math.floor(startCoins + (amount * progress));
+                coinEl.innerText = currentVal.toLocaleString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    coinEl.innerText = userCoins.toLocaleString();
+                    setTimeout(() => {
+                        container.classList.remove('border-green-500', 'shadow-[0_0_15px_rgba(34,197,94,0.5)]', 'scale-105');
+                        coinEl.classList.remove('text-green-400');
+                    }, 300);
+                }
+            }
+            requestAnimationFrame(updateCounter);
+        }
+
+        const defaultPrizes = [
+            { name: "Extra Life!", value: 0, type: 'item', image: 'https://cdn-icons-png.flaticon.com/512/833/833472.png', cssClass: 'filter: hue-rotate(250deg); transform: rotate(-90deg);' },
+            { name: "25 Coins", value: 25, type: 'coin', image: 'https://cdn-icons-png.flaticon.com/512/2586/2586171.png', cssClass: 'transform: rotate(90deg);' },
+            { name: "Mystery Box!", value: 0, type: 'item', image: 'https://cdn-icons-png.flaticon.com/512/892/892498.png', cssClass: 'filter: hue-rotate(250deg); transform: rotate(180deg);' },
+            { name: "50 Coins", value: 50, type: 'coin', image: 'https://cdn-icons-png.flaticon.com/512/2586/2586171.png', cssClass: 'transform: rotate(180deg);' },
+            { name: "Magnet x2", value: 0, type: 'item', image: 'https://cdn-icons-png.flaticon.com/512/873/873302.png', cssClass: 'filter: hue-rotate(200deg); transform: rotate(180deg);' },
+            { name: "25 Coins", value: 25, type: 'coin', image: 'https://cdn-icons-png.flaticon.com/512/2586/2586171.png', cssClass: 'transform: rotate(-90deg);' },
+            { name: "Extra Life x2!", value: 0, type: 'item', image: 'https://cdn-icons-png.flaticon.com/512/833/833472.png', cssClass: 'filter: hue-rotate(250deg); transform: rotate(-90deg);' },
+            { name: "500 Coins!", value: 500, type: 'coin', image: 'https://cdn-icons-png.flaticon.com/512/2586/2586171.png', cssClass: '' },
+        ];
+
+        let prizes = [];
+
+        function renderWheel() {
+            const wheel = document.getElementById('wheel');
+            wheel.innerHTML = '';
+            const total = prizes.length;
+            const deg = 360 / total;
+
+            for (let i = 0; i < total; i++) {
+                const prize = prizes[i];
+
+
+                const line = document.createElement('div');
+                line.className = 'segment-line';
+                line.style.transform = `rotate(${i * deg}deg)`;
+                wheel.appendChild(line);
+
+
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.style.transform = `rotate(${i * deg + (deg / 2)}deg)`;
+
+
+                const img = document.createElement('img');
+                img.src = prize.image;
+
+
+                if (prize.cssClass && !prize.isCustom) {
+                    img.style.cssText = prize.cssClass;
+                } else if (prize.cssClass && prize.cssClass.includes('transform: rotate')) {
+
+                    const match = prize.cssClass.match(/transform:\s*rotate\([^)]+\)/);
+                    if (match) img.style.cssText = match[0];
+                }
+
+                item.appendChild(img);
+
+
+                if (prize.value > 0 || prize.type === 'coin') {
+                    const text = document.createElement('div');
+                    text.className = 'item-text';
+                    text.innerText = prize.value >= 500 ? 'x' + prize.value : (prize.value > 0 ? 'x' + prize.value : prize.name);
+
+                    const currentAngle = i * deg + (deg / 2);
+                    if (currentAngle > 90 && currentAngle < 270) {
+                        text.style.transform = 'rotate(180deg)';
+                    }
+                    item.appendChild(text);
+                }
+
+                wheel.appendChild(item);
+            }
+        }
+        renderWheel();
+
+
+        document.getElementById('userCoins').innerText = '...';
+
+
+
+        function updateSpinButtonUI() {
+            if (!gameSettings) return;
+            const btnText = document.getElementById('spinButtonText');
+            if (btnText) {
+                btnText.innerText = `หมุนวงล้อ (${gameSettings.cost} Coins)`;
+            }
+        }
+        updateSpinButtonUI();
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'spin_prizes') {
+                prizes = JSON.parse(e.newValue);
+                renderWheel();
+            }
+            if (e.key === 'spin_game_settings') {
+                gameSettings = JSON.parse(e.newValue);
+                updateSpinButtonUI();
+            }
+            if (e.key === 'spin_user_custom_settings') {
+                userCustomSettings = JSON.parse(e.newValue);
+            }
+        });
+
+        function handleSpinEndFromServer(data) {
+            isSpinning = false;
+            const prize = data.prize;
+
+
+            const pointer = document.getElementById('wheelPointer');
+            pointer.style.transform = 'translate(-50%, 10px)';
+            setTimeout(() => {
+                pointer.style.transform = 'translate(-50%, 0)';
+            }, 150);
+
+
+            Swal.fire({
+                title: prize.type === 'coin' ? 'ยินดีด้วย คุณได้ ' + prize.name + '!' : 'คุณได้ ' + prize.name,
+                html: `<img src="${prize.image || 'https://cdn-icons-png.flaticon.com/512/833/833472.png'}" style="width: 80px; margin: 0 auto;">`,
+                background: '#1a1b20',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonColor: '#8b5cf6',
+                cancelButtonColor: '#10b981',
+                confirmButtonText: 'ตกลง',
+                cancelButtonText: 'แชร์อวดเพื่อน',
+                customClass: {
+                    popup: 'border border-purple-500/30 shadow-[0_0_30px_rgba(139,92,246,0.3)] rounded-2xl'
+                }
+            }).then((result) => {
+                if (result.dismiss === Swal.DismissReason.cancel) {
+                    sharePrize(prize);
+                }
+
+                if (prize.type === 'coin' && prize.value > 0) {
+                    animateCoinAddition(prize.value);
+                }
+
+                setTimeout(() => {
+                    userCoins = data.newPoints;
+                    document.getElementById('userCoins').innerText = userCoins.toLocaleString();
+                    loadLeaderboard();
+                }, prize.value > 0 ? 1000 : 0);
+            });
+        }
+
+        async function sharePrize(prize) {
+            if (!liff.isLoggedIn()) return;
+            try {
+                const result = await liff.shareTargetPicker([
+                    {
+                        "type": "flex",
+                        "altText": "ฉันได้รางวัลจากการหมุนวงล้อ!",
+                        "contents": {
+                            "type": "bubble",
+                            "hero": {
+                                "type": "image",
+                                "url": prize.image || "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                                "size": "full",
+                                "aspectRatio": "20:13",
+                                "aspectMode": "cover"
+                            },
+                            "body": {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "เย้! ฉันหมุนได้ " + prize.name,
+                                        "weight": "bold",
+                                        "size": "xl",
+                                        "wrap": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "มาหมุนวงล้อฟรีลุ้นรับรางวัลมากมายไปด้วยกัน!",
+                                        "margin": "md",
+                                        "wrap": true,
+                                        "color": "#666666"
+                                    }
+                                ]
+                            },
+                            "footer": {
+                                "type": "box",
+                                "layout": "vertical",
+                                "spacing": "sm",
+                                "contents": [
+                                    {
+                                        "type": "button",
+                                        "style": "primary",
+                                        "height": "sm",
+                                        "action": {
+                                            "type": "uri",
+                                            "label": "เล่นเลย!",
+                                            "uri": `https://liff.line.me/${LIFF_ID}`
+                                        },
+                                        "color": "#9333ea"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]);
+                if (result) {
+                    Swal.fire({ title: 'สำเร็จ!', text: 'แชร์อวดเพื่อนเรียบร้อยแล้ว', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function shareInvite() {
+            if (!liff.isLoggedIn()) {
+                Swal.fire('เข้าสู่ระบบ', 'กรุณาเข้าสู่ระบบก่อนแชร์', 'warning');
+                return;
+            }
+            try {
+                const result = await liff.shareTargetPicker([
+                    {
+                        "type": "flex",
+                        "altText": "ชวนคุณมาหมุนวงล้อลุ้นโชค!",
+                        "contents": {
+                            "type": "bubble",
+                            "hero": {
+                                "type": "image",
+                                "url": "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                                "size": "full",
+                                "aspectRatio": "20:13",
+                                "aspectMode": "cover"
+                            },
+                            "body": {
+                                "type": "box",
+                                "layout": "vertical",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "หมุนวงล้อลุ้นโชค",
+                                        "weight": "bold",
+                                        "size": "xl"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "มาหมุนวงล้อฟรีลุ้นรับรางวัลมากมายไปด้วยกัน!",
+                                        "margin": "md",
+                                        "wrap": true,
+                                        "color": "#666666"
+                                    }
+                                ]
+                            },
+                            "footer": {
+                                "type": "box",
+                                "layout": "vertical",
+                                "spacing": "sm",
+                                "contents": [
+                                    {
+                                        "type": "button",
+                                        "style": "primary",
+                                        "height": "sm",
+                                        "action": {
+                                            "type": "uri",
+                                            "label": "เล่นเลย!",
+                                            "uri": `https://liff.line.me/${LIFF_ID}`
+                                        },
+                                        "color": "#9333ea"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]);
+                if (result) {
+                    Swal.fire({ title: 'สำเร็จ!', text: 'แชร์ชวนเพื่อนเรียบร้อยแล้ว', icon: 'success', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        async function spinWheel() {
+            if (isSpinning) return;
+            if (!currentUserProfile) {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาเข้าสู่ระบบก่อนหมุนวงล้อ', 'error');
+                return;
+            }
+
+            const now = new Date();
+            if (gameSettings.startTime) {
+                const start = new Date(gameSettings.startTime);
+                if (now < start) {
+                    Swal.fire('ยังไม่ถึงเวลา', `กิจกรรมเริ่มวันที่ ${start.toLocaleString()}`, 'warning');
+                    return;
+                }
+            }
+
+            const customUserConf = userCustomSettings[currentUserProfile.userId] || {};
+            const effectiveEndTime = customUserConf.endTime || gameSettings.endTime;
+
+            if (effectiveEndTime) {
+                const end = new Date(effectiveEndTime);
+                if (now > end) {
+                    Swal.fire('หมดเวลา', `คุณไม่สามารถเข้าร่วมได้แล้ว (หมดเวลาเมื่อ ${end.toLocaleString()})`, 'warning');
+                    return;
+                }
+            }
+
+            if (userCoins < gameSettings.cost) {
+                Swal.fire('Coins ไม่พอ!', `ต้องใช้ ${gameSettings.cost} Coins ในการหมุนแต่ละรอบ`, 'warning');
+                const container = document.getElementById('coinContainer');
+                container.classList.add('border-red-500', 'scale-110');
+                setTimeout(() => container.classList.remove('border-red-500', 'scale-110'), 300);
+                return;
+            }
+
+            isSpinning = true;
+            animateCoinDeduction(gameSettings.cost);
+
+
+            Swal.fire({
+                title: 'กำลังสุ่ม...',
+                html: 'รอสักครู่ ขอเช็กดวงของคุณก่อน... <br><br> <div class="w-8 h-8 mx-auto border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                background: '#1a1b20',
+                color: '#fff',
+                customClass: {
+                    popup: 'border border-purple-500/30'
+                }
+            });
+
+            try {
+
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/spin-wheel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({ userId: currentUserProfile.userId, cost: gameSettings.cost })
+                });
+
+                if (!response.ok) {
+                    const errPayload = await response.json().catch(() => ({}));
+                    throw new Error(errPayload.error || "Spin failed on server");
+                }
+
+                const data = await response.json();
+                const targetIndex = data.prizeIndex;
+                const totalPrizes = prizes.length;
+                const degPerItem = 360 / totalPrizes;
+
+
+                const randomOffset = Math.floor(Math.random() * (degPerItem - 5)) + 2.5;
+                const targetRotationMod = 360 - (targetIndex * degPerItem + randomOffset);
+
+                const spins = 5;
+                const baseRotation = currentRotation + (spins * 360);
+
+                const remainder = baseRotation % 360;
+                let neededRotation = targetRotationMod - remainder;
+                if (neededRotation < 0) neededRotation += 360;
+
+                currentRotation = baseRotation + neededRotation;
+
+                const wheel = document.getElementById('wheel');
+
+
+                Swal.close();
+
+                wheel.style.transition = 'transform 4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                wheel.style.transform = `rotate(${currentRotation}deg)`;
+                setTimeout(() => handleSpinEndFromServer(data), 4000);
+            } catch (err) {
+                Swal.fire('เกิดข้อผิดพลาด', err.message, 'error');
+                isSpinning = false;
+                animateCoinAddition(gameSettings.cost);
+            }
+        }
+    </script>
+
+
+    <div id="pdpaModal"
+        class="fixed inset-0 bg-black/80 hidden items-center justify-center z-[100] backdrop-blur-sm transition-opacity opacity-0 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 transform transition-transform scale-95"
+            id="pdpaModalBox">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">ข้อตกลงและเงื่อนไข (PDPA)</h3>
+            <div class="text-sm text-gray-600 mb-6 h-48 overflow-y-auto bg-gray-50 p-3 border border-gray-200 rounded">
+                <p>นโยบายความเป็นส่วนตัวนี้จัดทำขึ้นเพื่อแจ้งให้ท่านทราบถึงรายละเอียดเกี่ยวกับการเก็บรวบรวม ใช้
+                    และเปิดเผยข้อมูลส่วนบุคคลของท่าน เพื่อนำมาประมวลผลให้สอดคล้องกับพ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ.
+                    2562 (PDPA)</p>
+                <br>
+                <p><strong>วัตถุประสงค์ของการเก็บข้อมูล:</strong></p>
+                <ul class="list-disc pl-5 mt-1">
+                    <li>เพื่อใช้ยืนยันตัวตนในการเข้าร่วมกิจกรรมหมุนวงล้อรับของรางวัล</li>
+                    <li>เพื่อบันทึกประวัติพอยต์ (Coins) และการใช้งานผ่านแอปพลิเคชันอย่างเป็นระบบ</li>
+                    <li>เพื่อใช้ในการติดต่อมอบของรางวัลเมื่อท่านชนะกิจกรรม</li>
+                </ul>
+                <br>
+                <p><strong>การแชร์ข้อมูล:</strong></p>
+                <p>เราจะไม่เปิดเผยข้อมูลของท่านต่อบุคคลที่สามโดยไม่ได้รับอนุญาต ยกเว้นในกรณีที่กฎหมายกำหนด</p>
+                <br>
+                <p>โดยการกด "ยอมรับ" ท่านตกลงและยินยอมให้เราประมวลผลข้อมูลส่วนบุคคลเบื้องต้นของท่านตามที่ระบุไว้ข้างต้น
+                </p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="declinePdpa()"
+                    class="px-5 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100 text-sm font-medium transition">ปฏิเสธ
+                    (Cancel)</button>
+                <button onclick="acceptPdpaAndLogin()"
+                    class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium shadow transition">ยอมรับเข้าใช้งาน
+                    (Accept)</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
