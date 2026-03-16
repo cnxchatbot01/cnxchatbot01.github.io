@@ -1004,52 +1004,59 @@
                         "type": "flex",
                         "altText": "ชวนคุณมาหมุนวงล้อลุ้นโชค!",
                         "contents": {
-                            "type": "bubble",
-                            "hero": {
-                                "type": "image",
-                                "url": "https://cdn-icons-png.flaticon.com/512/847/847969.png",
-                                "size": "full",
-                                "aspectRatio": "20:13",
-                                "aspectMode": "cover"
-                            },
-                            "body": {
-                                "type": "box",
-                                "layout": "vertical",
-                                "contents": [
-                                    {
-                                        "type": "text",
-                                        "text": "หมุนวงล้อลุ้นโชค",
-                                        "weight": "bold",
-                                        "size": "xl"
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": "มาหมุนวงล้อฟรีลุ้นรับรางวัลมากมายไปด้วยกัน!",
-                                        "margin": "md",
-                                        "wrap": true,
-                                        "color": "#666666"
-                                    }
-                                ]
-                            },
-                            "footer": {
-                                "type": "box",
-                                "layout": "vertical",
-                                "spacing": "sm",
-                                "contents": [
-                                    {
-                                        "type": "button",
-                                        "style": "primary",
-                                        "height": "sm",
-                                        "action": {
-                                            "type": "uri",
-                                            "label": "เล่นเลย!",
-                                            "uri": `https://liff.line.me/${LIFF_ID}`
-                                        },
-                                        "color": "#9333ea"
-                                    }
-                                ]
-                            }
-                        }
+  "type": "bubble",
+  "hero": {
+    "type": "image",
+    "url": "https://lh3.googleusercontent.com/d/1wm_xUn6x-02v5qTgco27vzuDbWmLVnKP",
+    "size": "full",
+    "aspectRatio": "1:1",
+    "aspectMode": "cover"
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "หมุนวงล้อลุ้นโชค",
+        "weight": "bold",
+        "size": "xl",
+        "color": "#ffffff"
+      },
+      {
+        "type": "text",
+        "text": "มาหมุนวงล้อฟรีลุ้นรับรางวัลมากมายไปด้วยกัน!",
+        "margin": "md",
+        "wrap": true,
+        "color": "#888888"
+      }
+    ],
+    "backgroundColor": "#282828"
+  },
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "spacing": "sm",
+    "contents": [
+      {
+        "type": "button",
+        "style": "secondary",
+        "height": "sm",
+        "action": {
+          "type": "uri",
+          "label": "เล่นเลย!",
+          "uri": `https://liff.line.me/${LIFF_ID}`
+        }
+      }
+    ],
+    "background": {
+      "type": "linearGradient",
+      "angle": "45deg",
+      "startColor": "#95f9c3",
+      "endColor": "#0b3866"
+    }
+  }
+}
                     }
                 ]);
                 if (result) {
