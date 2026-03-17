@@ -936,59 +936,168 @@
                         "type": "flex",
                         "altText": "ฉันได้รางวัลจากการหมุนวงล้อ!",
                         "contents": {
-                          "type": "bubble",
-                          "hero": {
-                            "type": "image",
-                            "url":  prize.image || "https://cvekhhdlklnvoreozist.supabase.co/storage/v1/object/public/user-images/U6fe24b4f46c63c746ec4ce487e969bca/1773686067684.jpeg",
-                            "size": "full",
-                            "aspectRatio": "1:1",
-                            "aspectMode": "cover"
-                          },
-                          "body": {
-                            "type": "box",
-                            "layout": "vertical",
-                            "contents": [
-                              {
-                                "type": "text",
-                                "text": "เย้! ฉันหมุนได้ " + prize.name,
-                                "weight": "bold",
-                                "size": "xl",
-                                "color": "#ffffff"
-                              },
-                              {
-                                "type": "text",
-                                "text": "มาร่วมกิจกรรมสะสมแต้ม ครบ25แต้ม มีสิทธิ์หมุนวงล้อฟรี1ครั้ง เพื่อลุ้นรับกาแฟฟรี และ ของรางวัลอื่นๆ",
-                                "margin": "md",
-                                "wrap": true,
-                                "color": "#888888"
-                              }
-                            ],
-                            "backgroundColor": "#282828"
-                          },
-                          "footer": {
-                            "type": "box",
-                            "layout": "vertical",
-                            "spacing": "sm",
-                            "contents": [
-                              {
-                                "type": "button",
-                                "style": "secondary",
-                                "height": "sm",
-                                "action": {
-                                  "type": "uri",
-                                  "label": "เข้าร่วมกิจกรรม!",
-                                  "uri": `https://liff.line.me/${LIFF_ID}`
-                                }
-                              }
-                            ],
-                            "background": {
-                              "type": "linearGradient",
-                              "angle": "45deg",
-                              "startColor": "#95f9c3",
-                              "endColor": "#0b3866"
-                            }
-                          }
-                        }
+  "type": "bubble",
+  "size": "giga",
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [],
+        "height": "110px",
+        "background": {
+          "type": "linearGradient",
+          "angle": "45deg",
+          "startColor": "#95f9c3",
+          "endColor": "#0b3866"
+        }
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "เข้าร่วมกิจกรรม",
+                    "size": "lg",
+                    "weight": "bold",
+                    "color": "#000000"
+                  }
+                ],
+                "background": {
+                  "type": "linearGradient",
+                  "angle": "90deg",
+                  "startColor": "#c9def4",
+                  "endColor": "#b8a4c9",
+                  "centerColor": "#f5ccd4"
+                },
+                "height": "50px",
+                "cornerRadius": "md",
+                "justifyContent": "center",
+                "alignItems": "center",
+                "action": {
+                  "type": "uri",
+                  "label": "action",
+                  "uri": `https://liff.line.me/${LIFF_ID}`
+                }
+              }
+            ],
+            "margin": "xxl",
+            "offsetTop": "10px"
+          }
+        ],
+        "paddingAll": "20px",
+        "backgroundColor": "#282828",
+        "paddingTop": "20px"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "image",
+            "url": prize.image || "https://cvekhhdlklnvoreozist.supabase.co/storage/v1/object/public/user-images/U6fe24b4f46c63c746ec4ce487e969bca/1773686067684.jpeg",
+            "aspectMode": "cover",
+            "size": "full"
+          }
+        ],
+        "position": "absolute",
+        "width": "120px",
+        "height": "120px",
+        "cornerRadius": "100px",
+        "borderWidth": "5px",
+        "borderColor": "#ffffff",
+        "offsetTop": "20px",
+        "offsetStart": "20px"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "text",
+            "text": "42 Slow Bar",
+            "size": "xxl",
+            "color": "#ffffff",
+            "weight": "bold"
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "type": "text",
+            "text": "เย้.!! ฉันหมนุนวงล้อได้รางวัล",
+            "offsetTop": "10px",
+            "color": "#ffffff"
+          },
+          {
+            "type": "text",
+            "text": prize.name,
+            "size": "lg",
+            "color": "#f7ba2c",
+            "margin": "xs",
+            "align": "center",
+            "offsetTop": "10px"
+          },
+          {
+            "type": "text",
+            "text": "."
+          },
+          {
+            "type": "text",
+            "text": "< สะสมครบ 25 แต้ม หนุนฟรี 1 ครั้ง >",
+            "color": "#ffffff",
+            "size": "sm"
+          }
+        ],
+        "position": "absolute",
+        "offsetStart": "150px",
+        "alignItems": "center",
+        "offsetTop": "5px"
+      }
+    ],
+    "paddingAll": "0px",
+    "height": "250px",
+    "backgroundColor": "#282828"
+  },
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "separator"
+      },
+      {
+        "type": "text",
+        "text": "<< 42 slow bar coffee roasters  * est 2026 >>",
+        "align": "center",
+        "size": "xs",
+        "color": "#ffffff",
+        "margin": "md"
+      },
+      {
+        "type": "separator"
+      }
+    ],
+    "spacing": "sm",
+    "background": {
+      "type": "linearGradient",
+      "angle": "45deg",
+      "startColor": "#95f9c3",
+      "endColor": "#0b3866"
+    }
+  }
+}
                     }
                 ]);
                 if (result) {
