@@ -431,7 +431,7 @@
 
                 showLoading(false);
                 clearCartStorage();
-                Swal.fire({ title: 'สั่งซื้อสำเร็จ!', icon: 'success', confirmButtonColor: '#84a59d', confirmButtonText: 'ติดตามสถานะ' }).then(() => toggleOrdersModal(true));
+                Swal.fire({ title: 'สั่งซื้อสำเร็จ!', icon: 'success', confirmButtonColor: '#84a59d', confirmButtonText: 'ชำระเงิน' }).then(() => toggleOrdersModal(true));
             } catch (e) { console.error(e); showLoading(false); Swal.fire('Error', e.message, 'error'); }
         }
 
@@ -1045,7 +1045,7 @@
                 class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transform transition-transform duration-300 translate-y-full flex flex-col max-h-[85vh]">
                 <div class="p-4 flex items-center justify-between border-b border-gray-100 bg-white z-10 rounded-t-3xl">
                     <div>
-                        <h3 class="font-bold text-lg text-dark">ติดตามสถานะ</h3>
+                        <h3 class="font-bold text-lg text-dark">ชำระเงิน</h3>
                         <p class="text-xs text-gray-400">รายการสั่งซื้อของคุณ</p>
                     </div><button onclick="toggleOrdersModal(false)"
                         class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><i
