@@ -245,6 +245,11 @@
                         </div>
                     </div>
                 </div>
+                <button @click="openWindow"
+                    class="w-full bg-white py-4 rounded-2xl shadow-sm text-line font-bold border border-green-100 flex items-center justify-center space-x-2 active:bg-green-50 hover:bg-green-50 transition transform active:scale-95 animate-fade-in-up"
+                    style="animation-delay: 0.3s;">
+                    <i class="fa-solid fa-arrows-spin"></i><span>หมุนกงล้อลุ้นรางวัล</span>
+                </button>
                 <button @click="openChatWindow"
                     class="w-full bg-white py-4 rounded-2xl shadow-sm text-line font-bold border border-green-100 flex items-center justify-center space-x-2 active:bg-green-50 hover:bg-green-50 transition transform active:scale-95 animate-fade-in-up"
                     style="animation-delay: 0.3s;">
@@ -457,6 +462,7 @@
                 },
                 openNewsDetail(news) { this.selectedNews = news; },
                 openChatWindow() { window.location.href = "https://line.me/R/oaMessage/@652lwnrg/?ติดต่อเรา"; },
+                openWindow() { window.location.href = "https://miniapp.line.me/2009488274-OpXluMp6"; },
                 async shareMyTier() {
                     if (!liff.isApiAvailable('shareTargetPicker')) return showAlert("แจ้งเตือน", "อุปกรณ์ไม่รองรับการแชร์", "warning");
                     const tierName = this.currentTierObj.name; const points = (this.memberData?.points || 0).toLocaleString(); const tierColor = this.getTierHexColor(this.currentTierObj.color_theme);
