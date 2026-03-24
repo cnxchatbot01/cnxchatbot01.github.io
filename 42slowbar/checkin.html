@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Check-in | Radiant Morning</title>
+    <link id="favicon" rel="icon" href="https://cdn-icons-gif.flaticon.com/18995/18995017.gif">
+    <link id="apple-touch-icon" rel="apple-touch-icon" href="https://cdn-icons-gif.flaticon.com/18995/18995017.gif">
+    <meta name="description" content="Daily Check-in" />
+    <meta name="author" content="42 slow bar coffee roasters" />
+    <meta property="og:title" content="Daily Check-in" />
+    <meta property="og:description" content="42 slow bar coffee roasters" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://google.com" />
+    <meta property="og:image" content="https://cdn-icons-gif.flaticon.com/18995/18995017.gif" />
+
+    <link rel="icon" href="https://cdn-icons-gif.flaticon.com/18995/18995017.gif">
+    <meta name="description" content="LINE Chatbot Admin Panel" />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <link href="https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/LINESeedSansTH/LINESeedSansTH.css"
+        rel="stylesheet" />
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.8), 8px 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .neo-card {
+            background: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 6px 6px 12px #e6e0d5, -6px -6px 12px #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .neo-btn {
+            background: linear-gradient(145deg, #836800, #6e5700);
+            box-shadow: 4px 4px 8px #d8b442, -4px -4px 8px #fff078;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .neo-btn:active {
+            box-shadow: inset 4px 4px 8px #584600, inset -4px -4px 8px #9c7c00;
+        }
+
+        body {
+            font-family: 'LINE Seed Sans TH', 'Plus Jakarta Sans', sans-serif;
+            background-color: #ffffd3;
+            color: #38392a;
+            min-height: max(884px, 100dvh);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d0b4;
+            border-radius: 10px;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+
+        .loader-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .loader-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(139, 107, 29, 0.1);
+            border-top: 4px solid #7a6100;
+            border-radius: 50%;
+            animation: loader-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+
+        .loader-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background: #7a6100;
+            border-radius: 50%;
+            animation: loader-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes loader-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes loader-pulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(0.6);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        #loading-overlay {
+            background: rgba(255, 255, 211, 0.85);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7a6100",
+                        "secondary-fixed-dim": "#feb64c",
+                        "on-secondary-fixed-variant": "#704800",
+                        "primary-fixed-dim": "#eec540",
+                        "outline-variant": "#bbbaa6",
+                        "surface-variant": "#ebeace",
+                        "error-dim": "#b92902",
+                        "tertiary-dim": "#973b1d",
+                        "surface-dim": "#e5e4c7",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#f95630",
+                        "on-tertiary-container": "#5e1700",
+                        "error": "#be2d06",
+                        "surface": "#ffffd3",
+                        "on-error-container": "#520c00",
+                        "secondary-fixed": "#ffc87f",
+                        "tertiary-container": "#ff9472",
+                        "tertiary-fixed": "#ff9472",
+                        "inverse-on-surface": "#9f9e8b",
+                        "on-primary-container": "#5c4900",
+                        "surface-container-highest": "#ebeace",
+                        "outline": "#82816f",
+                        "surface-bright": "#ffffd3",
+                        "on-tertiary-fixed-variant": "#6d1d01",
+                        "secondary": "#8b5a00",
+                        "on-primary-fixed": "#463600",
+                        "secondary-dim": "#7b4f00",
+                        "primary-dim": "#6c5600",
+                        "background": "#ffffd3",
+                        "on-primary-fixed-variant": "#675200",
+                        "on-surface": "#38392a",
+                        "tertiary": "#a74727",
+                        "tertiary-fixed-dim": "#f6835f",
+                        "primary-container": "#fdd34d",
+                        "surface-tint": "#7a6100",
+                        "on-secondary-container": "#644000",
+                        "on-surface-variant": "#656554",
+                        "surface-container-low": "#fcfae3",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#38392a",
+                        "surface-container": "#f6f5dc",
+                        "on-primary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#0e0f04",
+                        "surface-container-high": "#f1efd5",
+                        "on-tertiary-fixed": "#330900",
+                        "primary-fixed": "#fdd34d",
+                        "on-secondary-fixed": "#4a2e00",
+                        "inverse-primary": "#fdd34d",
+                        "secondary-container": "#ffc87f",
+                        "on-error": "#ffffff"
+                    },
+                    fontFamily: { "headline": ["LINE Seed Sans TH"], "body": ["LINE Seed Sans TH"], "label": ["LINE Seed Sans TH"] },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="min-h-screen pb-32">
+
+
+    <div id="loading-overlay"
+        class="fixed inset-0 z-[200] flex flex-col items-center justify-center transition-opacity duration-300 gap-4">
+        <div class="loader-container">
+            <div class="loader-ring"></div>
+            <div class="loader-dot"></div>
+        </div>
+        <p class="text-primary font-bold tracking-widest text-sm animate-pulse">กำลังโหลดข้อมูล...</p>
+    </div>
+
+
+    <div id="login-overlay"
+        class="hidden fixed inset-0 z-[150] bg-gradient-to-br from-[#ffffd3] to-[#ffeeb0] flex-col items-center justify-center p-6 text-center">
+        <div class="glass-card p-10 max-w-sm w-full space-y-6">
+            <span class="material-symbols-outlined text-6xl text-primary mb-2 drop-shadow-md">routine</span>
+            <h1 class="text-3xl font-extrabold text-[#7a6100] tracking-tight drop-shadow-sm">Radiant Morning</h1>
+            <p class="text-on-surface-variant text-sm border-b pb-6 border-outline-variant/30">เข้าสู่ระบบด้วย LINE
+                เพื่อเริ่มต้นเช็คอินรายวันและรับของรางวัลพิเศษ</p>
+            <button onclick="loginLine()"
+                class="w-full bg-[#06C755] hover:bg-[#05b34c] text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[inset_0px_2px_4px_rgba(255,255,255,0.3),_0px_6px_10px_rgba(6,199,85,0.3)] active:scale-95">
+                เข้าสู่ระบบด้วย LINE
+            </button>
+        </div>
+    </div>
+
+
+    <div id="pdpa-overlay"
+        class="hidden fixed inset-0 z-[140] bg-black/40 backdrop-blur-md flex-col items-center justify-center p-4">
+        <div class="glass-card bg-white/60 p-8 max-w-sm w-full space-y-6 relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 text-primary opacity-10">
+                <span class="material-symbols-outlined text-9xl drop-shadow-lg">policy</span>
+            </div>
+            <h2 class="text-2xl font-bold text-amber-900">ข้อตกลงและนโยบายความเป็นส่วนตัว</h2>
+            <div class="h-40 overflow-y-auto text-sm text-on-surface-variant pr-2 space-y-2">
+                <p>ยินดีต้อนรับสู่ Radiant Morning!</p>
+                <p>การเข้าใช้งานแอปพลิเคชันนี้ ถือว่าคุณยินยอมให้เราเก็บรวบรวมและใช้ข้อมูลโปรไฟล์ของคุณ (ชื่อ, รูปภาพ,
+                    สถานะ) จาก LINE เพื่อให้บริการระบบเช็คอินและการแจกรางวัล</p>
+                <p>เราเคารพความเป็นส่วนตัวของคุณตามข้อบังคับ PDPA และทำให้มั่นใจว่าข้อมูลของคุณถูกจัดเก็บอย่างปลอดภัย
+                </p>
+            </div>
+            <button onclick="acceptPdpa()"
+                class="w-full neo-btn py-3 px-4 rounded-xl font-bold transition-all shadow-md active:scale-95">
+                ฉันยอมรับและทำต่อ
+            </button>
+        </div>
+    </div>
+
+
+    <header
+        class="fixed top-0 w-full z-40 bg-yellow-50/80 backdrop-blur-xl transition-all duration-300 shadow-none hidden"
+        id="header">
+        <div class="flex items-center justify-between px-6 py-4 w-full max-w-screen-xl mx-auto">
+            <div class="flex items-center gap-3">
+                <div id="avatar-container" onclick="openProfileActions()"
+                    class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden cursor-pointer ring-2 ring-transparent hover:ring-primary transition-all">
+                    <img id="user-avatar" alt="User photo" class="w-full h-full object-cover"
+                        src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" />
+                </div>
+                <h1 class="text-amber-900 font-bold tracking-tight font-headline text-lg truncate w-32"
+                    id="user-greeting">Welcome</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="px-4 py-1.5 rounded-full bg-primary-container/40 flex items-center gap-2 border border-primary/10 transition-transform duration-300"
+                    id="points-badge">
+                    <span class="material-symbols-outlined text-primary scale-75"
+                        style="font-variation-settings: 'FILL' 1;">redeem</span>
+                    <span class="text-amber-900 font-semibold font-label" id="user-points">0 pts</span>
+                </div>
+                <!-- Admin Button Button -->
+                <button id="header-admin-btn" onclick="openAdminModal()"
+                    class="hidden bg-[#7a6100] text-white w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#6c5600] shadow-sm transition-all"
+                    title="Admin Control">
+                    <span class="material-symbols-outlined text-sm">settings</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content" class="pt-24 px-6 max-w-screen-md mx-auto space-y-8 hidden">
+
+
+        <section id="main-goal-card"
+            class="relative overflow-hidden bg-gradient-to-br from-[#8b6b1d] to-[#6b5010] p-8 rounded-2xl shadow-[0_10px_30px_rgba(139,107,29,0.3)] text-on-primary">
+            <div class="relative z-10" id="goal-card-content">
+                <span
+                    class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold tracking-widest uppercase mb-4">เป้าหมายหลัก</span>
+                <h2 class="text-2xl font-extrabold mb-2 leading-tight drop-shadow-md">เริ่มต้นสิ่งดีๆ ได้ทุกวัน!</h2>
+                <p class="text-white/80 mb-6 font-medium text-sm drop-shadow-sm">
+                    เช็คอินเพื่อสะสมคะแนนและรับของรางวัลสุดพิเศษ</p>
+                <button onclick="shareApp()"
+                    class="px-4 py-2 bg-white/20 hover:bg-white/30 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4),_0_2px_4px_rgba(0,0,0,0.2)] rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-[16px]">share</span> ชวนเพื่อน
+                </button>
+            </div>
+
+            <div class="absolute -right-8 -bottom-8 opacity-20 transform rotate-12 pointer-events-none"
+                id="goal-card-bg-icon">
+                <span class="material-symbols-outlined text-[12rem]">sunny</span>
+            </div>
+        </section>
+
+
+        <section class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-on-surface drop-shadow-sm">ปฏิทินเดือน <span
+                        id="calendar-month-label">...</span></h3>
+                <span class="text-xs neo-btn px-3 py-1.5 rounded-lg font-bold" id="today-point-label">วันนี้: 50
+                    คะแนน</span>
+            </div>
+            <div class="neo-card p-6 border-b-4 border-r-4 border-[#e9e4d5]">
+                <div class="grid grid-cols-7 gap-2 text-center mb-4">
+                    <span class="text-[#a74727] text-xs font-bold drop-shadow-sm">อา</span>
+                    <span class="text-on-surface-variant text-xs font-bold drop-shadow-sm">จ</span>
+                    <span class="text-on-surface-variant text-xs font-bold drop-shadow-sm">อ</span>
+                    <span class="text-on-surface-variant text-xs font-bold drop-shadow-sm">พ</span>
+                    <span class="text-on-surface-variant text-xs font-bold drop-shadow-sm">พฤ</span>
+                    <span class="text-on-surface-variant text-xs font-bold drop-shadow-sm">ศ</span>
+                    <span class="text-tertiary-dim text-xs font-bold drop-shadow-sm">ส</span>
+                </div>
+                <div class="grid grid-cols-7 gap-2" id="calendar-grid">
+                    <!-- Javascript will populate days here -->
+                </div>
+            </div>
+        </section>
+
+
+        <section class="space-y-4 mt-8">
+            <h3 class="text-xl font-bold text-on-surface drop-shadow-sm">กิจกรรมพิเศษเร็วๆ นี้</h3>
+            <div id="highlight-container" class="space-y-3">
+                <!-- Javascript will populate highlights here -->
+            </div>
+        </section>
+
+
+        <section class="space-y-4 mt-8">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-on-surface drop-shadow-sm">ของรางวัลแนะนำ</h3>
+            </div>
+            <div id="rewards-carousel" class="flex gap-4 overflow-x-auto snap-x hide-scrollbar pb-6 -mr-6 pr-6">
+                <!-- Javascript will populate rewards here -->
+            </div>
+        </section>
+
+    </main>
+
+
+    <button id="daily-checkin-btn" onclick="performCheckin()"
+        class="hidden fixed bottom-28 right-6 w-16 h-16 rounded-[1.2rem] neo-btn flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40"
+        title="Check-in">
+        <span class="material-symbols-outlined text-3xl drop-shadow-md">add</span>
+    </button>
+
+
+    <div
+        class="fixed top-0 right-0 -z-10 w-[300px] h-[300px] bg-primary-container/20 blur-[100px] rounded-full pointer-events-none">
+    </div>
+    <div
+        class="fixed bottom-0 left-0 -z-10 w-[400px] h-[400px] bg-tertiary-container/10 blur-[120px] rounded-full pointer-events-none">
+    </div>
+
+
+    <div id="admin-modal"
+        class="hidden fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col transform scale-95 transition-transform duration-300"
+            id="admin-modal-content">
+
+            <div class="p-5 bg-gradient-to-r from-gray-800 to-gray-900 text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined">admin_panel_settings</span>
+                    <h2 class="text-lg font-bold font-headline">ระบบจัดการ (Admin)</h2>
+                </div>
+
+                <button onclick="logoutLine()"
+                    class="flex items-center gap-1 bg-red-600 hover:bg-red-700 font-bold px-3 py-1 rounded text-xs transition-colors shadow">
+                    <span class="material-symbols-outlined text-sm">logout</span> ออกจากระบบ
+                </button>
+                <button onclick="closeAdminModal()" class="p-1 hover:bg-white/20 rounded-full transition-colors ml-2">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+
+            <div class="flex border-b border-gray-200 text-sm font-medium bg-white overflow-x-auto hide-scrollbar">
+                <button onclick="switchAdminTab('schedule')" id="tab-btn-schedule"
+                    class="admin-tab-btn flex-1 whitespace-nowrap px-3 py-3 text-blue-600 border-b-2 border-blue-600">จัดการคะแนน</button>
+                <button onclick="switchAdminTab('users')" id="tab-btn-users"
+                    class="admin-tab-btn flex-1 whitespace-nowrap px-3 py-3 text-gray-500 border-b-2 border-transparent hover:text-gray-700">ผู้ใช้งาน</button>
+                <button onclick="switchAdminTab('rewards')" id="tab-btn-rewards"
+                    class="admin-tab-btn flex-1 whitespace-nowrap px-3 py-3 text-gray-500 border-b-2 border-transparent hover:text-gray-700">ของรางวัล</button>
+                <button onclick="switchAdminTab('redeem')" id="tab-btn-redeem"
+                    class="admin-tab-btn flex-1 whitespace-nowrap px-3 py-3 text-gray-500 border-b-2 border-transparent hover:text-gray-700 relative">คำขอ
+                    <span id="admin-redeem-badge"
+                        class="hidden absolute top-2 right-1 bg-red-500 text-white rounded-full px-1.5 py-0.5 text-[9px]">0</span></button>
+            </div>
+
+
+            <div class="p-6 overflow-y-auto max-h-[70vh] bg-gray-50">
+
+
+                <div id="tab-content-schedule" class="admin-tab-content space-y-6">
+                    <div class="space-y-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <h3 class="font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm text-[#7a6100]">tune</span>
+                            ตั้งค่าคะแนนพื้นฐาน (สำหรับวันปกติ)
+                        </h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex gap-2">
+                                <div class="flex-1">
+                                    <label
+                                        class="block text-[10px] font-semibold text-gray-500 mb-1">คะแนนพื้นฐาน</label>
+                                    <input type="number" id="admin-default-points" placeholder="คะแนนพื้นฐาน (เช่น 50)"
+                                        class="w-full text-sm rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-[10px] font-semibold text-gray-500 mb-1">ไอคอน / รูปภาพ
+                                        (URL)</label>
+                                    <input type="text" id="admin-default-icon" placeholder="add หรือ http..."
+                                        class="w-full text-sm rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                            </div>
+                            <button onclick="saveDefaultPoints()"
+                                class="w-full neo-btn !bg-[#8b6b1d] !from-[#8b6b1d] !to-[#6b5010] text-white font-bold px-4 py-2.5 rounded-lg text-xs whitespace-nowrap active:scale-95 shadow-sm transition-transform">บันทึกค่าเริ่มต้น</button>
+                        </div>
+                    </div>
+                    <div class="space-y-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <h3 class="font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm text-blue-600">edit_calendar</span>
+                            ตั้งค่าคะแนนและกิจกรรมรายวัน
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">เลือกวันที่</label>
+                            <input type="date" id="admin-date-input"
+                                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">หัวข้อ/กิจกรรม</label>
+                            <input type="text" id="admin-topic-input" placeholder="เช่น โบนัสพิเศษวันหยุด"
+                                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">คะแนนที่จะแจก</label>
+                                <input type="number" id="admin-points-input" placeholder="เช่น 50"
+                                    class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">ไอคอน / รูปภาพ
+                                    (URL)</label>
+                                <input type="text" id="admin-daily-icon" placeholder="icon_name หรือ รูป http..."
+                                    class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <button onclick="saveDailyRewards()"
+                            class="w-full neo-btn !bg-blue-600 !from-blue-600 !to-blue-700 !shadow-[4px_4px_8px_#c3c3c3,_-4px_-4px_8px_#ffffff] px-4 py-3 rounded-xl font-bold transition-all flex justify-center items-center gap-2 active:scale-95 text-white">
+                            <span class="material-symbols-outlined text-sm">save</span> บันทึกการตั้งค่า
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="font-bold text-sm text-gray-700">รายการที่ตั้งค่าไว้</h4>
+                        <div id="admin-schedule-history" class="space-y-2 text-sm">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div id="admin-schedule-pagination"
+                            class="flex flex-wrap justify-center items-center gap-1 mt-4"></div>
+                    </div>
+                </div>
+
+
+                <div id="tab-content-users" class="admin-tab-content hidden space-y-4">
+                    <div class="flex gap-2">
+                        <input type="text" id="admin-user-search" placeholder="ค้นหาชื่อผู้ใช้หรือเบอร์โทร..."
+                            class="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="loadAdminUsers(1)"
+                            class="neo-btn !bg-gray-800 !from-gray-700 !to-gray-900 px-3 py-2 rounded-lg"><span
+                                class="material-symbols-outlined text-sm text-white">search</span></button>
+                    </div>
+                    <div id="admin-user-results" class="space-y-3">
+                        <p class="text-xs text-gray-500 text-center py-4 italic">กรุณารอสักครู่...</p>
+                    </div>
+
+                    <div id="admin-user-pagination" class="flex flex-wrap justify-center items-center gap-1 mt-4 pb-2">
+                    </div>
+                </div>
+
+
+                <div id="tab-content-rewards" class="admin-tab-content hidden space-y-6">
+                    <div class="space-y-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <h3 class="font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm text-[#a74727]">add_box</span>
+                            เพิ่มของรางวัลแนะนำ
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">ชื่อรางวัล</label>
+                            <input type="text" id="admin-reward-title" placeholder="เช่น E-Coupon ลด 50%"
+                                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1">รายละเอียด</label>
+                            <textarea id="admin-reward-desc" rows="2" placeholder="ใส่ข้อมูลเพิ่มเติม..."
+                                class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">คะแนนที่ใช้แลก</label>
+                                <input type="number" id="admin-reward-points" placeholder="5000"
+                                    class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">ไอคอน / รูปภาพ
+                                    (URL)</label>
+                                <input type="text" id="admin-reward-icon" placeholder="redeem หรือ http..."
+                                    class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
+                        </div>
+                        <button onclick="saveRewardSpotlight()"
+                            class="w-full neo-btn !bg-[#8b5a00] !from-[#8b5a00] !to-[#694300] !shadow-[4px_4px_8px_#c3c3c3,_-4px_-4px_8px_#ffffff] px-4 py-3 rounded-xl font-bold transition-all flex justify-center items-center gap-2 active:scale-95 text-white">
+                            <span class="material-symbols-outlined text-sm">add_circle</span> บันทึกของรางวัล
+                        </button>
+                    </div>
+                </div>
+
+
+                <div id="tab-content-redeem" class="admin-tab-content hidden space-y-4">
+                    <h3 class="font-bold text-gray-800 border-b pb-2 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-red-600">notifications_active</span>
+                        คำขอแลกของรางวัล
+                    </h3>
+                    <div id="admin-redeem-results" class="space-y-3">
+                        <p class="text-xs text-gray-500 text-center py-4 italic">กำลังโหลดคำขอที่รออนุมัติ...</p>
+                    </div>
+                    <div id="admin-redeem-pagination" class="flex flex-wrap justify-center items-center gap-1 mt-4">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        // Config 
+        const LIFF_ID = "2009451841-H2LBYTlm";
+        const SUPABASE_URL = "https://cvekhhdlklnvoreozist.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2ZWtoaGRsa2xudm9yZW96aXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NDEyNzksImV4cCI6MjA4NDQxNzI3OX0.A2tZb4Dh4QqZPI9pcjKWzJEAwEfrzIu6i_jyPo2NUsM";
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let userProfile = null;
+        let liffProfile = null;
+        let checkinLogsMap = {};
+        let monthlyConfigMap = {};
+        let pointsForToday = 50;
+        let globalDefaultPoints = 50;
+        let hasCheckedInToday = false;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeLiff();
+
+
+            document.getElementById('admin-date-input').value = getLocalIsoDate();
+        });
+
+
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID, withLoginOnExternalBrowser: true });
+                await liff.ready;
+                if (liff.isLoggedIn()) {
+                    liffProfile = await liff.getProfile();
+
+                    // Try to get email from ID Token
+                    const idToken = liff.getDecodedIDToken();
+                    if (idToken && idToken.email) {
+                        liffProfile.email = idToken.email;
+                    }
+
+                    await authenticateUser(liffProfile);
+                } else {
+                    hideLoader();
+                    document.getElementById('login-overlay').classList.remove('hidden');
+                    document.getElementById('login-overlay').classList.add('flex');
+                }
+            } catch (err) {
+                console.error("LIFF Init Error:", err);
+                Swal.fire('Error', 'Failed to initialize app', 'error');
+            }
+        }
+
+        function loginLine() {
+            liff.login();
+        }
+
+        async function logoutLine() {
+            if (liff.isLoggedIn()) {
+                liff.logout();
+                await Swal.fire({
+                    title: 'ออกจากระบบสำเร็จ',
+                    text: 'คุณได้ออกจากระบบเรียบร้อยแล้ว',
+                    icon: 'success',
+                    confirmButtonColor: '#7a6100'
+                });
+                window.location.reload();
+            }
+        }
+
+        async function authenticateUser(liffData) {
+            try {
+
+                let { data: profile, error } = await supabaseClient.from('user_profiles').select('*').eq('userId', liffData.userId).single();
+
+                if (!profile && error && error.code === 'PGRST116') {
+
+                    const { data: newProfile, error: insertErr } = await supabaseClient.from('user_profiles').insert({
+                        userId: liffData.userId,
+                        displayName: liffData.displayName,
+                        pictureUrl: liffData.pictureUrl,
+                        statusMessage: liffData.statusMessage,
+                        email: liffData.email || null,
+                        points: 0,
+                        role: 'user',
+                        pdpa_accepted: false,
+                        updated_at: new Date().toISOString()
+                    }).select().single();
+
+                    if (insertErr) throw insertErr;
+                    profile = newProfile;
+                } else if (!profile) {
+                    throw error;
+                }
+
+                userProfile = profile;
+                if (liffData.email && !userProfile.email) {
+                    userProfile.email = liffData.email;
+
+                    supabaseClient.from('user_profiles').update({ email: liffData.email }).eq('userId', userProfile.userId).then();
+                }
+
+
+                document.getElementById('user-greeting').innerText = liffData.displayName;
+                if (liffData.pictureUrl) {
+                    document.getElementById('user-avatar').src = liffData.pictureUrl;
+                }
+                updatePointsDisplay(profile.points);
+
+
+                if (profile.role === 'admin') {
+                    document.getElementById('header-admin-btn').classList.remove('hidden');
+                }
+
+                hideLoader();
+
+
+                if (!profile.pdpa_accepted) {
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('pdpa-overlay').classList.remove('hidden');
+                    document.getElementById('pdpa-overlay').classList.add('flex');
+                } else {
+                    enterMainApp();
+                }
+
+            } catch (e) {
+                console.error("Auth error", e);
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลโปรไฟล์ได้', 'error');
+                hideLoader();
+            }
+        }
+
+        async function acceptPdpa() {
+            showLoader();
+            const { error } = await supabaseClient.from('user_profiles').update({ pdpa_accepted: true, updated_at: new Date().toISOString() }).eq('userId', userProfile.userId);
+            if (!error) {
+                userProfile.pdpa_accepted = true;
+                document.getElementById('pdpa-overlay').classList.add('hidden');
+                document.getElementById('pdpa-overlay').classList.remove('flex');
+                enterMainApp();
+            } else {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกการยอมรับข้อตกลงได้', 'error');
+            }
+            hideLoader();
+        }
+
+        async function enterMainApp() {
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('login-overlay').classList.remove('flex');
+
+            document.getElementById('header').classList.remove('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+
+            await loadDefaultSetting();
+            await loadCalendarData();
+            await loadHighlights();
+            await loadRewards();
+
+            checkBirthdayEvent();
+            subscribeToRealtimeData();
+
+            if (userProfile?.role === 'admin') {
+                updateRedemptionBadge();
+            }
+        }
+
+
+        function subscribeToRealtimeData() {
+            if (!userProfile?.userId) return;
+
+
+            supabaseClient
+                .channel('public:user_profiles')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_profiles', filter: `userId=eq.${userProfile.userId}` }, payload => {
+                    if (payload.new && typeof payload.new.points !== 'undefined') {
+                        userProfile.points = payload.new.points;
+                        updatePointsDisplay(payload.new.points);
+                    }
+                })
+                .subscribe();
+
+
+            supabaseClient
+                .channel('public:daily_config')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_config' }, () => {
+                    loadCalendarData();
+                    loadHighlights();
+                    const adminScheduleTab = document.getElementById('tab-content-schedule');
+                    if (adminScheduleTab && !adminScheduleTab.classList.contains('hidden')) {
+                        loadAdminDailyHistory();
+                    }
+                })
+                .subscribe();
+
+
+            supabaseClient
+                .channel('public:rewards')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'rewards' }, () => {
+                    loadRewards();
+                })
+                .subscribe();
+
+
+            supabaseClient
+                .channel('public:checkin_logs')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkin_logs', filter: `userId=eq.${userProfile.userId}` }, () => {
+                    loadCalendarData();
+                })
+                .subscribe();
+
+
+            if (userProfile?.role === 'admin') {
+                supabaseClient
+                    .channel('public:reward_redemptions')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'reward_redemptions' }, () => {
+                        updateRedemptionBadge();
+                        const adminRedeemTab = document.getElementById('tab-content-redeem');
+                        if (adminRedeemTab && !adminRedeemTab.classList.contains('hidden')) {
+                            loadAdminRedemptions();
+                        }
+                    })
+                    .subscribe();
+            }
+        }
+
+
+        function getLocalIsoDate() {
+            const d = new Date();
+            return new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        }
+
+        async function loadCalendarData() {
+            const todayISO = getLocalIsoDate();
+
+            const [y, m] = todayISO.split('-');
+            const firstDayOfMonth = `${y}-${m}-01`;
+            const lastDay = new Date(y, m, 0).getDate();
+            const lastDayOfMonth = `${y}-${m}-${lastDay}`;
+
+
+            const { data: configs } = await supabaseClient.from('daily_config').select('*').gte('checkin_date', firstDayOfMonth).lte('checkin_date', lastDayOfMonth);
+            monthlyConfigMap = {};
+            if (configs) {
+                configs.forEach(c => monthlyConfigMap[c.checkin_date] = c);
+            }
+
+            const todayConfig = monthlyConfigMap[todayISO];
+            pointsForToday = todayConfig ? todayConfig.points_reward : globalDefaultPoints;
+
+            const { data: logs } = await supabaseClient.from('checkin_logs').select('checkin_date, points_awarded').eq('userId', userProfile.userId);
+
+            checkinLogsMap = {};
+            if (logs) logs.forEach(log => checkinLogsMap[log.checkin_date] = log.points_awarded);
+
+            hasCheckedInToday = !!checkinLogsMap[todayISO];
+            const checkinBtn = document.getElementById('daily-checkin-btn');
+            if (!hasCheckedInToday) {
+                checkinBtn.classList.remove('hidden');
+                const todayIcon = todayConfig?.icon_or_image || (await supabaseClient.from('daily_config').select('icon_or_image').eq('checkin_date', '2000-01-01').single().then(r => r.data?.icon_or_image)) || 'add';
+                if (todayIcon) {
+                    if (todayIcon.startsWith('http') || todayIcon.startsWith('data:')) {
+                        checkinBtn.innerHTML = `<img src="${todayIcon}" class="w-full h-full object-cover rounded-[1.2rem] shadow-sm">`;
+                    } else {
+                        checkinBtn.innerHTML = `<span id="daily-checkin-icon" class="material-symbols-outlined text-3xl drop-shadow-md">${todayIcon}</span>`;
+                    }
+                } else {
+                    checkinBtn.innerHTML = `<span id="daily-checkin-icon" class="material-symbols-outlined text-3xl drop-shadow-md">add</span>`;
+                }
+            } else {
+                checkinBtn.classList.add('hidden');
+            }
+
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            const todayStr = getLocalIsoDate();
+
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            document.getElementById('calendar-month-label').innerText = `${thaiMonths[currentMonth]} ${currentYear + 543}`;
+
+            document.getElementById('today-point-label').innerText = `วันนี้: ${pointsForToday} คะแนน`;
+
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+            const startingDayOfWeek = firstDay.getDay(); // 0 (Sun) to 6 (Sat)
+
+
+            const prevLastDay = new Date(currentYear, currentMonth, 0).getDate();
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const dayNum = prevLastDay - i;
+                grid.innerHTML += `<div class="aspect-square flex items-center justify-center text-on-surface-variant/30 text-sm font-medium opacity-50"><span class="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center">${dayNum}</span></div>`;
+            }
+
+
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+
+                const iterDate = new Date(currentYear, currentMonth, i);
+                const iterDateStr = new Date(iterDate.getTime() - (iterDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+
+                const isToday = iterDateStr === todayStr;
+                const isCheckedIn = !!checkinLogsMap[iterDateStr];
+                const configItem = monthlyConfigMap[iterDateStr];
+
+                let classes = "aspect-square flex items-center justify-center relative font-medium text-sm transition-all ";
+                let innerHtml = i;
+
+                if (isCheckedIn) {
+                    classes += "bg-primary-container text-on-primary-container rounded-full shadow-sm ";
+                    innerHtml = `${i} <span class="absolute -top-1 -right-1 material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">star</span>`;
+                } else if (isToday) {
+                    classes += "bg-surface-container-highest rounded-full border-2 border-primary text-on-surface ring-2 ring-primary/20 ";
+                } else {
+                    classes += "text-on-surface ";
+                }
+
+
+                if (configItem) {
+                    if (!isCheckedIn) {
+                        innerHtml += `<span class="absolute -bottom-2 text-orange-500 material-symbols-outlined text-[16px] animate-bounce" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>`;
+                    } else {
+                        innerHtml += `<span class="absolute -bottom-2 text-tertiary material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>`;
+                    }
+                }
+
+                grid.innerHTML += `<div class="${classes}">${innerHtml}</div>`;
+            }
+        }
+
+
+        async function performCheckin() {
+            if (hasCheckedInToday) return;
+
+            showLoader();
+            const todayISO = getLocalIsoDate();
+
+            try {
+
+                const { error: logErr } = await supabaseClient.from('checkin_logs').insert({
+                    userId: userProfile.userId,
+                    checkin_date: todayISO,
+                    points_awarded: pointsForToday
+                });
+
+                if (logErr) throw logErr;
+
+
+                const newPoints = userProfile.points + pointsForToday;
+                const { error: updateErr } = await supabaseClient.from('user_profiles').update({
+                    points: newPoints,
+                    last_activity: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }).eq('userId', userProfile.userId);
+
+                if (updateErr) throw updateErr;
+
+
+                userProfile.points = newPoints;
+                checkinLogsMap[todayISO] = pointsForToday;
+                hasCheckedInToday = true;
+
+                updatePointsDisplay(newPoints);
+                renderCalendar();
+                document.getElementById('daily-checkin-btn').classList.add('hidden');
+
+                Swal.fire({
+                    title: 'Awesome!',
+                    text: `คุณเช็คอินสำเร็จและได้รับคะแนนสะสมแล้ว ${pointsForToday} points!`,
+                    icon: 'success',
+                    confirmButtonColor: '#7a6100'
+                });
+
+
+                const notifyMsg = `<b>⭐ New Check-in!</b>\nUser: ${userProfile.displayName}\nDate: ${todayISO}\nPoints earned: ${pointsForToday}\nTotal points: ${newPoints}`;
+                try {
+                    await supabaseClient.functions.invoke('telegram-notify', {
+                        body: { message: notifyMsg }
+                    });
+                } catch (e) {
+                    console.log("Could not trigger telegram hook, moving on.", e);
+                }
+
+            } catch (err) {
+                console.error(err);
+                if (err.code === '23505') { // unique violation
+                    Swal.fire('ข้อมูล', 'คุณได้เช็คอินของวันนี้ไปเรียบร้อยแล้ว', 'info');
+                    hasCheckedInToday = true;
+                    document.getElementById('daily-checkin-btn').classList.add('hidden');
+                } else {
+                    Swal.fire('ขออภัย...', 'เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง', 'error');
+                }
+            }
+            hideLoader();
+        }
+
+        async function shareApp() {
+            if (liff.isApiAvailable("shareTargetPicker")) {
+                try {
+                    const result = await liff.shareTargetPicker([
+                        {
+                            "type": "flex",
+                            "altText": "ชวนคุณมาเช็คอินรับรางวัลที่ Radiant Morning!",
+                            "contents": {
+                                "type": "bubble",
+                                "hero": {
+                                    "type": "image",
+                                    "url": "https://i.pinimg.com/1200x/2a/f4/cc/2af4cccd153d0bd28d93641828c8bea8.jpg",
+                                    "size": "full",
+                                    "aspectRatio": "20:13",
+                                    "aspectMode": "cover"
+                                },
+                                "body": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "contents": [
+                                        {
+                                            "type": "text",
+                                            "text": "กิจกรรมเช็คอินรายวัน",
+                                            "weight": "bold",
+                                            "size": "xl",
+                                            "color": "#7a6100"
+                                        },
+                                        {
+                                            "type": "text",
+                                            "text": `สวัสดี! ฉันเพิ่งสะสมคะแนนได้ที่ Radiant Morning เข้ามาเช็คอินต่อเนื่องเพื่อรับของรางวัลพิเศษด้วยกันสิ!`,
+                                            "wrap": true,
+                                            "color": "#656554",
+                                            "size": "sm",
+                                            "margin": "md"
+                                        }
+                                    ]
+                                },
+                                "footer": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "spacing": "sm",
+                                    "contents": [
+                                        {
+                                            "type": "button",
+                                            "style": "primary",
+                                            "color": "#fdd34d",
+                                            "height": "sm",
+                                            "action": {
+                                                "type": "uri",
+                                                "label": "เริ่มใช้งานเลย",
+                                                "uri": "https://line.me/R/app/" + LIFF_ID
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]);
+                    if (result) {
+                        Swal.fire({ title: 'แชร์สำเร็จ!', 'icon': 'success', timer: 1500, showConfirmButton: false });
+                    }
+                } catch (e) {
+                    console.error("Share fail:", e);
+                }
+            } else {
+                Swal.fire('ประกาศ', 'อุปกรณ์หรือแพลตฟอร์มนี้ไม่รองรับการแชร์ (Share Target Picker)', 'warning');
+            }
+        }
+
+
+        const adminModal = document.getElementById('admin-modal');
+        const modalContent = document.getElementById('admin-modal-content');
+
+        function openAdminModal() {
+            adminModal.classList.remove('hidden');
+            adminModal.classList.add('flex');
+            setTimeout(() => {
+                adminModal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                loadAdminDailyHistory();
+            }, 10);
+        }
+
+        function closeAdminModal() {
+            adminModal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                adminModal.classList.add('hidden');
+                adminModal.classList.remove('flex');
+            }, 300);
+        }
+
+        async function saveDailyRewards() {
+            const dateVal = document.getElementById('admin-date-input').value;
+            const topicVal = document.getElementById('admin-topic-input').value || 'Daily Check-in';
+            const pointsVal = parseInt(document.getElementById('admin-points-input').value, 10);
+            const iconVal = document.getElementById('admin-daily-icon').value.trim() || 'local_fire_department';
+
+            if (!dateVal || isNaN(pointsVal) || pointsVal <= 0) {
+                Swal.fire('Warning', 'Please enter a valid date and a positive points value.', 'warning');
+                return;
+            }
+
+            showLoader();
+
+            const { error } = await supabaseClient.from('daily_config').upsert({
+                checkin_date: dateVal,
+                topic: topicVal,
+                points_reward: pointsVal,
+                icon_or_image: iconVal
+            });
+
+            hideLoader();
+
+            if (error) {
+                Swal.fire('Error', 'Could not save configuration: ' + error.message, 'error');
+            } else {
+                Swal.fire('Success', `Reward for ${dateVal} updated to ${pointsVal} pts!`, 'success');
+
+                if (dateVal === getLocalIsoDate()) {
+                    await loadCalendarData();
+                    await loadHighlights();
+                }
+                loadAdminDailyHistory();
+            }
+        }
+
+        async function loadDefaultSetting() {
+            const { data } = await supabaseClient.from('daily_config').select('points_reward, icon_or_image').eq('checkin_date', '2000-01-01').single();
+            if (data) {
+                if (data.points_reward) {
+                    globalDefaultPoints = data.points_reward;
+                    const input = document.getElementById('admin-default-points');
+                    if (input) input.value = globalDefaultPoints;
+                }
+                if (data.icon_or_image) {
+                    const iconInput = document.getElementById('admin-default-icon');
+                    if (iconInput) iconInput.value = data.icon_or_image;
+                }
+            }
+        }
+
+        async function saveDefaultPoints() {
+            const pts = parseInt(document.getElementById('admin-default-points').value, 10);
+            const icon = document.getElementById('admin-default-icon').value.trim() || 'add';
+            if (!pts || isNaN(pts) || pts <= 0) return Swal.fire('Error', 'กรุณาระบุคะแนนที่ถูกต้อง', 'error');
+
+            showLoader();
+            const { error } = await supabaseClient.from('daily_config').upsert({
+                checkin_date: '2000-01-01',
+                topic: 'Default Check-in',
+                points_reward: pts,
+                icon_or_image: icon
+            });
+            hideLoader();
+
+            if (!error) {
+                globalDefaultPoints = pts;
+                Swal.fire('สำเร็จ', 'บันทึกคะแนนและไอคอนพื้นฐานเรียบร้อยแล้ว', 'success');
+                await loadCalendarData();
+                await loadHighlights();
+            } else {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+
+
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.admin-tab-btn').forEach(b => {
+                b.classList.remove('text-blue-600', 'border-blue-600');
+                b.classList.add('text-gray-500', 'border-transparent');
+            });
+            document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+
+            document.getElementById('tab-btn-' + tab).classList.remove('text-gray-500', 'border-transparent');
+            document.getElementById('tab-btn-' + tab).classList.add('text-blue-600', 'border-blue-600');
+            document.getElementById('tab-content-' + tab).classList.remove('hidden');
+
+            if (tab === 'schedule') {
+                loadAdminDailyHistory();
+                loadDefaultSetting();
+            }
+            if (tab === 'redeem') loadAdminRedemptions();
+            if (tab === 'users') loadAdminUsers(1);
+        }
+
+        function formatDateThai(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        const ADMIN_PAGE_SIZE = 50;
+
+        function renderPaginationButtons(containerId, currentPage, totalCount, onPageClick) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            const totalPages = Math.ceil(totalCount / ADMIN_PAGE_SIZE);
+            if (totalPages <= 1) return;
+
+            const btnBaseClass = "min-w-[32px] h-8 px-2 flex items-center justify-center rounded-lg text-xs font-bold transition-all shadow-sm active:scale-90 border";
+            const activeClass = "bg-[#7a6100] text-white border-[#7a6100]";
+            const inactiveClass = "bg-white text-gray-600 border-gray-200 hover:bg-gray-50";
+
+
+            if (currentPage > 1) {
+                container.innerHTML += `<button onclick="${onPageClick}(1)" class="${btnBaseClass} ${inactiveClass}"><span class="material-symbols-outlined text-[16px]">first_page</span></button>`;
+                container.innerHTML += `<button onclick="${onPageClick}(${currentPage - 1})" class="${btnBaseClass} ${inactiveClass}"><span class="material-symbols-outlined text-[16px]">chevron_left</span></button>`;
+            }
+
+
+            let start = Math.max(1, currentPage - 2);
+            let end = Math.min(totalPages, start + 4);
+            if (end - start < 4) start = Math.max(1, end - 4);
+
+            for (let i = start; i <= end; i++) {
+                const isCurrent = i === currentPage;
+                container.innerHTML += `<button onclick="${onPageClick}(${i})" class="${btnBaseClass} ${isCurrent ? activeClass : inactiveClass}">${i}</button>`;
+            }
+
+
+            if (currentPage < totalPages) {
+                container.innerHTML += `<button onclick="${onPageClick}(${currentPage + 1})" class="${btnBaseClass} ${inactiveClass}"><span class="material-symbols-outlined text-[16px]">chevron_right</span></button>`;
+                container.innerHTML += `<button onclick="${onPageClick}(${totalPages})" class="${btnBaseClass} ${inactiveClass}"><span class="material-symbols-outlined text-[16px]">last_page</span></button>`;
+            }
+        }
+
+        let currentAdminSchedulePage = 1;
+        async function loadAdminDailyHistory(page = 1) {
+            currentAdminSchedulePage = page;
+            const container = document.getElementById('admin-schedule-history');
+            if (!container) return;
+            container.innerHTML = '<p class="text-xs text-gray-500 italic pb-4">กำลังโหลด...</p>';
+
+            const start = (page - 1) * ADMIN_PAGE_SIZE;
+            const end = start + ADMIN_PAGE_SIZE - 1;
+
+            const { data: configs, count, error } = await supabaseClient
+                .from('daily_config')
+                .select('*', { count: 'exact' })
+                .order('checkin_date', { ascending: false })
+                .range(start, end);
+
+            if (error) return container.innerHTML = '<p class="text-xs text-red-500">Error: ' + error.message + '</p>';
+
+            if (!configs || configs.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 py-4 text-center">ยังไม่มีการตั้งค่าไว้</p>';
+                return;
+            }
+            container.innerHTML = '';
+            configs.forEach(c => {
+                if (c.checkin_date === '2000-01-01') return; // Skip default config in history
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-2 border border-gray-100 rounded-xl shadow-[inset_1px_1px_2px_rgba(255,255,255,0.8),_1px_1px_4px_rgba(0,0,0,0.02)]">
+                        <div>
+                            <p class="font-bold text-gray-800 leading-tight text-xs">${c.topic}</p>
+                            <p class="text-[9px] text-gray-400 mt-0.5">${formatDateThai(c.checkin_date)}</p>
+                        </div>
+                        <span class="bg-amber-50 text-amber-700 text-[10px] font-extrabold px-2 py-1 rounded-lg border border-amber-100 shadow-sm">${c.points_reward} pts</span>
+                    </div>`;
+            });
+
+            renderPaginationButtons('admin-schedule-pagination', page, count, 'loadAdminDailyHistory');
+        }
+
+        async function loadAdminUsers(page = 1) {
+            currentAdminUserPage = page;
+            const query = document.getElementById('admin-user-search').value.trim();
+            showLoader();
+
+            let req = supabaseClient.from('user_profiles').select('*', { count: 'exact' });
+            if (query) {
+                req = req.or(`displayName.ilike.%${query}%,phone.ilike.%${query}%`);
+            }
+
+            const start = (page - 1) * ADMIN_PAGE_SIZE;
+            const end = start + ADMIN_PAGE_SIZE - 1;
+
+            const { data: users, count, error } = await req.order('created_at', { ascending: false }).range(start, end);
+            hideLoader();
+
+            const container = document.getElementById('admin-user-results');
+            container.innerHTML = '';
+            adminLoadedUsersMap = {};
+
+            if (error) return container.innerHTML = `<p class="text-xs text-red-500 p-4">${error.message}</p>`;
+
+            if (!users || users.length === 0) {
+                container.innerHTML = '<p class="text-xs text-red-500 text-center py-4">ไม่พบผู้ใช้งาน</p>';
+                return;
+            }
+
+            users.forEach(u => {
+                adminLoadedUsersMap[u.userId] = u;
+                container.innerHTML += `
+                    <div class="bg-white p-3 border border-gray-100 rounded-xl flex flex-col gap-2 shadow-sm relative pr-10">
+                        <button onclick="adminEditUserProfile('${u.userId}')" class="absolute top-3 right-3 text-gray-400 hover:text-blue-600 transition-colors" title="แก้ไขโปรไฟล์">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <div class="flex items-center gap-2">
+                                ${u.pictureUrl ? `<img src="${u.pictureUrl}" class="w-8 h-8 rounded-full object-cover">` : `<span class="material-symbols-outlined text-gray-400 text-2xl">person</span>`}
+                                <div>
+                                    <p class="font-bold text-gray-800 leading-tight text-sm">${u.displayName} ${u.role === 'admin' ? '<span class="text-[9px] bg-red-100 text-red-700 px-1 rounded">Admin</span>' : ''}</p>
+                                    <p class="text-[10px] text-gray-400">คะแนน: <span id="admin-pts-${u.userId}" class="font-bold text-blue-600">${u.points}</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <input type="number" id="admin-act-pts-${u.userId}" placeholder="ใส่แต้ม" class="w-20 text-[10px] p-1.5 border border-gray-200 rounded-lg focus:outline-none bg-gray-50 focus:ring-1 focus:ring-amber-500">
+                            <button onclick="updateUserPoints('${u.userId}', 'add')" class="flex-1 bg-green-50 text-green-700 hover:bg-green-100 text-[10px] font-extrabold py-2 rounded-lg transition-all active:scale-95">เพิ่ม</button>
+                            <button onclick="updateUserPoints('${u.userId}', 'sub')" class="flex-1 bg-red-50 text-red-700 hover:bg-red-100 text-[10px] font-extrabold py-2 rounded-lg transition-all active:scale-95">ลด</button>
+                        </div>
+                    </div>`;
+            });
+
+            renderPaginationButtons('admin-user-pagination', page, count, 'loadAdminUsers');
+        }
+
+        function adminEditUserProfile(uid) {
+            const u = adminLoadedUsersMap[uid];
+            if (!u) return;
+            Swal.fire({
+                title: 'จัดการผู้ใช้งาน',
+                html: `
+                    <div class="space-y-3 text-left">
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">ชื่อที่แสดง</label><input type="text" id="adm-prof-name" class="w-full border p-2 rounded text-sm" value="${u.displayName || ''}"></div>
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">สิทธิการใช้งาน</label>
+                            <select id="adm-prof-role" class="w-full border p-2 rounded text-sm">
+                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>User (ผู้ใช้ทั่วไป)</option>
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin (แอดมิน)</option>
+                            </select>
+                        </div>
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">อีเมล</label><input type="email" id="adm-prof-email" class="w-full border p-2 rounded text-sm" value="${u.email || ''}"></div>
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">เบอร์โทรศัพท์</label><input type="tel" id="adm-prof-phone" class="w-full border p-2 rounded text-sm" value="${u.phone || ''}" maxlength="10" placeholder="0XXXXXXXXX"></div>
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">วัน/เดือน/ปีเกิด</label><input type="date" id="adm-prof-birth" class="w-full border p-2 rounded text-sm" value="${u.birthdate || ''}"></div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'บันทึก',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#3b82f6',
+                preConfirm: () => {
+                    return {
+                        displayName: document.getElementById('adm-prof-name').value,
+                        role: document.getElementById('adm-prof-role').value,
+                        email: document.getElementById('adm-prof-email').value,
+                        phone: document.getElementById('adm-prof-phone').value,
+                        birthdate: document.getElementById('adm-prof-birth').value || null
+                    }
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoader();
+                    const d = result.value;
+                    const { error } = await supabaseClient.from('user_profiles').update(d).eq('userId', uid);
+                    hideLoader();
+                    if (!error) {
+                        Swal.fire('สำเร็จ', 'อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว', 'success');
+                        loadAdminUsers(currentAdminUserPage);
+                        if (uid === userProfile?.userId) {
+                            userProfile = { ...userProfile, ...d };
+                        }
+                    } else {
+                        Swal.fire('Error', error.message, 'error');
+                    }
+                }
+            });
+        }
+
+        async function updateUserPoints(uid, act) {
+            const amtElem = document.getElementById(`admin-act-pts-${uid}`);
+            const amt = parseInt(amtElem.value, 10);
+            if (!amt || isNaN(amt) || amt <= 0) {
+                Swal.fire('Error', 'Invalid amount', 'error'); return;
+            }
+            showLoader();
+            const { data: user } = await supabaseClient.from('user_profiles').select('points').eq('userId', uid).single();
+            let newPts = user.points;
+            if (act === 'add') newPts += amt;
+            if (act === 'sub') newPts = Math.max(0, newPts - amt);
+
+            const { error } = await supabaseClient.from('user_profiles').update({ points: newPts }).eq('userId', uid);
+            hideLoader();
+            if (!error) {
+                document.getElementById(`admin-pts-${uid}`).innerText = newPts;
+                amtElem.value = '';
+                Swal.fire({ title: 'Success', icon: 'success', text: 'Points updated!', timer: 1500 });
+            } else { Swal.fire('Error', error.message, 'error'); }
+        }
+
+        async function saveRewardSpotlight() {
+            const title = document.getElementById('admin-reward-title').value;
+            const desc = document.getElementById('admin-reward-desc').value;
+            const pts = parseInt(document.getElementById('admin-reward-points').value, 10);
+            const iconVal = document.getElementById('admin-reward-icon').value.trim() || 'redeem';
+
+            let icon_name = 'redeem';
+            let image_url = null;
+            if (iconVal.startsWith('http') || iconVal.startsWith('data:')) {
+                image_url = iconVal;
+                icon_name = null;
+            } else {
+                icon_name = iconVal;
+            }
+
+            if (!title || !pts || isNaN(pts) || pts <= 0) {
+                Swal.fire('Warning', 'Title and valid Points are required', 'warning'); return;
+            }
+
+            showLoader();
+            const { error } = await supabaseClient.from('rewards').insert({
+                title: title, description: desc, points_required: pts, icon_name: icon_name, image_url: image_url
+            });
+            hideLoader();
+            if (!error) {
+                Swal.fire('Success', 'Reward Spotlight created!', 'success');
+                document.getElementById('admin-reward-title').value = '';
+                document.getElementById('admin-reward-desc').value = '';
+                document.getElementById('admin-reward-points').value = '';
+                document.getElementById('admin-reward-icon').value = '';
+                await loadRewards();
+            } else { Swal.fire('Error', error.message, 'error'); }
+        }
+
+        async function loadHighlights() {
+            const todayISO = getLocalIsoDate();
+            const { data: configs } = await supabaseClient.from('daily_config').select('*').gte('checkin_date', todayISO).order('checkin_date', { ascending: true }).limit(5);
+
+            const container = document.getElementById('highlight-container');
+            container.innerHTML = '';
+
+            if (!configs || configs.length === 0) {
+                container.innerHTML = `
+                    <div class="neo-card p-5 flex items-center justify-between transition-all hover:-translate-y-1">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 bg-[#fadd7d] rounded-2xl flex items-center justify-center text-[#7a6100] drop-shadow-sm border border-[#fff4b3]">
+                                <span class="material-symbols-outlined text-3xl">local_activity</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-[#38392a] drop-shadow-sm">เช็คอินประจำวัน</h4>
+                                <p class="text-on-surface-variant text-sm flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-xs">stars</span> 50 คะแนนวันนี้
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="shareHighlightFlex('เช็คอินประจำวัน', 50)" class="w-12 h-12 bg-white rounded-full border border-gray-100 shadow-[inset_2px_2px_4px_#ffffff,_3px_3px_6px_#d8d3c8] flex items-center justify-center text-[#7a6100] active:shadow-[inset_3px_3px_6px_#d8d3c8] transition-all">
+                            <span class="material-symbols-outlined">share</span>
+                        </button>
+                    </div>`;
+                return;
+            }
+
+            configs.forEach(config => {
+                const isToday = config.checkin_date === todayISO;
+                const dateLabel = isToday ? 'วันนี้' : formatDateThai(config.checkin_date);
+                const bgClass = isToday ? 'neo-card !border-[#e6b745] !border-2' : 'neo-card';
+                const isImage = config.icon_or_image && (config.icon_or_image.startsWith('http') || config.icon_or_image.startsWith('data:'));
+                const iconHtml = isImage ? `<img src="${config.icon_or_image}" class="w-full h-full object-cover">` : `<span class="material-symbols-outlined text-2xl">${config.icon_or_image || (isToday ? 'event_available' : 'event')}</span>`;
+
+                container.innerHTML += `
+                    <div class="${bgClass} p-5 flex items-center justify-between transition-all hover:-translate-y-1 relative overflow-hidden">
+                        ${isToday ? '<div class="absolute top-0 right-0 w-16 h-16 bg-[#ffd952] opacity-20 rounded-bl-full"></div>' : ''}
+                        <div class="flex items-center gap-4 relative z-10">
+                            <div class="w-12 h-12 ${isToday ? 'bg-[#fadd7d]' : 'bg-[#e9e4d5]'} rounded-[1rem] flex items-center justify-center text-[#7a6100] drop-shadow-sm border border-white overflow-hidden">
+                                ${iconHtml}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-base text-on-surface drop-shadow-sm">${config.topic}</h4>
+                                <p class="text-on-surface-variant text-xs flex items-center gap-1">
+                                    <span class="font-bold text-[#a74727]">${dateLabel}</span> • <span class="material-symbols-outlined text-[10px]">stars</span> ${config.points_reward} คะแนน
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="shareHighlightFlex('${config.topic.replace(/'/g, "\\'")}', ${config.points_reward})" class="w-10 h-10 bg-white rounded-full border border-gray-100 shadow-[inset_2px_2px_4px_#ffffff,_3px_3px_6px_#d8d3c8] flex items-center justify-center text-[#7a6100] active:shadow-[inset_3px_3px_6px_#d8d3c8] transition-all relative z-10">
+                            <span class="material-symbols-outlined text-sm">share</span>
+                        </button>
+                    </div>`;
+            });
+        }
+
+        async function loadRewards() {
+            const { data: rewards } = await supabaseClient.from('rewards').select('*').order('created_at', { ascending: false });
+            const container = document.getElementById('rewards-carousel');
+            container.innerHTML = '';
+
+            if (rewards && rewards.length > 0) {
+                rewards.forEach(r => {
+                    const iconOrImg = r.image_url ? `<img src="${r.image_url}" class="w-full h-full object-cover">` : `<span class="material-symbols-outlined text-amber-600 text-2xl">${r.icon_name}</span>`;
+                    const bgOrImg = r.image_url ? '' : `<div class="absolute -right-3 -bottom-3 opacity-[0.05] scale-150 transform -rotate-12 transition-transform group-hover:scale-125 pointer-events-none"><span class="material-symbols-outlined text-9xl">${r.icon_name}</span></div>`;
+
+                    container.innerHTML += `
+                        <div onclick="openRewardDetail(${r.id}, '${r.title.replace(/'/g, "\\'")}', '${r.description ? r.description.replace(/'/g, "\\'") : ''}', ${r.points_required}, '${r.image_url || ''}', '${r.icon_name || ''}')" class="min-w-[160px] neo-card p-5 flex flex-col justify-between aspect-square relative overflow-hidden group cursor-pointer hover:-translate-y-1 transition-all flex-shrink-0">
+                            <div class="w-10 h-10 bg-[#fef9f4] shadow-[inset_2px_2px_4px_#ffffff,_2px_2px_4px_#e9e4d5] rounded-full flex items-center justify-center mb-3 overflow-hidden">
+                                ${iconOrImg}
+                            </div>
+                            <div class="relative z-10 space-y-2">
+                                <h5 class="font-bold text-gray-800 text-sm leading-tight drop-shadow-sm">${r.title}</h5>
+                                <p class="text-[10px] text-amber-800 font-bold bg-[#ffd952]/40 shadow-sm border border-white inline-block px-2 py-0.5 rounded-full">${r.points_required} คะแนน</p>
+                            </div>
+                            ${bgOrImg}
+                        </div>`;
+                });
+            } else {
+                container.innerHTML = `<p class="text-sm text-gray-500 italic px-2">ยังไม่มีของรางวัลในขณะนี้</p>`;
+            }
+        }
+
+        async function shareHighlightFlex(topicStr, pts) {
+            if (liff.isApiAvailable("shareTargetPicker")) {
+                try {
+                    await liff.shareTargetPicker([
+                        {
+                            "type": "flex",
+                            "altText": `กิจกรรมพิเศษ: ${topicStr} รับ ${pts} คะแนน!`,
+                            "contents": {
+                                "type": "bubble",
+                                "body": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "contents": [
+                                        { "type": "text", "text": "🎯 กิจกรรมพิเศษ!", "weight": "bold", "color": "#7a6100", "size": "xl" },
+                                        { "type": "text", "text": topicStr, "weight": "bold", "size": "md", "margin": "md", "wrap": true },
+                                        { "type": "text", "text": `สิทธิพิเศษรับ ${pts} คะแนน เมื่อเช็คอินสำเร็จ`, "color": "#a74727", "size": "sm" }
+                                    ]
+                                },
+                                "footer": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "contents": [
+                                        {
+                                            "type": "button",
+                                            "style": "primary",
+                                            "color": "#fdd34d",
+                                            "action": {
+                                                "type": "uri",
+                                                "label": "เปิดแอปพลิเคชัน",
+                                                "uri": "https://line.me/R/app/" + LIFF_ID
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]);
+                } catch (e) { }
+            }
+        }
+
+        function openRewardDetail(id, title, desc, pts, img, icon) {
+            const preview = img ? `<img src="${img}" class="w-full h-full object-cover rounded-full">` : `<span class="material-symbols-outlined text-5xl text-[#7a6100] drop-shadow-md" style="font-variation-settings: 'FILL' 1;">${icon}</span>`;
+
+            Swal.fire({
+                title: title,
+                html: `
+                <div class="space-y-4 text-left">
+                    <div class="flex justify-center my-4">
+                        <div class="w-20 h-20 shadow-[inset_3px_3px_6px_#d8d3c8,_3px_3px_6px_#ffffff] bg-[#fef9f4] rounded-full flex items-center justify-center overflow-hidden border-2 border-white">
+                            ${preview}
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600">${desc}</p>
+                    <div class="bg-yellow-50 p-4 rounded-xl flex justify-between items-center text-amber-900 font-bold border border-yellow-200 shadow-sm">
+                        <span>คะแนนที่ต้องใช้แลก</span>
+                        <span class="bg-white px-3 py-1 rounded-full shadow-sm">${pts} คะแนน</span>
+                    </div>
+                </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'แลกของรางวัล',
+                cancelButtonText: 'แชร์ให้เพื่อน',
+                cancelButtonColor: '#06C755',
+                confirmButtonColor: '#7a6100'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    if (userProfile.points < pts) {
+                        Swal.fire('ล้มเหลว', 'คะแนนของคุณไม่เพียงพอสำหรับการแลกของรางวัลนี้', 'error');
+                        return;
+                    }
+                    showLoader();
+                    const { error: pErr } = await supabaseClient.from('reward_redemptions').insert({
+                        userId: userProfile.userId, reward_id: id, status: 'pending'
+                    });
+                    hideLoader();
+
+                    if (!pErr) {
+                        Swal.fire('สำเร็จ', 'ส่งคำขอแลกรางวัลแล้ว กรุณารอแอดมินอนุมัติ!', 'success');
+                    } else {
+                        Swal.fire('ไม่สำเร็จ', pErr.message, 'error');
+                    }
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    shareRewardFlex(title, desc, pts);
+                }
+            });
+        }
+
+        async function shareRewardFlex(title, desc, pts) {
+            if (liff.isApiAvailable("shareTargetPicker")) {
+                try {
+                    await liff.shareTargetPicker([
+                        {
+                            "type": "flex",
+                            "altText": `รางวัลแนะนำ: ${title}`,
+                            "contents": {
+                                "type": "bubble",
+                                "body": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "contents": [
+                                        { "type": "text", "text": "🎁 ของรางวัลแนะนำ", "weight": "bold", "color": "#7a6100", "size": "xl" },
+                                        { "type": "text", "text": title, "weight": "bold", "size": "md", "margin": "md", "wrap": true },
+                                        { "type": "text", "text": `ใช้เพียง ${pts} คะแนน`, "color": "#a74727", "size": "sm" },
+                                        { "type": "text", "text": desc, "wrap": true, "size": "sm", "margin": "md", "color": "#656554" }
+                                    ]
+                                },
+                                "footer": {
+                                    "type": "box",
+                                    "layout": "vertical",
+                                    "contents": [
+                                        {
+                                            "type": "button",
+                                            "style": "primary",
+                                            "color": "#fdd34d",
+                                            "action": {
+                                                "type": "uri",
+                                                "label": "เข้าสู่ระบบเพื่อแลกรับ",
+                                                "uri": "https://line.me/R/app/" + LIFF_ID
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]);
+                } catch (e) { }
+            }
+        }
+
+
+        function updatePointsDisplay(pts) {
+            const pointsDisplay = document.getElementById('user-points');
+            const pointsBadge = document.getElementById('points-badge');
+
+            pointsDisplay.textContent = `${pts} คะแนน`;
+            pointsBadge.classList.add('scale-110', 'bg-primary-container', 'shadow-md');
+            setTimeout(() => {
+                pointsBadge.classList.remove('scale-110', 'bg-primary-container', 'shadow-md');
+            }, 300);
+        }
+
+        function showLoader() {
+            const l = document.getElementById('loading-overlay');
+            l.classList.remove('hidden');
+            l.classList.add('flex', 'opacity-100');
+        }
+
+        function hideLoader() {
+            const l = document.getElementById('loading-overlay');
+            l.classList.add('opacity-0');
+            setTimeout(() => {
+                l.classList.add('hidden');
+                l.classList.remove('flex');
+            }, 300);
+        }
+
+        function checkBirthdayEvent() {
+            if (!userProfile?.birthdate) return;
+            const today = new Date();
+            const b = new Date(userProfile.birthdate);
+            if (today.getMonth() === b.getMonth() && today.getDate() === b.getDate()) {
+                const h2 = document.querySelector('#goal-card-content h2');
+                const p = document.querySelector('#goal-card-content p');
+                const icon = document.querySelector('#goal-card-bg-icon span');
+                const spanLabel = document.querySelector('#goal-card-content span.mb-4');
+                if (spanLabel) spanLabel.innerText = 'สุขสันต์วันเกิด! 🎂';
+                if (h2) h2.innerHTML = `ขอให้มีความสุขมากๆ<br>${userProfile.displayName || ''}`;
+                if (p) p.innerText = 'อย่าลืมกดเช็คอินเพื่อสะสมคะแนนเป็นของขวัญวันเกิดพิเศษจากเรานะ';
+                if (icon) icon.innerText = 'cake';
+            }
+        }
+
+        async function updateRedemptionBadge() {
+            const { count } = await supabaseClient.from('reward_redemptions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+            const b = document.getElementById('admin-redeem-badge');
+            if (b) {
+                if (count > 0) {
+                    b.classList.remove('hidden');
+                    b.innerText = count;
+                } else {
+                    b.classList.add('hidden');
+                }
+            }
+        }
+
+        let currentAdminRedeemPage = 1;
+        async function loadAdminRedemptions(page = 1) {
+            currentAdminRedeemPage = page;
+            const container = document.getElementById('admin-redeem-results');
+            container.innerHTML = '<p class="text-xs text-gray-500 text-center py-4 italic">กำลังโหลด...</p>';
+
+            const start = (page - 1) * ADMIN_PAGE_SIZE;
+            const end = start + ADMIN_PAGE_SIZE - 1;
+
+            const { data: reqs, count, error } = await supabaseClient
+                .from('reward_redemptions')
+                .select('id, userId, status, created_at, user_profiles(displayName, pictureUrl), rewards(title, points_required, icon_name, image_url)', { count: 'exact' })
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .range(start, end);
+
+            if (error) {
+                console.error("Fetch redemptions error: ", error);
+                container.innerHTML = '<p class="text-xs text-red-500 text-center py-4">เกิดข้อผิดพลาด: ' + error.message + '</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            if (!reqs || reqs.length === 0) {
+                container.innerHTML = '<div class="py-12 flex flex-col items-center opacity-30"><span class="material-symbols-outlined text-5xl">inventory_2</span><p class="text-[10px] font-bold mt-2">ไม่มีคำขอแลกของรางวัลรออนุมัติ</p></div>';
+                document.getElementById('admin-redeem-pagination').innerHTML = '';
+                return;
+            }
+            reqs.forEach(r => {
+                const u = r.user_profiles;
+                const rew = r.rewards;
+                const picHtml = u?.pictureUrl ? `<img src="${u.pictureUrl}" class="w-8 h-8 rounded-full">` : `<span class="material-symbols-outlined text-gray-400">person</span>`;
+                const rPicHtml = rew?.image_url ? `<img src="${rew.image_url}" class="w-6 h-6 object-cover rounded">` : `<span class="material-symbols-outlined text-amber-600 text-sm">${rew?.icon_name}</span>`;
+
+                container.innerHTML += `
+                    <div class="bg-white p-3 border border-gray-100 rounded-xl flex flex-col gap-2 shadow-sm relative overflow-hidden transition-all hover:border-amber-200">
+                        <div class="flex items-center gap-3">
+                            ${picHtml}
+                            <div class="flex-1">
+                                <p class="text-xs font-extrabold text-gray-800">${u?.displayName || 'Unknown'}</p>
+                                <div class="flex items-center gap-1 mt-1 text-[10px] text-gray-500">
+                                    ${rPicHtml}
+                                    <span class="font-bold text-amber-800">${rew?.title}</span>
+                                    <span class="text-red-600">(-${rew?.points_required} pts)</span>
+                                </div>
+                                <p class="text-[9px] text-gray-400 mt-0.5">${formatDateThai(r.created_at)}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 w-full mt-1 border-t border-gray-50 pt-2">
+                            <button onclick="approveRedemption(${r.id}, true, '${r.userId}', ${rew?.points_required})" class="flex-1 bg-green-50 hover:bg-green-100 text-green-700 font-extrabold py-2 rounded-lg text-[10px] active:scale-95 transition-all outline-none">อนุมัติ</button>
+                            <button onclick="approveRedemption(${r.id}, false, '${r.userId}', ${rew?.points_required})" class="flex-1 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold py-2 rounded-lg text-[10px] active:scale-95 transition-all outline-none">ปฏิเสธ</button>
+                        </div>
+                    </div>`;
+            });
+
+            renderPaginationButtons('admin-redeem-pagination', page, count, 'loadAdminRedemptions');
+        }
+
+        async function approveRedemption(reqId, isApprove, uid, ptsToDeduct) {
+            Swal.fire({
+                title: isApprove ? 'ต้องการอนุมัติไหม?' : 'ต้องการปฏิเสธคำขอไหม?',
+                text: isApprove ? `แต้มของลูกค้า (${ptsToDeduct} pts) จะถูกหักเมื่ออนุมัติเสร็จสิ้น` : 'คำขอนี้จะถูกยกเลิก (ไม่มีการหักแต้ม)',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (res) => {
+                if (res.isConfirmed) {
+                    showLoader();
+                    if (isApprove) {
+                        const { data: ud } = await supabaseClient.from('user_profiles').select('points').eq('userId', uid).single();
+                        if (ud) {
+                            if (ud.points < ptsToDeduct) {
+                                hideLoader();
+                                Swal.fire('ล้มเหลว', 'ลูกค้ามีแต้มไม่พอให้หัก', 'error');
+                                return;
+                            }
+                            await supabaseClient.from('user_profiles').update({ points: ud.points - ptsToDeduct }).eq('userId', uid);
+                        }
+                    }
+                    const newStatus = isApprove ? 'approved' : 'rejected';
+                    await supabaseClient.from('reward_redemptions').update({ status: newStatus }).eq('id', reqId);
+                    hideLoader();
+                    loadAdminRedemptions();
+                    updateRedemptionBadge();
+                    Swal.fire('สำเร็จ', 'ดำเนินการเรียบร้อย', 'success');
+                }
+            });
+        }
+
+        function openProfileActions() {
+            Swal.fire({
+                title: userProfile.displayName,
+                html: `<p class="text-sm font-medium mb-1">สิทธิการใช้งาน: ${userProfile.role}</p><p class="text-sm text-gray-500">${userProfile.email || 'ยังไม่ได้ระบุอีเมล'}</p><p class="text-sm text-gray-500">${userProfile.phone || 'ยังไม่ได้ระบุเบอร์โทร'}</p>`,
+                imageUrl: userProfile.pictureUrl,
+                imageWidth: 80,
+                imageHeight: 80,
+                imageAlt: 'รูปโปรไฟล์',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonColor: '#7a6100',
+                denyButtonColor: '#d33',
+                cancelButtonColor: '#a7a7a7',
+                confirmButtonText: 'แก้ไขโปรไฟล์',
+                denyButtonText: 'ออกจากระบบ',
+                cancelButtonText: 'ปิด'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    editUserProfile();
+                } else if (result.isDenied) {
+                    logoutLine();
+                }
+            })
+        }
+
+        function editUserProfile() {
+            Swal.fire({
+                title: 'แก้ไขข้อมูลโปรไฟล์',
+                html: `
+                    <div class="space-y-3 text-left">
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">ชื่อที่แสดง</label><input type="text" id="prof-name" class="w-full border border-gray-300 bg-gray-50 p-2 rounded-lg text-sm" value="${userProfile.displayName || ''}"></div>
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">อีเมล</label><input type="email" id="prof-email" class="w-full border border-gray-300 bg-gray-50 p-2 rounded-lg text-sm" value="${userProfile.email || ''}"></div>
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">เบอร์โทรศัพท์</label><input type="tel" id="prof-phone" class="w-full border border-gray-300 bg-gray-50 p-2 rounded-lg text-sm" value="${userProfile.phone || ''}" maxlength="10" placeholder="0XXXXXXXXX"></div>
+                        <div><label class="text-xs font-bold text-gray-600 block mb-1">วัน/เดือน/ปีเกิด</label><input type="date" id="prof-birth" class="w-full border border-gray-300 bg-gray-50 p-2 rounded-lg text-sm" value="${userProfile.birthdate || ''}"></div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'บันทึก',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#7a6100',
+                preConfirm: () => {
+                    return {
+                        displayName: document.getElementById('prof-name').value,
+                        email: document.getElementById('prof-email').value,
+                        phone: document.getElementById('prof-phone').value,
+                        birthdate: document.getElementById('prof-birth').value || null
+                    }
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoader();
+                    const d = result.value;
+                    const { error } = await supabaseClient.from('user_profiles').update(d).eq('userId', userProfile.userId);
+                    hideLoader();
+                    if (!error) {
+                        userProfile = { ...userProfile, ...d };
+                        checkBirthdayEvent();
+                        Swal.fire('สำเร็จ', 'อัปเดตข้อมูลส่วนตัวแล้ว', 'success');
+                    } else {
+                        Swal.fire('ล้มเหลว', error.message, 'error');
+                    }
+                }
+            });
+        }
+
+
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('header');
+            if (window.scrollY > 10) {
+                header.classList.add('shadow-sm', 'bg-yellow-50/95');
+                header.classList.remove('bg-yellow-50/80');
+            } else {
+                header.classList.remove('shadow-sm', 'bg-yellow-50/95');
+                header.classList.add('bg-yellow-50/80');
+            }
+        });
+    </script>
+</body>
+
+</html>
