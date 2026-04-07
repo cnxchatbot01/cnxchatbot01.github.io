@@ -1,0 +1,317 @@
+:root {
+  --primary: #7b5400;
+  --primary-rgb: 123, 84, 0;
+  --on-primary: #fff1df;
+  --primary-container: #feb300;
+  --on-primary-container: #523700;
+  --secondary: #006a27;
+  --on-secondary: #cfffcd;
+  --secondary-container: #81fc90;
+  --on-secondary-container: #005f22;
+  --surface: #fff5e7;
+  --on-surface: #3c2c00;
+  --surface-container-low: #ffefd1;
+  --surface-container: #ffe6ae;
+  --surface-container-high: #ffdf95;
+  --surface-container-highest: #fed980;
+  --outline: #8b743a;
+  --outline-variant: #c5aa6b;
+  --error: #b02500;
+  --on-error: #ffefec;
+  --error-container: #f95630;
+  --on-error-container: #520c00;
+  --radius-xl: 2.5rem;
+  --radius-lg: 1.5rem;
+  --radius-md: 1rem;
+  --radius-sm: 0.5rem;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+body {
+  font-family: 'LINE Seed Sans TH', 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--surface);
+  color: var(--on-surface);
+  line-height: 1.5;
+  margin: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1;
+}
+
+
+.glass {
+  background: rgba(255, 245, 231, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceSubtle {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.3s ease-in-out forwards;
+}
+
+.animate-pulse-subtle {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 3s infinite ease-in-out;
+}
+
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--on-primary);
+  padding: 1rem 2rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  box-shadow: 0 15px 35px rgba(60, 44, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 50px rgba(60, 44, 0, 0.08);
+}
+
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--surface-container);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+.responsive-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+main {
+  transition: padding 0.3s ease-in-out;
+}
+
+@media (max-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+
+.group:hover .group-hover\:scale-110 {
+  transform: scale(1.1);
+}
+
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--primary);
+}
+
+
+.nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--outline-variant);
+  text-decoration: none;
+  font-size: 11px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 64px;
+  position: relative;
+}
+
+.nav-link .material-symbols-outlined {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  margin-bottom: 4px;
+}
+
+.nav-link.active {
+  color: var(--primary);
+}
+
+.nav-link.active .material-symbols-outlined {
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  font-variation-settings: 'FILL' 1;
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(254, 179, 0, 0.3);
+}
+
+.nav-link.active span:last-child {
+  font-weight: 800;
+  transform: translateY(-4px);
+}
+
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-radius: 9999px;
+  color: var(--on-surface-variant);
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: var(--surface-container-highest);
+  color: var(--on-surface);
+  font-weight: 700;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+#progress-bar {
+  background: linear-gradient(90deg, 
+    var(--primary) 0%, 
+    var(--primary-container) 50%, 
+    var(--primary) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.5);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  border-radius: inherit;
+}
+
+#progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.4) 50%, 
+    transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
