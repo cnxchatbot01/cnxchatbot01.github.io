@@ -1,5 +1,5 @@
 // --- CONFIGURATION ---
-const LIFF_ID = "2010119023-66PrUicG";
+const LIFF_ID = "2010118994-BlcBJ0G2";
 const SUPABASE_URL = "https://hbyojbdhyzxfxarobjbg.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhieW9qYmRoeXp4Znhhcm9iamJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNzYzMTQsImV4cCI6MjA5NDY1MjMxNH0.5Z8cUp9uZtw12yJkPWsvbOcSOgdwN6jRJJI6la5sqgQ";
 
