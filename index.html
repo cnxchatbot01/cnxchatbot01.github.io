@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title id="page-title">ระบบสั่งอาหาร SaaS</title>
+    <link rel="icon" href="https://cdn-icons-gif.flaticon.com/18497/18497932.gif">
+    <link rel="apple-touch-icon" href="https://cdn-icons-gif.flaticon.com/18497/18497932.gif">
+    <meta name="description" content="ระบบสั่งอาหารออนไลน์พรีเมียม" />
+    <meta property="og:title" content="ระบบสั่งอาหารออนไลน์" />
+    <meta property="og:description" content="สัมผัสประสบการณ์อาหารพรีเมียม สั่งเลยผ่าน LINE" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/3170/3170733.png" />
+
+    <!-- Fonts -->
+    <link href="https://cdn.jsdelivr.net/gh/lazywasabi/thai-web-fonts@7/fonts/LINESeedSansTH/LINESeedSansTH.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <!-- Libs -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <link rel="stylesheet" href="index.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary:   { DEFAULT: 'var(--primary)', dark: 'var(--primary-dark)', light: 'var(--primary-light)', container: 'var(--primary-container)' },
+                        secondary: { DEFAULT: 'var(--secondary)', dark: 'var(--secondary-dark)', container: 'var(--secondary-container)' },
+                        sand:  { DEFAULT: 'var(--sand)',  light: 'var(--sand-light)',  dark: 'var(--sand-dark)' },
+                        sage:  { DEFAULT: 'var(--sage)',  light: 'var(--sage-light)',  dark: 'var(--sage-dark)' },
+                        mint:  { DEFAULT: 'var(--mint)',  light: 'var(--mint-light)',  dark: 'var(--mint-dark)' },
+                        slate: { DEFAULT: 'var(--slate)', light: 'var(--slate-light)', dark: 'var(--slate-dark)' },
+                        plum:  { DEFAULT: 'var(--plum)',  light: 'var(--plum-light)',  dark: 'var(--plum-dark)' },
+                        surface: {
+                            DEFAULT: 'var(--surface)',
+                            container: 'var(--surface-container)',
+                            'container-low': 'var(--surface-container-low)',
+                            'container-high': 'var(--surface-container-high)',
+                        },
+                        'on-primary': 'var(--on-primary)',
+                        'on-surface': 'var(--on-surface)',
+                        'on-surface-variant': 'var(--on-surface-variant)',
+                        outline: 'var(--outline)',
+                        'outline-variant': 'var(--outline-variant)',
+                        error: 'var(--error)',
+                    },
+                    borderRadius: {
+                        '4xl': '2rem',
+                        '5xl': '2.5rem',
+                    },
+                    fontFamily: {
+                        display: ['LINE Seed Sans TH', 'sans-serif'],
+                        body: ['LINE Seed Sans TH', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-surface text-on-surface overflow-x-hidden">
+
+    <!-- ==================== GLOBAL LOADER ==================== -->
+    <div id="global-loader" class="loading-overlay">
+        <div class="text-center w-full max-w-xs px-8 animate-fade-in">
+            <div class="mb-8">
+                <div class="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mx-auto mb-6 animate-float overflow-hidden">
+                    <img id="loader-logo" class="hidden w-full h-full object-cover">
+                    <span id="loader-icon" class="material-symbols-outlined text-[42px] filled">restaurant</span>
+                </div>
+                <h2 id="loader-store-name" class="text-3xl font-black text-on-surface mb-1" style="font-family:'LINE Seed Sans TH',sans-serif;">Culinary</h2>
+                <p class="text-[10px] uppercase font-bold tracking-[0.35em] text-primary/60">ประสบการณ์พรีเมียม</p>
+            </div>
+            <div class="w-full bg-surface-container h-1 rounded-full overflow-hidden mb-3">
+                <div id="progress-bar" class="h-full w-0 rounded-full"></div>
+            </div>
+            <p id="progress-percentage" class="text-xs font-bold" style="color:var(--plum-light);">0%</p>
+        </div>
+    </div>
+
+    <!-- ==================== PDPA MODAL ==================== -->
+    <div id="pdpa-modal" class="fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden opacity-0 transition-all duration-400">
+        <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-10 max-w-md w-full shadow-2xl">
+            <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6">
+                <span class="material-symbols-outlined text-[28px] filled">verified_user</span>
+            </div>
+            <h2 class="text-2xl font-black mb-2" style="font-family:'LINE Seed Sans TH',sans-serif;">นโยบายความเป็นส่วนตัว</h2>
+            <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">
+                เราขอความยินยอมในการเก็บข้อมูลโปรไฟล์ เพื่อให้บริการอย่างปลอดภัยและสะดวกสบาย ตามนโยบาย PDPA
+            </p>
+            <div class="space-y-3 mb-7">
+                <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/15">
+                    <span class="material-symbols-outlined text-secondary text-[18px] filled">check_circle</span>
+                    <p class="text-xs font-medium text-on-surface-variant">ข้อมูลโปรไฟล์ (ชื่อ, รูปภาพ)</p>
+                </div>
+                <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/15">
+                    <span class="material-symbols-outlined text-secondary text-[18px] filled">check_circle</span>
+                    <p class="text-xs font-medium text-on-surface-variant">ประวัติการสั่งซื้อ</p>
+                </div>
+            </div>
+            <button onclick="acceptPDPA()" class="btn-primary w-full py-4">ยอมรับและดำเนินการต่อ</button>
+        </div>
+    </div>
+
+    <!-- ==================== HEADER ==================== -->
+    <header id="main-header" class="fixed top-0 w-full z-50 glass px-4 sm:px-6 lg:px-10 flex justify-between items-center h-[72px]">
+        <!-- Logo -->
+        <button onclick="setView('home')" class="flex items-center gap-3 shrink-0">
+            <div class="w-10 h-10 rounded-xl overflow-hidden" style="background:linear-gradient(160deg,#f0d5b0 0%,var(--sand) 45%,var(--sand-dark) 100%); flex items-center justify-center text-white shadow-md shadow-primary/25">
+                <img id="app-logo" class="hidden w-full h-full object-cover">
+                <span id="app-logo-icon" class="material-symbols-outlined text-[22px] filled">restaurant</span>
+            </div>
+            <span id="store-name" class="text-xl font-black hidden sm:block" style="font-family:'LINE Seed Sans TH',sans-serif;">Culinary</span>
+        </button>
+
+        <!-- Search -->
+        <div class="flex-1 max-w-md mx-3 sm:mx-8">
+            <div class="relative">
+                <input type="text" placeholder="ค้นหาเมนู..."
+                    class="w-full py-2.5 pl-10 pr-4 rounded-xl text-sm"
+                    onkeyup="handleSearch(this.value)">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">search</span>
+            </div>
+        </div>
+
+        <!-- Right actions -->
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button id="super-admin-switch" onclick="toggleSuperAdminView()"
+                class="btn-primary py-2 px-4 text-xs hidden items-center gap-1.5"
+                style="background:var(--plum-dark); color:white; border-color:var(--plum-dark);">
+                <span class="material-symbols-outlined text-[16px]">stars</span>
+                <span class="hidden sm:inline">ซูเปอร์แอดมิน</span>
+            </button>
+            <button id="admin-switch" onclick="toggleAdminView()"
+                class="btn-primary py-2 px-4 text-xs hidden items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                <span class="hidden sm:inline">แอดมิน</span>
+            </button>
+            <button onclick="setView('profile')"
+                class="w-10 h-10 rounded-xl overflow-hidden border-2 border-primary/15 hover:border-primary/40 transition-all shadow-sm">
+                <img src="https://cdn-icons-gif.flaticon.com/8121/8121295.gif"
+                    class="w-full h-full object-cover" id="user-pfp">
+            </button>
+        </div>
+    </header>
+
+    <!-- ==================== APP LAYOUT ==================== -->
+    <div class="flex" style="padding-top:72px; min-height:100vh;">
+
+        <!-- Sidebar Desktop -->
+        <aside class="hidden lg:flex flex-col w-64 fixed left-0 top-[72px] h-[calc(100vh-72px)] bg-white/60 backdrop-blur-xl border-r border-outline-variant/10 py-8 px-5 z-40">
+            <nav class="space-y-1.5 flex-1" id="sidebar-nav"></nav>
+            
+            <button onclick="shareStore()" class="w-full flex items-center justify-center gap-2 mb-4 py-3 rounded-xl bg-gradient-to-r from-[#18c461] to-[#12a14e] text-white shadow-lg shadow-[#18c461]/20 font-bold text-sm hover:opacity-90 active:scale-98 transition-all">
+                <span class="material-symbols-outlined text-[18px]">share</span> แนะนำร้าน (ส่งเข้าแชท)
+            </button>
+            
+            <!-- Points Widget -->
+            <div class="mt-auto p-5 rounded-2xl text-center" style="background:linear-gradient(135deg,rgba(230,199,156,.22) 0%,rgba(205,223,160,.12) 100%);border:1px solid rgba(230,199,156,.38);">
+                <p class="text-[10px] uppercase font-bold tracking-widest text-primary/60 mb-2">คะแนนสะสม</p>
+                <div class="flex items-center justify-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-[20px] filled">stars</span>
+                    <span class="text-3xl font-black" style="font-family:'LINE Seed Sans TH',sans-serif;color:var(--plum-dark);" id="user-points">0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 lg:ml-64 lg:mr-[28rem] px-4 sm:px-6 lg:px-8 py-6 w-full animate-fade-in"></main>
+
+        <!-- Cart Panel Desktop -->
+        <aside id="desktop-cart-panel" class="hidden lg:flex flex-col w-[28rem] fixed right-0 top-[72px] h-[calc(100vh-72px)] px-7 py-8 z-40">
+            <!-- Mobile close -->
+            <button onclick="toggleMobileCart()"
+                class="lg:hidden absolute top-4 right-4 w-10 h-10 bg-surface-container rounded-xl flex items-center justify-center z-10">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-black flex items-center gap-2" style="font-family:'LINE Seed Sans TH',sans-serif;">
+                    ตะกร้า
+                    <span class="text-[11px] font-black px-2.5 py-1 bg-primary text-white rounded-full shadow-sm" id="cart-count-desktop">0</span>
+                </h3>
+            </div>
+
+            <div class="flex-1 overflow-y-auto hide-scrollbar" id="cart-items-container"></div>
+
+            <div id="cart-summary" class="hidden mt-5 pt-5 border-t border-outline-variant/10">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm text-on-surface-variant font-medium">ยอดรวม</span>
+                    <span class="text-2xl font-black" style="color:var(--plum-dark);font-family:'LINE Seed Sans TH',sans-serif;" id="cart-total-desktop">0.00 บ.</span>
+                </div>
+                <button id="submit-order-btn" onclick="submitOrder()" class="btn-primary w-full py-4 text-base">
+                    <span class="material-symbols-outlined text-[20px]" id="submit-order-icon">check_circle</span>
+                    <span id="submit-order-label">สั่งอาหารเลย</span>
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- ==================== MOBILE BOTTOM NAV ==================== -->
+    <nav id="bottom-nav" class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-3 pt-3 glass rounded-t-3xl z-50 lg:hidden shadow-2xl border-t border-outline-variant/10"></nav>
+
+    <!-- ==================== PAYMENT MODAL ==================== -->
+    <div id="payment-modal" class="fixed inset-0 z-[1001] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-9 max-w-sm w-full shadow-2xl relative text-center">
+            <button onclick="closePayment()"
+                class="absolute top-4 right-4 w-9 h-9 bg-surface-container-low rounded-xl flex items-center justify-center hover:bg-surface-container transition-all">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+
+            <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-5">
+                <span class="material-symbols-outlined text-[28px] filled">qr_code_2</span>
+            </div>
+            <h3 class="text-xl font-black mb-1" style="font-family:'LINE Seed Sans TH',sans-serif;">ชำระเงิน</h3>
+            <p class="text-xs text-on-surface-variant mb-6">สแกน QR โอนเงิน</p>
+
+            <div class="bg-surface-container-low rounded-2xl p-5 mx-auto w-fit mb-6 border border-outline-variant/15" id="qr-container">
+                <div class="w-48 h-48 flex items-center justify-center shimmer rounded-xl">
+                    <span class="material-symbols-outlined text-[48px] text-on-surface-variant/20">qr_code</span>
+                </div>
+            </div>
+
+            <div class="bg-surface-container-low rounded-2xl p-4 mb-5 flex items-center justify-between border border-outline-variant/10 text-left">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-0.5">โอนไปที่</p>
+                    <p class="text-sm font-bold" id="bank-name">Kasikorn Bank</p>
+                    <p class="text-base font-black text-primary" style="font-family:'LINE Seed Sans TH',sans-serif;" id="bank-acc">123-4-56789-0</p>
+                </div>
+                <button onclick="copyAccount()"
+                    class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow border border-outline-variant/15 text-primary active:scale-90 transition-all">
+                    <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                </button>
+            </div>
+
+            <div class="flex justify-between items-center mb-6 px-1">
+                <span class="text-sm text-on-surface-variant">ยอดที่ต้องชำระ</span>
+                <span class="text-2xl font-black" style="color:var(--plum-dark);font-family:'LINE Seed Sans TH',sans-serif;" id="pay-amount">0.00 บ.</span>
+            </div>
+
+            <button onclick="closePayment()" class="btn-primary w-full py-3.5 text-sm">
+                ดูสถานะออเดอร์
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== EDIT MODAL (Admin) ==================== -->
+    <div id="edit-modal" class="fixed inset-0 z-[1002] flex items-end sm:items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-9 max-w-lg w-full shadow-2xl relative overflow-y-auto max-h-[90dvh]">
+            <button onclick="closeEditModal()"
+                class="absolute top-5 right-5 w-9 h-9 bg-surface-container-low rounded-xl flex items-center justify-center hover:bg-surface-container transition-all">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+            <h3 class="text-2xl font-black mb-7" style="font-family:'LINE Seed Sans TH',sans-serif;" id="edit-modal-title">จัดการรายการ</h3>
+
+            <form id="edit-form" onsubmit="handleEditSubmit(event)" class="space-y-5">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-type">
+
+                <div id="standard-fields" class="space-y-5">
+                    <div>
+                        <label id="label-name" class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">ชื่อรายการ</label>
+                        <input type="text" id="edit-name" class="w-full">
+                    </div>
+                    <div id="product-only-fields" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">ราคา (บ.)</label>
+                            <input type="number" step="0.01" min="0" id="edit-price" class="w-full">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">หมวดหมู่</label>
+                            <select id="edit-category" class="w-full"></select>
+                        </div>
+                    </div>
+                    <!-- Availability Toggle -->
+                    <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl border border-outline-variant/10">
+                        <div>
+                            <p class="text-sm font-bold text-on-surface">สถานะรายการ</p>
+                            <p class="text-xs text-on-surface-variant">พร้อมรับออเดอร์</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="edit-available" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-inner"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Settings fields -->
+                <div id="settings-fields" class="hidden space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">เบอร์พร้อมเพย์</label>
+                        <input type="text" id="setting-promptpay" class="w-full">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">ชื่อธนาคาร</label>
+                        <input type="text" id="setting-bank" class="w-full">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">เลขบัญชี</label>
+                        <input type="text" id="setting-acc" class="w-full">
+                    </div>
+                </div>
+
+                <div id="image-field">
+                    <label id="label-image" class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">URL รูปภาพ</label>
+                    <input type="text" id="edit-image" class="w-full">
+                </div>
+
+                <div id="desc-field">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">คำอธิบาย</label>
+                    <textarea id="edit-desc" rows="3" class="w-full resize-none"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary w-full py-4 mt-2">บันทึก</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== REGISTER MODAL ==================== -->
+    <div id="register-modal" class="fixed inset-0 z-[1003] bg-black/60 backdrop-blur-md hidden opacity-0 transition-all duration-400 flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-10 shadow-2xl relative overflow-hidden">
+            <!-- Accent bar -->
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[var(--sand)] to-[var(--sage)] rounded-t-[2rem]"></div>
+
+            <h2 class="text-2xl font-black mb-1 mt-2" style="font-family:'LINE Seed Sans TH',sans-serif;" id="reg-modal-title">สร้างบัญชี</h2>
+            <p class="text-sm text-on-surface-variant mb-7" id="reg-modal-desc">กรอกข้อมูลเพื่อเริ่มใช้งาน</p>
+
+            <form id="reg-form" onsubmit="handleRegistration(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">ชื่อ-นามสกุล</label>
+                    <input type="text" id="reg-name" required class="w-full" placeholder="กรอกชื่อของคุณ">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">เบอร์โทรศัพท์</label>
+                    <input type="tel" id="reg-phone" maxlength="10" required pattern="[0-9]{10}" class="w-full" placeholder="0812345678">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">วันเกิด</label>
+                    <input type="date" id="reg-birthday" required class="w-full">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">อีเมล</label>
+                    <input type="email" id="reg-email" readonly class="w-full opacity-50 cursor-not-allowed">
+                </div>
+                <div class="pt-3 space-y-3">
+                    <button type="submit" class="btn-primary w-full py-4">บันทึกข้อมูล</button>
+                    <button type="button" onclick="closeRegisterModal()" id="reg-cancel-btn"
+                        class="w-full py-3 text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors hidden uppercase tracking-widest">
+                        ยกเลิก
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="toast-container" class="fixed bottom-28 lg:bottom-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col-reverse gap-2 pointer-events-none items-center w-full px-4"></div>
+
+    <!-- ==================== STORE CLOSED OVERLAY ==================== -->
+    <div id="store-closed-overlay" class="fixed inset-0 z-[9000] hidden flex-col items-center justify-center text-center p-8"
+        style="background:radial-gradient(ellipse at 30% 20%,rgba(184,48,32,.18) 0%,rgba(244,239,233,.99) 55%),var(--surface);">
+        <div class="max-w-sm animate-fade-in-scale">
+            <div class="w-24 h-24 mx-auto mb-8 rounded-3xl flex items-center justify-center"
+                style="background:linear-gradient(160deg,rgba(184,48,32,.12) 0%,rgba(184,48,32,.06) 100%);border:1px solid rgba(184,48,32,.20);">
+                <span class="material-symbols-outlined text-[52px]" style="color:var(--error);">store_mall_directory</span>
+            </div>
+            <h1 id="store-closed-name" class="text-4xl font-black mb-3" style="font-family:'LINE Seed Sans TH',sans-serif;">ร้านค้า</h1>
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 text-sm font-bold" style="background:rgba(184,48,32,.10);color:var(--error);border:1px solid rgba(184,48,32,.20)">
+                <span class="w-2 h-2 rounded-full" style="background:var(--error);"></span>
+                ปิดให้บริการชั่วคราว
+            </div>
+            <p class="text-sm font-medium mb-8" style="color:var(--plum);">ขออภัยในความไม่สะดวก ร้านค้านี้ยังไม่เปิดให้บริการ หรืออยู่ระหว่างการระงับการใช้งาน</p>
+            <p class="text-xs" style="color:var(--plum-light);">กรุณาติดต่อเจ้าของร้านเพื่อสอบถามข้อมูลเพิ่มเติม</p>
+        </div>
+    </div>
+
+    <!-- ==================== STORE EXPIRED OVERLAY ==================== -->
+    <div id="store-expired-overlay" class="fixed inset-0 z-[9000] hidden flex-col items-center justify-center text-center p-8"
+        style="background:radial-gradient(ellipse at 30% 20%,rgba(180,120,0,.18) 0%,rgba(244,239,233,.99) 55%),var(--surface);">
+        <div class="max-w-sm animate-fade-in-scale">
+            <div class="w-24 h-24 mx-auto mb-8 rounded-3xl flex items-center justify-center"
+                style="background:linear-gradient(160deg,rgba(180,120,0,.14) 0%,rgba(180,120,0,.06) 100%);border:1px solid rgba(180,120,0,.22);">
+                <span class="material-symbols-outlined text-[52px]" style="color:#b45309;">schedule</span>
+            </div>
+            <h1 id="expired-store-name" class="text-4xl font-black mb-3" style="font-family:'LINE Seed Sans TH',sans-serif;">ร้านค้า</h1>
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 text-sm font-bold" style="background:rgba(180,120,0,.10);color:#b45309;border:1px solid rgba(180,120,0,.22);">
+                <span class="w-2 h-2 rounded-full" style="background:#b45309;"></span>
+                แพ็คเกจหมดอายุแล้ว
+            </div>
+            <p id="expired-date-text" class="text-sm font-medium mb-3" style="color:var(--plum);">แพ็คเกจการใช้งานของร้านนี้หมดอายุแล้ว</p>
+            <p class="text-xs mb-8" style="color:var(--plum-light);">กรุณาติดต่อเจ้าของร้านเพื่อต่ออายุการใช้งาน</p>
+        </div>
+    </div>
+
+    <!-- ==================== STORE SETUP MODAL (Onboarding Phase 3) ==================== -->
+    <div id="store-setup-modal" class="fixed inset-0 z-[2500] hidden opacity-0 transition-all duration-400 flex items-center justify-center p-4"
+        style="background:rgba(0,0,0,.65);backdrop-filter:blur(16px);">
+        <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-10 max-w-lg w-full shadow-2xl relative overflow-y-auto max-h-[92dvh]">
+            <!-- Accent bar -->
+            <div class="absolute top-0 left-0 w-full h-1.5 rounded-t-[2rem]" style="background:linear-gradient(90deg,var(--sand),var(--sage),var(--mint));"></div>
+
+            <div class="text-center mb-8 mt-2">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style="background:linear-gradient(160deg,rgba(230,199,156,.35) 0%,rgba(205,223,160,.25) 100%);border:1px solid rgba(230,199,156,.50);">
+                    <span class="material-symbols-outlined text-[32px] filled" style="color:var(--sand-dark);">storefront</span>
+                </div>
+                <h2 class="text-3xl font-black mb-1" style="font-family:'LINE Seed Sans TH',sans-serif;">ตั้งค่าร้านของคุณ</h2>
+                <p class="text-sm" style="color:var(--plum);">กรอกข้อมูลเพื่อเริ่มใช้งาน Culinary SaaS</p>
+            </div>
+
+            <form id="store-setup-form" onsubmit="handleStoreSetup(event)" class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--plum-light);">ชื่อร้าน *</label>
+                    <input type="text" id="setup-store-name" required class="w-full" placeholder="เช่น Café iton5">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--plum-light);">คำอธิบายร้าน</label>
+                    <textarea id="setup-store-desc" rows="2" class="w-full resize-none" placeholder="อธิบายร้านของคุณสั้นๆ"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--plum-light);">URL โลโก้ร้าน</label>
+                    <input type="url" id="setup-logo-url" class="w-full" placeholder="https://...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--plum-light);">เบอร์พร้อมเพย์</label>
+                        <input type="text" id="setup-promptpay" class="w-full" placeholder="0812345678">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--plum-light);">ธนาคาร</label>
+                        <input type="text" id="setup-bank-name" class="w-full" placeholder="Kasikorn Bank">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest mb-2" style="color:var(--plum-light);">เลขบัญชีธนาคาร</label>
+                    <input type="text" id="setup-bank-acc" class="w-full" placeholder="123-4-56789-0">
+                </div>
+                <button type="submit" class="btn-primary w-full py-4 mt-3">
+                    <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+                    เริ่มใช้งานร้านเลย!
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== TENANT PLAN MODAL ==================== -->
+    <div id="plan-modal" class="fixed inset-0 z-[1004] hidden opacity-0 transition-all duration-400 flex items-center justify-center p-4"
+        style="background:rgba(0,0,0,.60);backdrop-filter:blur(14px);">
+        <div class="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-10 max-w-md w-full shadow-2xl relative">
+            <button onclick="closePlanModal()" class="absolute top-5 right-5 w-9 h-9 rounded-xl flex items-center justify-center transition-all" style="background:var(--surface-container-low);">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style="background:linear-gradient(160deg,rgba(230,199,156,.40) 0%,rgba(201,164,112,.25) 100%);border:1px solid rgba(230,199,156,.55);">
+                    <span class="material-symbols-outlined text-[28px] filled" style="color:var(--sand-dark);">workspace_premium</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black" style="font-family:'LINE Seed Sans TH',sans-serif;">แผนบริการ</h2>
+                    <p class="text-xs" style="color:var(--plum);">ข้อมูลการสมัครใช้งาน</p>
+                </div>
+            </div>
+            <div id="plan-modal-body" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
